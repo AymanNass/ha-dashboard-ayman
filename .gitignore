@@ -18,3 +18,7 @@ scripts/views.json
 
 # Screenshots contain personal data; a curated subset is force-added
 screenshots
+
+# Recorded clips: raw webm scratch is throwaway; the curated mp4/jpg are force-added
+media/.raw
+media
