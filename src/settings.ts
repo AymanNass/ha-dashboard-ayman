@@ -8,6 +8,7 @@ export interface AppSettings {
   haToken: string;
   theme: ThemeId;
   accent: string; // hex color used as the primary accent
+  ambientEffects: boolean; // weather backdrop (rain/snow particles, lightning)
 }
 
 const STORAGE_KEY = 'ha-dashboard-settings';
@@ -40,6 +41,7 @@ const DEFAULTS: AppSettings = {
   haToken: '',
   theme: 'midnight',
   accent: DEFAULT_ACCENT,
+  ambientEffects: true,
 };
 
 let cache: AppSettings | null = null;

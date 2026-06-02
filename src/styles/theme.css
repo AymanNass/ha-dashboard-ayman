@@ -173,6 +173,36 @@ body::after {
   to   { transform: translate(24px, 110vh); opacity: 0.9; }
 }
 
+/* ── Lightning flash (thunderstorms) ──
+   A full-screen bluish-white wash that fires an irregular double-strike on a
+   long loop, sitting above the rain layer. Decorative; honors reduced motion
+   via the component (it isn't rendered when reduce is set). */
+.ambient-lightning {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(210, 225, 255, 0.95), transparent 55%),
+    radial-gradient(90% 60% at 20% 0%, rgba(180, 205, 255, 0.5), transparent 60%);
+  animation: lightning-flash 9s ease-out infinite;
+}
+
+@keyframes lightning-flash {
+  0%, 100% { opacity: 0; }
+  3%  { opacity: 0.9; }
+  4%  { opacity: 0.1; }
+  5%  { opacity: 0.75; }
+  6%  { opacity: 0; }
+  58% { opacity: 0; }
+  59% { opacity: 0.55; }
+  60% { opacity: 0.05; }
+  61% { opacity: 0.45; }
+  62% { opacity: 0; }
+}
+
 /* ── Layout ── */
 .app {
   position: relative;

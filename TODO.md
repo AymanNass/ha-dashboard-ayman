@@ -66,6 +66,8 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 - [x] ~~Time-of-day ambiance — warm gradient at night, cool in morning (drive from
   `sensor.time_based_color_temp`).~~
 - [x] ~~Weather-reactive backdrop — subtle particle layer tied to weather entity.~~
+  Added lightning flashes during thunderstorms (`?precip=storm` / `?storm=1`
+  preview) and an "Ambient effects" on/off toggle in Settings → Appearance.
 - [x] ~~Live light color — a light tile's glow matches its real RGB/kelvin.~~
 
 ### Depth & materials

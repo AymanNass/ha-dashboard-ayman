@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
+import { getSettings } from '../settings';
 
 interface Props {
   entities: HassEntities;
@@ -23,6 +24,11 @@ function weatherKind(state?: string): 'rain' | 'snow' | 'none' {
   return 'none';
 }
 
+/** Whether the weather is a thunderstorm, so we add lightning flashes. */
+function isStorm(state?: string): boolean {
+  return !!state && /(lightning|thunder|storm)/i.test(state);
+}
+
 /**
  * Ambient layers behind the UI: a time-of-day tint (set as a data attribute on
  * the root so CSS can recolor the background gradient) plus a subtle, optional
@@ -30,6 +36,7 @@ function weatherKind(state?: string): 'rain' | 'snow' | 'none' {
  */
 export function AmbientBackdrop({ entities }: Props) {
   const [tod, setTod] = useState<TimeOfDay>(() => timeOfDay());
+  const [effects, setEffects] = useState<boolean>(() => getSettings().ambientEffects);
 
   // Refresh the time-of-day attribute periodically so the tint drifts with the
   // real clock without a full reload.
@@ -54,26 +61,52 @@ export function AmbientBackdrop({ entities }: Props) {
     return () => clearInterval(id);
   }, []);
 
+  // Live-preview / persist updates from the Settings modal.
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<boolean>).detail;
+      setEffects(typeof detail === 'boolean' ? detail : getSettings().ambientEffects);
+    };
+    window.addEventListener('ha:ambient-effects', onChange);
+    return () => window.removeEventListener('ha:ambient-effects', onChange);
+  }, []);
+
   const weather =
     entities['weather.forecast_home_2'] ||
     Object.values(entities).find((e) => e.entity_id.startsWith('weather.'));
 
-  // Dev preview override: ?precip=rain|snow|none forces the precipitation layer
-  // regardless of real weather, and ?tod=night|dawn|dusk|day forces the tint.
-  const override =
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('precip')
-      : null;
-  const kind =
-    override === 'rain' || override === 'snow' || override === 'none'
-      ? (override as 'rain' | 'snow' | 'none')
-      : weatherKind(weather?.state);
+  // Dev preview override: ?precip=rain|snow|storm|none forces the precipitation
+  // layer regardless of real weather, ?storm=1 forces lightning, and
+  // ?tod=night|dawn|dusk|day forces the tint.
+  const params =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const override = params?.get('precip') ?? null;
+  const stormOverride = params?.get('storm');
 
+  let kind: 'rain' | 'snow' | 'none';
+  let storm: boolean;
+  if (override === 'rain' || override === 'snow' || override === 'none') {
+    kind = override;
+    storm = false;
+  } else if (override === 'storm') {
+    kind = 'rain';
+    storm = true;
+  } else {
+    kind = weatherKind(weather?.state);
+    storm = isStorm(weather?.state);
+  }
+  if (stormOverride === '1' || stormOverride === 'true') storm = true;
+
+  // An explicit URL override (?precip / ?storm) is a deliberate preview request,
+  // so it bypasses the reduced-motion gate; automatic real-weather effects still
+  // honor the user's reduced-motion preference.
+  const forced = override !== null || stormOverride != null;
   const reduced =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-  const showPrecip = kind !== 'none' && !reduced;
+  const showPrecip = effects && kind !== 'none' && (!reduced || forced);
+  const showLightning = showPrecip && storm;
 
   // A handful of drops/flakes is enough to read as "weather" without cost.
   const count = kind === 'rain' ? 28 : 22;
@@ -104,6 +137,7 @@ export function AmbientBackdrop({ entities }: Props) {
           {cells}
         </div>
       )}
+      {showLightning && <div className="ambient-lightning" aria-hidden="true" />}
     </>
   );
 }

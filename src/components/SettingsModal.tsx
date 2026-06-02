@@ -26,6 +26,7 @@ export function SettingsModal({ onClose, onResetLayout }: Props) {
   const [showToken, setShowToken] = useState(false);
   const [theme, setTheme] = useState<ThemeId>(initial.theme);
   const [accent, setAccent] = useState(initial.accent);
+  const [ambientEffects, setAmbientEffects] = useState(initial.ambientEffects);
   const [test, setTest] = useState<TestState>('idle');
   const [testMsg, setTestMsg] = useState('');
 
@@ -37,6 +38,12 @@ export function SettingsModal({ onClose, onResetLayout }: Props) {
   const pickAccent = (c: string) => {
     setAccent(c);
     applyTheme({ ...getSettings(), theme, accent: c });
+  };
+  const toggleEffects = () => {
+    const next = !ambientEffects;
+    setAmbientEffects(next);
+    // Live-preview the backdrop without persisting yet.
+    window.dispatchEvent(new CustomEvent('ha:ambient-effects', { detail: next }));
   };
 
   const effectiveUrl = haUrl.trim() || 'http://homeassistant.local:8123';
@@ -57,7 +64,7 @@ export function SettingsModal({ onClose, onResetLayout }: Props) {
   };
 
   const save = (reload: boolean) => {
-    saveSettings({ haUrl: haUrl.trim(), haToken: haToken.trim(), theme, accent });
+    saveSettings({ haUrl: haUrl.trim(), haToken: haToken.trim(), theme, accent, ambientEffects });
     if (reload) {
       window.location.reload();
     } else {
@@ -68,6 +75,9 @@ export function SettingsModal({ onClose, onResetLayout }: Props) {
   const cancel = () => {
     // Revert any live appearance preview to the persisted values.
     applyTheme(getSettings());
+    window.dispatchEvent(
+      new CustomEvent('ha:ambient-effects', { detail: getSettings().ambientEffects }),
+    );
     onClose();
   };
 
@@ -186,6 +196,20 @@ export function SettingsModal({ onClose, onResetLayout }: Props) {
                 </label>
               </div>
             </div>
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Ambient effects</span>
+                <small>Weather backdrop — rain &amp; snow particles, plus lightning in thunderstorms.</small>
+              </div>
+              <button
+                className={`ts-switch ${ambientEffects ? 'on' : ''}`}
+                role="switch"
+                aria-checked={ambientEffects}
+                onClick={toggleEffects}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
           </section>
 
           {/* Data */}
