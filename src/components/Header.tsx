@@ -1,6 +1,7 @@
 import type { HassEntities } from 'home-assistant-js-websocket';
 import { useEffect, useState } from 'react';
 import { AnimatedNumber } from './AnimatedNumber';
+import { persons } from '../config';
 
 interface ForecastDay {
   datetime: string;
@@ -21,6 +22,20 @@ function getGreeting(): string {
   if (hour < 17) return 'Good afternoon';
   if (hour < 21) return 'Good evening';
   return 'Good night';
+}
+
+/** Join names naturally: "Jeff", "Jeff & Carissa", "Jeff, Carissa & Sam". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? '';
+  if (names.length === 2) return `${names[0]} & ${names[1]}`;
+  return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`;
+}
+
+/** Names of the configured people currently home, in config order. */
+function getHomeNames(entities: HassEntities): string[] {
+  return persons
+    .filter((p) => entities[p.entity_id]?.state === 'home')
+    .map((p) => p.name);
 }
 
 function getWeatherIcon(state: string): string {
@@ -69,10 +84,16 @@ export function Header({ entities, getForecast }: Props) {
     (e) => e.entity_id.startsWith('media_player.') && e.state === 'playing'
   );
 
+  const homeNames = getHomeNames(entities);
+  const greetingName = joinNames(homeNames);
+
   return (
     <header className="header">
       <div className="greeting">
-        <h1>{getGreeting()}, Jeff!</h1>
+        <h1>
+          {getGreeting()}
+          {greetingName ? `, ${greetingName}!` : '!'}
+        </h1>
         <p className="subtitle">
           {mediaPlaying.length > 0
             ? `${mediaPlaying.length} media playing`

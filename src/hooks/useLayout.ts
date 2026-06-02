@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { views as defaultViews } from '../config';
 import { withRows } from '../lib/layout';
-import type { DashRow, DashView, RoomEntity, TileSize } from '../types';
+import type { DashRow, DashView, GlanceButtonConfig, RoomEntity, TileSize } from '../types';
 
 const ENDPOINT = '/layout';
 const SIZE_CYCLE: TileSize[] = ['1x1', '2x1', '1x2', '2x2'];
@@ -227,6 +227,16 @@ export function useLayout() {
     [mutateView],
   );
 
+  // ── Glance summary buttons ──
+  const setGlance = useCallback(
+    (viewId: string, glance: GlanceButtonConfig[]) => {
+      mutateView(viewId, (v) => {
+        v.glance = glance;
+      });
+    },
+    [mutateView],
+  );
+
   const resetLayout = useCallback(() => {
     setViews(withRows(clone(defaultViews)));
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -253,6 +263,7 @@ export function useLayout() {
     addScene,
     removeScene,
     moveScene,
+    setGlance,
     resetLayout,
   };
 }

@@ -82,7 +82,16 @@ export default function App() {
       <main className="main-content">
         <Header entities={entities} getForecast={getForecast} />
 
-        {!editing && activeView === 'main' && <GlanceStrip entities={entities} />}
+        {activeView === 'main' && (
+          <GlanceStrip
+            entities={entities}
+            glance={view.glance}
+            editing={editing}
+            onGlanceChange={(g) => layout.setGlance(view.id, g)}
+            onOpenDetail={setDetailEntity}
+            callHA={callHA}
+          />
+        )}
 
         {!editing && (viewScenes.length > 0 || activeView === 'main') && (
           <div className="home-top">

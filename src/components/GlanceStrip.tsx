@@ -1,112 +1,386 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
-import { persons } from '../config';
+import type { GlanceButtonConfig, GlanceMetric } from '../types';
 import { AnimatedNumber } from './AnimatedNumber';
+import { EntityPicker } from './DashboardView';
+import {
+  computeMetric,
+  DEFAULT_GLANCE,
+  METRICS,
+  METRIC_OPTIONS,
+  type GlanceItem,
+  type MetricResult,
+} from '../lib/glance';
+
+type CallHA = (
+  domain: string,
+  service: string,
+  data?: Record<string, unknown>,
+  target?: { entity_id: string | string[] },
+) => Promise<void>;
 
 interface Props {
   entities: HassEntities;
+  /** Configured buttons for this view (falls back to defaults when unset). */
+  glance?: GlanceButtonConfig[];
+  /** When true, the strip shows add/remove/configure controls. */
+  editing?: boolean;
+  /** Persist a new button configuration (edit mode). */
+  onGlanceChange?: (next: GlanceButtonConfig[]) => void;
+  /** Open an entity's detail flyout (used by non-toggle list rows). */
+  onOpenDetail?: (entityId: string) => void;
+  callHA: CallHA;
 }
 
-interface Stat {
-  key: string;
-  icon: string;
-  value: string;
-  /** When set, the value counts up/down smoothly instead of snapping. */
-  num?: number;
-  numSuffix?: string;
-  label: string;
-  active: boolean;
-}
+const ALWAYS_SHOW: GlanceMetric[] = ['lights', 'people'];
+
+const domainForMetric = (m: GlanceMetric): string[] => {
+  switch (m) {
+    case 'lights': return ['light'];
+    case 'switches': return ['switch'];
+    case 'fans': return ['fan'];
+    case 'locks': return ['lock'];
+    case 'covers': return ['cover'];
+    case 'climate': return ['climate'];
+    case 'media': return ['media_player'];
+    case 'people': return ['person'];
+  }
+};
 
 /**
- * Compact "at a glance" strip: a few live summary stats (lights on, indoor
- * temperature, who's home, media playing) derived entirely from current
- * entity state. Stats with no data are omitted.
+ * Configurable "at a glance" strip. Each button summarizes a metric (lights on,
+ * indoor temperature, who's home, …) and — when enabled — opens a flyout listing
+ * the exact entities behind the number. Toggle metrics (lights/switches/…) render
+ * the flyout as a grid of pushable on/off buttons; others render a tappable list.
+ * The whole strip is user-configurable in edit mode.
  */
-export function GlanceStrip({ entities }: Props) {
-  const stats = useMemo<Stat[]>(() => {
-    const list = Object.values(entities);
+export function GlanceStrip({
+  entities,
+  glance,
+  editing = false,
+  onGlanceChange,
+  onOpenDetail,
+  callHA,
+}: Props) {
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [editKey, setEditKey] = useState<string | null>(null);
 
-    // Lights currently on.
-    const lightsOn = list.filter(
-      (e) => e.entity_id.startsWith('light.') && e.state === 'on'
-    ).length;
+  const config = glance ?? DEFAULT_GLANCE;
 
-    // Average current temperature across climate entities (indoor).
-    const temps = list
-      .filter((e) => e.entity_id.startsWith('climate.'))
-      .map((e) => e.attributes.current_temperature as number | undefined)
-      .filter((t): t is number => typeof t === 'number');
-    const avgTemp = temps.length
-      ? Math.round(temps.reduce((a, b) => a + b, 0) / temps.length)
-      : undefined;
+  const computed = useMemo(
+    () =>
+      config.map((c) => ({
+        cfg: c,
+        result: computeMetric(c.metric, entities, c.exclude ?? []),
+      })),
+    [config, entities],
+  );
 
-    // People home.
-    const homeCount = persons.filter((p) => entities[p.entity_id]?.state === 'home').length;
-
-    // Media playing.
-    const mediaPlaying = list.filter(
-      (e) => e.entity_id.startsWith('media_player.') && e.state === 'playing'
-    ).length;
-
-    const out: Stat[] = [];
-
-    out.push({
-      key: 'lights',
-      icon: 'mdi-lightbulb-group',
-      value: String(lightsOn),
-      label: lightsOn === 1 ? 'light on' : 'lights on',
-      active: lightsOn > 0,
-    });
-
-    if (avgTemp !== undefined) {
-      out.push({
-        key: 'temp',
-        icon: 'mdi-thermometer',
-        value: `${avgTemp}°`,
-        num: avgTemp,
-        numSuffix: '°',
-        label: 'indoor',
-        active: true,
-      });
+  const toggleItem = (item: GlanceItem) => {
+    if (item.toggleKind === 'switch') {
+      callHA('homeassistant', 'toggle', undefined, { entity_id: item.id });
+    } else if (item.toggleKind === 'lock') {
+      callHA('lock', item.on ? 'lock' : 'unlock', undefined, { entity_id: item.id });
+    } else if (item.toggleKind === 'cover') {
+      callHA('cover', item.on ? 'close_cover' : 'open_cover', undefined, { entity_id: item.id });
     }
+  };
 
-    out.push({
-      key: 'home',
-      icon: 'mdi-account-group',
-      value: String(homeCount),
-      label: homeCount === 1 ? 'home' : 'home',
-      active: homeCount > 0,
-    });
+  const updateButton = (id: string, patch: Partial<GlanceButtonConfig>) =>
+    onGlanceChange?.(config.map((c) => (c.id === id ? { ...c, ...patch } : c)));
 
-    if (mediaPlaying > 0) {
-      out.push({
-        key: 'media',
-        icon: 'mdi-play-circle',
-        value: String(mediaPlaying),
-        label: mediaPlaying === 1 ? 'playing' : 'playing',
-        active: true,
-      });
-    }
+  const removeButton = (id: string) =>
+    onGlanceChange?.(config.filter((c) => c.id !== id));
 
-    return out;
-  }, [entities]);
+  const addButton = () =>
+    onGlanceChange?.([
+      ...config,
+      { id: `g-${Date.now().toString(36)}`, metric: 'lights', flyout: true },
+    ]);
 
-  if (!stats.length) return null;
+  const visible = computed.filter(({ cfg, result }) => {
+    if (editing) return true;
+    if (ALWAYS_SHOW.includes(cfg.metric)) return true;
+    if (cfg.metric === 'climate') return result.active;
+    return result.count > 0;
+  });
+
+  if (!visible.length && !editing) return null;
+
+  const open = computed.find((c) => c.cfg.id === openKey) ?? null;
+  const editCfg = config.find((c) => c.id === editKey) ?? null;
 
   return (
-    <div className="glance-strip">
-      {stats.map((s) => (
-        <div key={s.key} className={`glance-stat ${s.active ? 'active' : ''}`}>
-          <span className={`mdi ${s.icon} glance-icon`} />
-          <div className="glance-text">
-            <span className="glance-value">
-              {s.num != null ? <AnimatedNumber value={s.num} suffix={s.numSuffix} /> : s.value}
-            </span>
-            <span className="glance-label">{s.label}</span>
+    <>
+      <div className={`glance-strip ${editing ? 'is-editing' : ''}`}>
+        {visible.map(({ cfg, result }) => {
+          const label = cfg.label || result.label;
+          const def = METRICS[cfg.metric];
+          const flyoutEnabled = cfg.flyout !== false;
+          const interactive = !editing && flyoutEnabled;
+          const Chip = interactive ? 'button' : 'div';
+          return (
+            <div key={cfg.id} className="glance-stat-wrap">
+              <Chip
+                type={interactive ? 'button' : undefined}
+                className={`glance-stat ${result.active ? 'active' : ''} ${interactive ? 'clickable' : ''}`}
+                onClick={interactive ? () => setOpenKey(cfg.id) : undefined}
+                aria-haspopup={interactive ? 'dialog' : undefined}
+              >
+                <span className={`mdi ${def.icon} glance-icon`} />
+                <div className="glance-text">
+                  <span className="glance-value">
+                    {result.num != null ? (
+                      <AnimatedNumber value={result.num} suffix={result.numSuffix} />
+                    ) : (
+                      result.value
+                    )}
+                  </span>
+                  <span className="glance-label">{label}</span>
+                </div>
+              </Chip>
+              {editing && (
+                <div className="glance-edit-controls">
+                  <button
+                    type="button"
+                    className="glance-edit-btn"
+                    title="Configure"
+                    onClick={() => setEditKey(cfg.id)}
+                  >
+                    <span className="mdi mdi-cog" />
+                  </button>
+                  <button
+                    type="button"
+                    className="glance-edit-btn danger"
+                    title="Remove"
+                    onClick={() => removeButton(cfg.id)}
+                  >
+                    <span className="mdi mdi-close" />
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {editing && (
+          <button type="button" className="glance-stat glance-add" onClick={addButton}>
+            <span className="mdi mdi-plus glance-icon" />
+            <span className="glance-label">Add button</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── Flyout listing the entities behind a chip ── */}
+      <div className={`detail-overlay ${open ? 'open' : ''}`} onClick={() => setOpenKey(null)} />
+      <div className={`detail-panel glance-flyout ${open ? 'open' : ''}`}>
+        {open && (
+          <GlanceFlyout
+            result={open.result}
+            label={open.cfg.label || open.result.label}
+            icon={METRICS[open.cfg.metric].icon}
+            onClose={() => setOpenKey(null)}
+            onToggle={toggleItem}
+            onOpenDetail={(id) => {
+              setOpenKey(null);
+              onOpenDetail?.(id);
+            }}
+          />
+        )}
+      </div>
+
+      {/* ── Per-button configuration (edit mode) ── */}
+      {editCfg && (
+        <GlanceButtonEditor
+          cfg={editCfg}
+          entities={entities}
+          onChange={(patch) => updateButton(editCfg.id, patch)}
+          onClose={() => setEditKey(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Flyout body — toggle grid for switchable metrics, list for the rest.
+// ──────────────────────────────────────────────────────────────────────────
+function GlanceFlyout({
+  result,
+  label,
+  icon,
+  onClose,
+  onToggle,
+  onOpenDetail,
+}: {
+  result: MetricResult;
+  label: string;
+  icon: string;
+  onClose: () => void;
+  onToggle: (item: GlanceItem) => void;
+  onOpenDetail: (entityId: string) => void;
+}) {
+  return (
+    <>
+      <div className="detail-header">
+        <h2>
+          <span className={`mdi ${icon}`} style={{ marginRight: 8 }} />
+          {capitalize(label)}
+        </h2>
+        <button className="detail-close" onClick={onClose}>
+          <span className="mdi mdi-close" />
+        </button>
+      </div>
+
+      {result.items.length === 0 ? (
+        <div className="glass-card detail-links">
+          <p className="glance-empty">{result.empty}</p>
+        </div>
+      ) : result.toggleable ? (
+        <div className="glance-toggle-grid">
+          {result.items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`glance-toggle ${item.on ? 'on' : ''}`}
+              onClick={() => onToggle(item)}
+              title={`Tap to turn ${item.on ? 'off' : 'on'}`}
+            >
+              <span className={`mdi ${item.icon} glance-toggle-icon`} />
+              <span className="glance-toggle-name">{item.name}</span>
+              <span className="glance-toggle-detail">{item.detail}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="glass-card detail-links">
+          {result.items.map((item) => (
+            <div className="detail-link-row" key={item.id}>
+              <button className="detail-link-name" onClick={() => onOpenDetail(item.id)}>
+                <span className={`mdi ${item.icon}`} />
+                {item.name}
+              </button>
+              <span className={`detail-link-state ${item.on ? 'is-active' : ''}`}>
+                {item.detail}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ──────────────────────────────────────────────────────────────────────────
+// Per-button editor modal.
+// ──────────────────────────────────────────────────────────────────────────
+function GlanceButtonEditor({
+  cfg,
+  entities,
+  onChange,
+  onClose,
+}: {
+  cfg: GlanceButtonConfig;
+  entities: HassEntities;
+  onChange: (patch: Partial<GlanceButtonConfig>) => void;
+  onClose: () => void;
+}) {
+  const [picking, setPicking] = useState(false);
+  const exclude = cfg.exclude ?? [];
+  const nameOf = (id: string) =>
+    (entities[id]?.attributes.friendly_name as string) || id;
+
+  return (
+    <div className="picker-overlay" onClick={onClose}>
+      <div className="picker-modal glance-editor" onClick={(e) => e.stopPropagation()}>
+        <div className="picker-head">
+          <span className="mdi mdi-tune-variant" />
+          <span className="glance-editor-title">Glance button</span>
+          <button className="edit-icon-btn" title="Close" onClick={onClose}>
+            <span className="mdi mdi-close" />
+          </button>
+        </div>
+
+        <div className="glance-editor-body">
+          <label className="glance-field">
+            <span>Shows</span>
+            <select
+              value={cfg.metric}
+              onChange={(e) => onChange({ metric: e.target.value as GlanceMetric, exclude: [] })}
+            >
+              {METRIC_OPTIONS.map((o) => (
+                <option key={o.metric} value={o.metric}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="glance-field">
+            <span>Label</span>
+            <input
+              type="text"
+              placeholder={METRICS[cfg.metric].label}
+              value={cfg.label ?? ''}
+              onChange={(e) => onChange({ label: e.target.value || undefined })}
+            />
+          </label>
+
+          <label className="glance-field glance-field-row">
+            <span>Open a flyout when tapped</span>
+            <button
+              type="button"
+              className={`ts-switch ${cfg.flyout !== false ? 'on' : ''}`}
+              role="switch"
+              aria-checked={cfg.flyout !== false}
+              onClick={() => onChange({ flyout: cfg.flyout === false })}
+            >
+              <span className="ts-switch-knob" />
+            </button>
+          </label>
+
+          <div className="glance-field">
+            <span>Exclude entities</span>
+            <p className="glance-field-hint">
+              Hide specific entities (e.g. tablet “screen” lights) from this button’s
+              count and flyout.
+            </p>
+            <div className="glance-exclude-list">
+              {exclude.length === 0 && <span className="glance-field-hint">None excluded.</span>}
+              {exclude.map((id) => (
+                <span className="glance-exclude-chip" key={id}>
+                  {nameOf(id)}
+                  <button
+                    type="button"
+                    title="Remove"
+                    onClick={() => onChange({ exclude: exclude.filter((x) => x !== id) })}
+                  >
+                    <span className="mdi mdi-close" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <button type="button" className="glance-add-exclude" onClick={() => setPicking(true)}>
+              <span className="mdi mdi-plus" /> Exclude an entity
+            </button>
           </div>
         </div>
-      ))}
+      </div>
+
+      {picking && (
+        <EntityPicker
+          entities={entities}
+          existing={new Set(exclude)}
+          domainFilter={domainForMetric(cfg.metric)}
+          title="Exclude entity…"
+          onClose={() => setPicking(false)}
+          onPick={(id) => {
+            onChange({ exclude: [...exclude, id] });
+            setPicking(false);
+          }}
+        />
+      )}
     </div>
   );
 }

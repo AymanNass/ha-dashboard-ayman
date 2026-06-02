@@ -52,7 +52,15 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 - [x] ~~**Haptics + spring press** — `:active { scale: 0.97 }` + `navigator.vibrate(8)`
   so taps feel physical.~~
 - [x] ~~**"At a glance" header strip**~~ — active lights count, indoor temp, who's
-  home, next calendar event.
+  home, next calendar event. Now fully **user-configurable** in edit mode: pick
+  which metric each button shows (lights/switches/fans/locks/covers/climate/
+  people/media), set a custom label, toggle the flyout on/off, and build a
+  per-button exclude list (tablet/kiosk screen `light.*` entities are filtered
+  by default). Flyouts are dynamic to the button — toggleable metrics render a
+  2–3 column grid of pushable toggles (light groups collapse to a single toggle
+  while the count still reflects individual lights on); non-toggle metrics list
+  rows that open the detail panel. Config persists on the view (`view.glance`)
+  so it syncs across devices.
 
 ### Motion & micro-interactions
 
@@ -69,6 +77,9 @@ Decision: leaving as `localStorage` for now since it works on a single device.
   Added lightning flashes during thunderstorms (`?precip=storm` / `?storm=1`
   preview) and an "Ambient effects" on/off toggle in Settings → Appearance.
 - [x] ~~Live light color — a light tile's glow matches its real RGB/kelvin.~~
+- [x] ~~Dynamic greeting — the header now greets whoever is actually home based on
+  the `person.*` states ("Good night, Jeff & Carissa!" / just one name / no name
+  when nobody's home), in config order.~~
 
 ### Depth & materials
 

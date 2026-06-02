@@ -111,6 +111,31 @@ export interface DashView {
   sections: DashSection[];
   /** Rich row/column layout. When present, takes precedence over `sections`. */
   rows?: DashRow[];
+  /** User-configured "at a glance" summary buttons shown above this view. */
+  glance?: GlanceButtonConfig[];
+}
+
+/** The metric a glance button summarizes. Drives both its count and its flyout. */
+export type GlanceMetric =
+  | 'lights'
+  | 'switches'
+  | 'fans'
+  | 'locks'
+  | 'covers'
+  | 'climate'
+  | 'people'
+  | 'media';
+
+/** A single user-configured "at a glance" summary button. */
+export interface GlanceButtonConfig {
+  id: string;
+  metric: GlanceMetric;
+  /** Optional label override (defaults to the metric's built-in label). */
+  label?: string;
+  /** Whether tapping the button opens a flyout listing the underlying entities. */
+  flyout?: boolean;
+  /** entity_ids to omit from this metric (e.g. tablet "screen" lights). */
+  exclude?: string[];
 }
 
 export type ViewId = string;

@@ -410,6 +410,20 @@ body::after {
   border: 1px solid var(--border-glass);
   backdrop-filter: blur(12px);
   transition: var(--transition-fast);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.glance-stat.clickable,
+.glance-add {
+  cursor: pointer;
+}
+
+.glance-stat.clickable:hover,
+.glance-add:hover {
+  background: var(--bg-glass-hover);
 }
 
 .glance-stat.active {
@@ -440,6 +454,224 @@ body::after {
 .glance-label {
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* ── Glance: edit-mode controls ── */
+.glance-stat-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.glance-strip.is-editing .glance-stat {
+  padding-right: 18px;
+}
+
+.glance-edit-controls {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  gap: 4px;
+}
+
+.glance-edit-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border-glass-light);
+  background: rgba(20, 20, 35, 0.9);
+  color: var(--text-primary);
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.glance-edit-btn:hover {
+  background: var(--bg-glass-hover);
+}
+
+.glance-edit-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.glance-add {
+  border-style: dashed;
+  color: var(--text-muted);
+  gap: 8px;
+}
+
+.glance-add:hover {
+  color: var(--text-primary);
+}
+
+/* ── Glance flyout: multi-column toggle grid ── */
+.glance-toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.glance-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border-glass);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.glance-toggle:hover {
+  background: var(--bg-glass-hover);
+}
+
+.glance-toggle.on {
+  border-color: rgba(var(--accent-rgb), 0.5);
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
+.glance-toggle:active {
+  transform: scale(0.96);
+  transition: transform 0.08s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.glance-toggle-icon {
+  font-size: 20px;
+  color: var(--text-muted);
+}
+
+.glance-toggle.on .glance-toggle-icon {
+  color: var(--accent-orange);
+}
+
+.glance-toggle-name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.glance-toggle-detail {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Glance button editor ── */
+.glance-editor {
+  max-width: 460px;
+}
+
+.glance-editor-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.glance-editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.glance-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.glance-field > span {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.glance-field select,
+.glance-field input[type='text'] {
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.glance-field-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.glance-field-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.glance-exclude-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.glance-exclude-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.glance-exclude-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.glance-exclude-chip button:hover {
+  color: var(--text-primary);
+  background: rgba(239, 68, 68, 0.3);
+}
+
+.glance-add-exclude {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px dashed var(--border-glass-light);
+  background: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.glance-add-exclude:hover {
+  color: var(--text-primary);
+  background: var(--bg-glass);
 }
 
 /* ── Home top row (scenes + people) ── */
@@ -3000,6 +3232,32 @@ html.vt-active .detail-panel.open > * {
   font-size: 12px;
   color: var(--text-secondary);
   text-transform: capitalize;
+}
+
+/* ── Glance strip flyout (lights on / climate / who's home / now playing) ── */
+.glance-flyout .detail-header h2 {
+  display: flex;
+  align-items: center;
+}
+
+.glance-flyout .detail-link-state {
+  flex-shrink: 0;
+  max-width: 55%;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: none;
+}
+
+.glance-flyout .detail-link-state.is-active {
+  color: var(--accent-orange);
+}
+
+.glance-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0;
 }
 
 .detail-link-toggle {
