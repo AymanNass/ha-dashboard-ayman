@@ -220,6 +220,18 @@ async function main() {
     await sleep(800);
   });
 
+  // 6. Thunderstorm — rain plus lightning flashes (night tint for contrast).
+  // The flash fires ~early and ~mid in a 9s loop, so record long enough to
+  // catch a couple of strikes.
+  await clip(
+    browser,
+    '06-ambient-storm',
+    async (page) => {
+      await sleep(10000);
+    },
+    { startPath: '/?precip=storm&tod=night' },
+  );
+
   await browser.close();
 
   // Tidy: drop the raw webm scratch dir.

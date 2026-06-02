@@ -18,7 +18,7 @@ ambient effects.
 | ![Light flyout](screenshots/21-flyout-light.png) | ![Edit mode](screenshots/30-edit-mode.png) |
 | **Light flyout** — brightness, color, live glow | **Edit mode** — drag-and-drop tile arrangement |
 | ![Settings](screenshots/40-settings.png) | ![Ambient — rain](screenshots/50-ambient-rain.png) |
-| **Settings** — themes, accent color, connection | **Ambient backdrop** — weather-reactive rain |
+| **Settings** — themes, accent color, connection | **Ambient backdrop** — weather-reactive rain (with lightning in thunderstorms) |
 | ![Ambient — snow](screenshots/51-ambient-snow.png) | ![Ambient — night](screenshots/52-ambient-night.png) |
 | **Ambient backdrop** — snow particles | **Ambient backdrop** — night time-of-day tint |
 | ![Ambient — dusk](screenshots/53-ambient-dusk.png) | ![Ambient — rain at night](screenshots/54-ambient-rain-night.png) |
@@ -47,6 +47,10 @@ Stills don't do the motion justice — these short clips show the live animation
 **Ambient backdrop** — weather-reactive rain particles
 
 ![Ambient rain](media/03-ambient-rain.gif)
+
+**Thunderstorm** — rain plus lightning flashes (toggle in Settings → Appearance)
+
+![Ambient storm](media/06-ambient-storm.gif)
 
 **Light flyout** — brightness drag + warmth/color controls
 
