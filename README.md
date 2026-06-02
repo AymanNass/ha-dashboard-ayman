@@ -29,27 +29,26 @@ ambient effects.
 ## Motion
 
 Stills don't do the motion justice — these short clips show the live animations.
-(GitHub plays them inline; click to expand if your viewer shows a poster frame.)
 
 **View switching** — staggered tile-entrance cascade
 
-https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/01-view-switching.mp4
+<video src="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/01-view-switching.mp4" poster="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/01-view-switching.jpg" controls muted loop width="640"></video>
 
 **Media flyout** — spring-open with shared-element artwork morph
 
-https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/02-media-flyout.mp4
+<video src="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/02-media-flyout.mp4" poster="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/02-media-flyout.jpg" controls muted loop width="640"></video>
 
 **Ambient backdrop** — weather-reactive rain particles
 
-https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/03-ambient-rain.mp4
+<video src="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/03-ambient-rain.mp4" poster="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/03-ambient-rain.jpg" controls muted loop width="640"></video>
 
 **Light flyout** — brightness drag + warmth/color controls
 
-https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/04-light-flyout.mp4
+<video src="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/04-light-flyout.mp4" poster="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/04-light-flyout.jpg" controls muted loop width="640"></video>
 
 **Edit mode** — drag-and-drop tile arrangement
 
-https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/05-edit-mode.mp4
+<video src="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/05-edit-mode.mp4" poster="https://github.com/jvenuto80/Dynamic-HA-Dashboard/raw/main/media/05-edit-mode.jpg" controls muted loop width="640"></video>
 
 ---
 
