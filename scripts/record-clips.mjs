@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
-const VIEWPORT = { width: 1024, height: 768 };
+const VIEWPORT = { width: 1920, height: 1080 };
 const OUT = fileURLToPath(new URL('../media/', import.meta.url));
 const RAW = fileURLToPath(new URL('../media/.raw/', import.meta.url));
 
@@ -77,7 +77,7 @@ async function clip(browser, name, fn, { startPath = '/' } = {}) {
   // (palette-optimized) — that renders inline as an image. The GIF is what the
   // README references; the MP4 is kept as a higher-quality download.
   const pal = `${OUT}${name}.pal.png`;
-  const vf = 'fps=15,scale=640:-1:flags=lanczos';
+  const vf = 'fps=15,scale=900:-1:flags=lanczos';
   await run('ffmpeg', ['-y', '-i', mp4, '-vf', `${vf},palettegen=stats_mode=diff`, pal]);
   await run('ffmpeg', [
     '-y', '-i', mp4, '-i', pal,
@@ -149,7 +149,7 @@ async function main() {
       for (let j = 0; j < total; j++) {
         const tile = named.nth(j);
         const label = (await tile.locator('.tile-name').first().textContent().catch(() => '')) || '';
-        if (!/lamp|light/i.test(label)) continue;
+        if (!/hall\s*lamp|hallway/i.test(label)) continue;
         await tile.scrollIntoViewIfNeeded().catch(() => {});
         const cls = (await tile.getAttribute('class')) || '';
         if (!/\bon\b|live-light/.test(cls)) {

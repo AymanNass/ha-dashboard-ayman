@@ -24,6 +24,12 @@ ambient effects.
 | ![Ambient — dusk](screenshots/53-ambient-dusk.png) | ![Ambient — rain at night](screenshots/54-ambient-rain-night.png) |
 | **Ambient backdrop** — dusk gradient | **Ambient backdrop** — rain + night combined |
 
+### Responsive
+
+The same layout reflows from a full-size wall display down to a phone screen.
+
+<img src="screenshots/60-mobile.png" alt="Mobile layout" width="300" />
+
 ---
 
 ## Motion

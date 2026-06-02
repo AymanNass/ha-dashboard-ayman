@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const OUT = fileURLToPath(new URL('../screenshots/', import.meta.url));
-const VIEWPORT = { width: 1024, height: 768 };
+const VIEWPORT = { width: 1920, height: 1080 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -176,6 +176,21 @@ async function run() {
     await sleep(1500); // let particles populate
     await shot(page, name);
   }
+
+  // 6. Phone-width shot — shows the responsive layout shrunk to a cell phone.
+  const phone = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true,
+  });
+  const phonePage = await phone.newPage();
+  await phonePage.goto(BASE, { waitUntil: 'networkidle' });
+  await waitReady(phonePage);
+  await sleep(800);
+  await phonePage.screenshot({ path: `${OUT}60-mobile.png` });
+  console.log('captured 60-mobile');
+  await phone.close();
 
   await browser.close();
   console.log('done →', OUT);
