@@ -1,4 +1,10 @@
 # Changelog
+## 0.9.3.6-beta
+
+- **Tighter masonry between sections.** Narrowed the masonry column width
+  (440px → 340px) and enabled `column-fill: balance` so sibling room sections
+  (e.g. Kitchen vs Climate & Utilities) balance to roughly equal heights
+  instead of leaving a tall blank gap below a short section.
 ## 0.9.3.5-beta
 
 - **Tiles backfill empty gaps.** Switched the tile grid to `grid-auto-flow: dense`

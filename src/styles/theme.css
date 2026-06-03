@@ -1300,18 +1300,23 @@ body::after {
   font-size: 13px;
 }
 
-/* ── Masonry sectioned layout ── */
+/* ── Masonry sectioned layout ──
+   CSS-columns based masonry. column-fill: balance keeps column heights as
+   even as possible so sibling sections (e.g. Kitchen vs Climate & Utilities)
+   don't leave a tall blank gap below a short section. */
 .masonry {
-  column-width: 440px;
-  column-gap: 18px;
+  column-width: 340px;
+  column-gap: 14px;
+  column-fill: balance;
   margin-top: 4px;
-}.masonry-section {
+}
+.masonry-section {
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
   page-break-inside: avoid;
   display: inline-block;
   width: 100%;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .masonry-section .section-title {
