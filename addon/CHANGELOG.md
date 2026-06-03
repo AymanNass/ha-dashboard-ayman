@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.1-beta
+
+- Fix Docker build failure: declare `ARG BUILD_FROM` in the global scope
+  (before the first `FROM`) so the runtime stage's base image resolves.
+
 ## 0.9.0-beta
 
 - Added add-on icon and logo.

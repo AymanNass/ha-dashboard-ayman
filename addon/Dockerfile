@@ -1,4 +1,8 @@
 # ── Stage 1: build the static dashboard ───────────────────────────────────
+# BUILD_FROM is supplied by the HA Supervisor (see build.yaml). Declared here
+# in the global scope so it can be used in the second stage's FROM.
+ARG BUILD_FROM=ghcr.io/hassio-addons/base:stable
+
 FROM node:20-alpine AS build
 
 # Clone + build the dashboard from the public repo so this add-on folder stays
@@ -13,7 +17,6 @@ RUN git clone --depth 1 --branch "${DASHBOARD_REF}" "${DASHBOARD_REPO}" . \
     && npm run build
 
 # ── Stage 2: runtime (HA add-on base) ──────────────────────────────────────
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:stable
 FROM ${BUILD_FROM}
 
 # Node + a static server (vite preview also serves the /layout persistence API).
