@@ -81,3 +81,30 @@ the add-on on Ingress only (sidebar panel).
 > port — don't change that. There is no separate top-level "Network" tab; the
 > card lives on the **Configuration** tab (visible once the add-on is started).
 
+### Ingress vs. direct port — what to know
+
+| | Ingress (default) | Direct host port |
+| --- | --- | --- |
+| URL | **Glance** sidebar panel | `http://<ha-ip>:<port>` |
+| HA login | **Required** (wraps the dashboard) | **Not** required on that port |
+| Best for | Normal + remote use | Kiosks/tablets on a trusted LAN |
+
+What changes when you set a direct port:
+
+- **You gain** a stable, simple URL that kiosk browsers (Fully Kiosk, tablets,
+  wall displays) can auto-launch reliably — no long Ingress token path.
+- **No Home Assistant authentication on that port.** Anyone who can reach that
+  `IP:port` on your network sees the dashboard UI with no login prompt.
+- **Your HA data stays protected by the token.** Glance stores no secrets; it
+  only connects to HA after a long-lived token is entered in **Settings** (saved
+  per-browser in `localStorage`). A fresh device hitting the port sees an
+  unconfigured dashboard until a token is added; your already-set-up kiosk keeps
+  showing live data because its token lives in that browser.
+- **Keep the port on your LAN.** Do **not** port-forward it to the internet or
+  put it behind an unauthenticated reverse proxy — use Ingress for remote access.
+- **Both can run at once.** Setting a host port doesn't disable the Ingress
+  sidebar panel; leaving the box empty keeps it Ingress-only.
+
+**Recommendation:** use the direct port only on trusted LAN kiosk devices, and
+keep Ingress for normal and remote access.
+
