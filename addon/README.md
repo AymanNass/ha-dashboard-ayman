@@ -66,11 +66,18 @@ port — it inherits Home Assistant's authentication). If you want to point a
 **Fully Kiosk Browser**, tablet, or wall display straight at the dashboard, give
 it a direct port:
 
-1. Open the add-on → **Network** tab.
-2. Map host port **`3000`** to the container's **`3000/tcp`** (or pick any free
-   host port you prefer).
-3. **Save** and restart the add-on.
+1. Open the add-on → **Configuration** tab. You'll see a **Network** card with a
+   row labeled **`3000/tcp`** and an empty box to its left.
+2. In that empty box, type the **host port** you want to reach the dashboard on —
+   enter **`3000`** (or any other free port).
+3. Click **Save**, then go to the **Info** tab and **Restart** the add-on.
 
-Then browse to **`http://<home-assistant-ip>:3000`** (replace with the host port
-you chose). The dashboard listens on container port **`3000`**.
+Then browse to **`http://<home-assistant-ip>:<port>`** — for example
+`http://192.168.1.10:3000` if you entered `3000`. Leaving the box **empty** keeps
+the add-on on Ingress only (sidebar panel).
+
+> The box on the **left** is the **host** port (the number you type in your
+> browser). The **`3000/tcp`** label on the **right** is the container's fixed
+> port — don't change that. There is no separate top-level "Network" tab; the
+> card lives on the **Configuration** tab (visible once the add-on is started).
 
