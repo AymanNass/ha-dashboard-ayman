@@ -7,6 +7,8 @@ ambient effects.
 
 > Companion file: [TODO.md](./TODO.md) tracks remaining ideas and decisions.
 
+[![Buy me a beer](https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge)](https://venmo.com/u/jvenuto)
+
 ---
 
 ## Screenshots
@@ -234,3 +236,11 @@ App settings (HA URL, token, theme, accent) currently save to **`localStorage`**
 - `@dnd-kit/*` for drag-and-drop editing
 - Material Design Icons (`mdi-*` classes)
 - Single stylesheet: `src/styles/theme.css`
+
+---
+
+## Support
+
+If this dashboard made your home feel a little more premium, you can say thanks:
+
+[![Buy me a beer](https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge)](https://venmo.com/u/jvenuto)
