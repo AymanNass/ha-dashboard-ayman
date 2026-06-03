@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="addon/logo.png" alt="Dynamic HA Dashboard" width="520" />
+</p>
+
 # HA Dashboard
 
 A custom, high-polish Home Assistant dashboard built with **React 19 + TypeScript +
@@ -7,7 +11,7 @@ ambient effects.
 
 > Companion file: [TODO.md](./TODO.md) tracks remaining ideas and decisions.
 
-[![Buy me a beer](https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge)](https://venmo.com/u/jvenuto)
+<a href="https://venmo.com/u/jvenuto" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge" alt="Buy me a beer" /></a>
 
 ---
 
@@ -253,4 +257,4 @@ for commercial gain, and derivatives must keep these same terms.
 
 If this dashboard made your home feel a little more premium, you can say thanks:
 
-[![Buy me a beer](https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge)](https://venmo.com/u/jvenuto)
+<a href="https://venmo.com/u/jvenuto" target="_blank" rel="noopener noreferrer"><img src="https://img.shields.io/badge/Buy%20me%20a%20beer-%F0%9F%8D%BA-FF8C42?style=for-the-badge" alt="Buy me a beer" /></a>
