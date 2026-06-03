@@ -51,7 +51,15 @@ disk or baked into the image.
 If you already built a dashboard on another device:
 
 1. On the existing dashboard: **Settings → Dashboard data → Export layout**.
-2. On this add-on: **Settings → Dashboard data → Import layout**, pick the file.
+2. On this add-on, **connect first** — **Settings → Home Assistant**, enter your
+   URL + **Long-Lived Access Token**, then **Save & reload**.
+3. Then **Settings → Dashboard data → Import layout**, pick the file.
+
+> **Do the token and the import separately, not in one session.** If you enter
+> the token *and* import the backup at the same time, the dashboard can reload
+> into the imported layout without the connection applied and come up empty. If
+> that happens, re-open **Settings**, re-enter the **Long-Lived Access Token**,
+> and **Save & reload** — it will then populate with your backup.
 
 ## Notes
 
