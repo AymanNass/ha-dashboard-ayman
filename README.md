@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="addon/logo.png" alt="Glance — Dynamic HA Dashboard" width="520" />
+  <img src="addon/logo-glance.png" alt="Glance — Dynamic HA Dashboard" width="520" />
 </p>
 
 # Glance — HA Dashboard
