@@ -1,0 +1,60 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b2233"/>
+      <stop offset="1" stop-color="#0c0f17"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="96" y1="96" x2="416" y2="416" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff8c42"/>
+      <stop offset="1" stop-color="#ff5a1f"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+  </defs>
+
+  <!-- rounded app background -->
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- ambient accent glow -->
+  <circle cx="368" cy="150" r="120" fill="#ff7a33" opacity="0.45" filter="url(#glow)"/>
+  <circle cx="150" cy="380" r="110" fill="#2f7dff" opacity="0.30" filter="url(#glow)"/>
+
+  <!-- dashboard tile grid (glass cards) -->
+  <g>
+    <!-- large tile -->
+    <rect x="92" y="104" width="186" height="186" rx="34" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <!-- accent active tile -->
+    <rect x="296" y="104" width="124" height="124" rx="30" fill="url(#accent)"/>
+    <rect x="296" y="104" width="124" height="124" rx="30" fill="url(#accent)" filter="url(#soft)" opacity="0.55"/>
+    <!-- small tile -->
+    <rect x="296" y="246" width="124" height="162" rx="30" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <!-- wide tile -->
+    <rect x="92" y="308" width="186" height="100" rx="30" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+  </g>
+
+  <!-- icon details on large tile: a lightbulb glyph -->
+  <g transform="translate(185,197)">
+    <circle cx="0" cy="-18" r="44" fill="#ffd27a"/>
+    <circle cx="0" cy="-18" r="44" fill="#ffd27a" filter="url(#soft)" opacity="0.6"/>
+    <rect x="-18" y="22" width="36" height="14" rx="7" fill="#ffe6b3"/>
+    <rect x="-12" y="40" width="24" height="10" rx="5" fill="#ffe6b3"/>
+  </g>
+
+  <!-- toggle dots on small tile -->
+  <g transform="translate(358,300)">
+    <rect x="-46" y="-8" width="92" height="40" rx="20" fill="#0c0f17" fill-opacity="0.5"/>
+    <circle cx="24" cy="12" r="15" fill="#ff8c42"/>
+  </g>
+
+  <!-- sparkline on wide tile -->
+  <polyline points="118,378 150,352 178,366 208,332 238,358 262,340"
+    fill="none" stroke="url(#accent)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

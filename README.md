@@ -89,6 +89,20 @@ the in-app Settings modal (saved to `localStorage`).
 
 ---
 
+## Run as a Home Assistant Add-on
+
+Prefer to run it on the HA server itself? The dashboard ships as a
+Supervisor-managed add-on (served from the sidebar via **Ingress**).
+
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fjvenuto80%2FDynamic-HA-Dashboard)
+
+Click the button (or add `https://github.com/jvenuto80/Dynamic-HA-Dashboard` as
+a repository in **Settings → Add-ons → Add-on Store → ⋮ → Repositories**), then
+install **Dynamic HA Dashboard**. See [`addon/README.md`](addon/README.md) for
+first-time token setup and layout import/export.
+
+---
+
 ## Architecture
 
 ```

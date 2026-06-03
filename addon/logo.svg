@@ -1,0 +1,51 @@
+<svg width="900" height="280" viewBox="0 0 900 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="900" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1b2233"/>
+      <stop offset="1" stop-color="#0c0f17"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff8c42"/>
+      <stop offset="1" stop-color="#ff5a1f"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c8d2e0"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="280" rx="36" fill="url(#bg)"/>
+  <circle cx="120" cy="60" r="120" fill="#ff7a33" opacity="0.30" filter="url(#glow)"/>
+  <circle cx="760" cy="240" r="120" fill="#2f7dff" opacity="0.22" filter="url(#glow)"/>
+
+  <!-- mini dashboard mark -->
+  <g transform="translate(48,58)">
+    <rect x="0" y="0" width="164" height="164" rx="38" fill="#10141f"/>
+    <rect x="18" y="18" width="74" height="74" rx="18" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <rect x="102" y="18" width="44" height="44" rx="14" fill="url(#accent)"/>
+    <rect x="102" y="72" width="44" height="74" rx="14" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <rect x="18" y="102" width="74" height="44" rx="14" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.16" stroke-width="2"/>
+    <!-- bulb -->
+    <circle cx="55" cy="50" r="20" fill="#ffd27a"/>
+    <circle cx="55" cy="50" r="20" fill="#ffd27a" filter="url(#soft)" opacity="0.6"/>
+    <!-- sparkline -->
+    <polyline points="28,134 44,120 58,128 74,108 86,124"
+      fill="none" stroke="url(#accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <g transform="translate(248,0)">
+    <text x="0" y="128" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="68" font-weight="800" fill="url(#text)" letter-spacing="-1">Dynamic</text>
+    <text x="0" y="200" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="68" font-weight="800" fill="url(#accent)" letter-spacing="-1">HA Dashboard</text>
+  </g>
+</svg>
