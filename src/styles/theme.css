@@ -815,13 +815,13 @@ body::after {
 .view-rows {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 18px;
 }
 
 .view-row {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .row-title {
@@ -1575,7 +1575,7 @@ body::after {
 /* ── Device Tiles (sleek) ── */
 .tile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   grid-auto-rows: 94px;
   /* Backfill gaps left by tall tiles (covers, vacuums, on-lights expanded
      manually) with following 1x1 tiles so the layout packs tightly. */

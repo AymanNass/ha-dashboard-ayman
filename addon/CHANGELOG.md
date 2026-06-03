@@ -1,4 +1,11 @@
 # Changelog
+## 0.9.3.7-beta
+
+- **Tiles fill the row width.** Switched the tile grid from `auto-fill` to
+  `auto-fit`, so the tiles in a section stretch to consume leftover space
+  instead of leaving phantom empty columns. Tightened the vertical spacing
+  between room sections so stacked sections (e.g. Kitchen above
+  Climate & Utilities) sit closer together with less dead space.
 ## 0.9.3.6-beta
 
 - **Tighter masonry between sections.** Narrowed the masonry column width
