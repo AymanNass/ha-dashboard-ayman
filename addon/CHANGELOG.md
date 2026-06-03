@@ -1,4 +1,10 @@
 # Changelog
+## 0.9.3.1-beta
+
+- **Update now reliably rebuilds from source.** Added a cache-bust step before the
+  `git clone` in the Dockerfile so an add-on **Update** always pulls the latest
+  `main` instead of reusing a cached (stale) clone layer. Previously only the
+  **Rebuild** button (`--no-cache`) guaranteed fresh source.
 ## 0.9.3-beta
 
 - **Remember connection on this server** (opt-in) — a new toggle in **Settings →
