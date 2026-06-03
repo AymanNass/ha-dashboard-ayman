@@ -9,6 +9,7 @@ export interface AppSettings {
   theme: ThemeId;
   accent: string; // hex color used as the primary accent
   ambientEffects: boolean; // weather backdrop (rain/snow particles, lightning)
+  rememberOnServer: boolean; // opt-in: store connection (URL + token) on the server so new devices auto-connect
 }
 
 const STORAGE_KEY = 'ha-dashboard-settings';
@@ -42,6 +43,7 @@ const DEFAULTS: AppSettings = {
   theme: 'midnight',
   accent: DEFAULT_ACCENT,
   ambientEffects: true,
+  rememberOnServer: false,
 };
 
 let cache: AppSettings | null = null;
@@ -79,6 +81,68 @@ export function getHaUrl(): string {
 /** Effective long-lived access token: saved setting → env var → empty. */
 export function getHaToken(): string {
   return getSettings().haToken || ENV_TOKEN;
+}
+
+// ── Opt-in shared connection (stored on the server, shared across devices) ──
+
+// Resolve the API relative to the app's base path so it works behind HA Ingress
+// (served under /api/hassio_ingress/<token>/) as well as at the root.
+const CONNECTION_ENDPOINT = `${import.meta.env.BASE_URL}connection`.replace(/\/\/+/g, '/');
+
+interface ServerConnection {
+  haUrl: string;
+  haToken: string;
+}
+
+/** Read the shared connection from the server, or null if none is stored. */
+export async function fetchServerConnection(): Promise<ServerConnection | null> {
+  try {
+    const res = await fetch(CONNECTION_ENDPOINT);
+    if (!res.ok || res.status === 204) return null;
+    const data = (await res.json()) as Partial<ServerConnection>;
+    if (data && typeof data.haUrl === 'string' && typeof data.haToken === 'string' && data.haToken) {
+      return { haUrl: data.haUrl, haToken: data.haToken };
+    }
+  } catch {
+    /* server connection is optional */
+  }
+  return null;
+}
+
+/** Store the shared connection on the server (opt-in). */
+export async function saveServerConnection(haUrl: string, haToken: string): Promise<void> {
+  try {
+    await fetch(CONNECTION_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ haUrl, haToken }),
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Remove the shared connection from the server. */
+export async function clearServerConnection(): Promise<void> {
+  try {
+    await fetch(CONNECTION_ENDPOINT, { method: 'DELETE' });
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * On startup, if this browser has no local token but the server has a shared
+ * connection stored, adopt it for this session so the device auto-connects.
+ * Returns true if a server connection was applied.
+ */
+export async function hydrateConnectionFromServer(): Promise<boolean> {
+  const local = getSettings();
+  if (local.haToken) return false; // this device already has its own connection
+  const server = await fetchServerConnection();
+  if (!server) return false;
+  cache = { ...local, haUrl: server.haUrl, haToken: server.haToken, rememberOnServer: true };
+  return true;
 }
 
 /** Apply theme + accent to the document root via data attribute and CSS vars. */

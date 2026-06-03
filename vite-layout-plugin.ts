@@ -7,7 +7,13 @@ import { resolve } from 'node:path';
 const LAYOUT_FILE = process.env.LAYOUT_FILE
   ? resolve(process.env.LAYOUT_FILE)
   : resolve(process.cwd(), 'layouts.json');
+// Optional shared connection (URL + token) for the opt-in "remember connection
+// on the server" feature. Override with CONNECTION_FILE (add-on → /data).
+const CONNECTION_FILE = process.env.CONNECTION_FILE
+  ? resolve(process.env.CONNECTION_FILE)
+  : resolve(process.cwd(), 'connection.json');
 const ROUTE = '/layout';
+const CONNECTION_ROUTE = '/connection';
 const MAX_BYTES = 512 * 1024;
 
 /**
@@ -16,16 +22,22 @@ const MAX_BYTES = 512 * 1024;
  *   GET  /layout  -> 200 { ...layout } | 204 (no saved layout yet)
  *   POST /layout  -> 200 { ok: true }  (body is the layout JSON)
  *   DELETE /layout -> 200 { ok: true } (reset to defaults)
+ *
+ * It also exposes an opt-in shared connection so new devices can auto-connect:
+ *   GET  /connection  -> 200 { haUrl, haToken } | 204 (not stored)
+ *   POST /connection  -> 200 { ok: true }
+ *   DELETE /connection -> 200 { ok: true }
  */
 export function layoutApi(): Plugin {
   const handler = (server: ViteDevServer) => {
     server.middlewares.use(async (req, res, next) => {
       const url = (req.url || '').split('?')[0];
-      if (url !== ROUTE) return next();
+      const file = url === ROUTE ? LAYOUT_FILE : url === CONNECTION_ROUTE ? CONNECTION_FILE : null;
+      if (!file) return next();
 
       if (req.method === 'GET') {
         try {
-          const data = await readFile(LAYOUT_FILE, 'utf8');
+          const data = await readFile(file, 'utf8');
           res.setHeader('Content-Type', 'application/json');
           res.end(data);
         } catch {
@@ -53,7 +65,7 @@ export function layoutApi(): Plugin {
           }
           try {
             const parsed = JSON.parse(body); // validate it's JSON
-            await writeFile(LAYOUT_FILE, JSON.stringify(parsed, null, 2), 'utf8');
+            await writeFile(file, JSON.stringify(parsed, null, 2), 'utf8');
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ ok: true }));
           } catch {
@@ -66,7 +78,7 @@ export function layoutApi(): Plugin {
 
       if (req.method === 'DELETE') {
         try {
-          await writeFile(LAYOUT_FILE, '', 'utf8');
+          await writeFile(file, '', 'utf8');
         } catch {
           /* ignore */
         }

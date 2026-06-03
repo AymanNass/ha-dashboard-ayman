@@ -1,4 +1,11 @@
 # Changelog
+## 0.9.3-beta
+
+- **Remember connection on this server** (opt-in) — a new toggle in **Settings →
+  Home Assistant** stores the server URL + token on the add-on's `/data` so new
+  devices (tablets, kiosks) connect automatically without pasting the token on
+  each one. Off by default; the token stays per-device unless you enable it, and
+  you can turn it off (which clears the stored connection) anytime.
 ## 0.9.2.2-beta
 
 - Document the **Web UI port (`3000`)** on the add-on page so kiosk setups

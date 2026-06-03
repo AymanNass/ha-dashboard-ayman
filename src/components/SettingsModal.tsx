@@ -7,6 +7,8 @@ import {
   getSettings,
   saveSettings,
   applyTheme,
+  saveServerConnection,
+  clearServerConnection,
   THEMES,
   ACCENT_SWATCHES,
   type ThemeId,
@@ -27,6 +29,7 @@ export function SettingsModal({ onClose, onResetLayout, onExportLayout, onImport
   const [haUrl, setHaUrl] = useState(initial.haUrl);
   const [haToken, setHaToken] = useState(initial.haToken);
   const [showToken, setShowToken] = useState(false);
+  const [rememberOnServer, setRememberOnServer] = useState(initial.rememberOnServer);
   const [theme, setTheme] = useState<ThemeId>(initial.theme);
   const [accent, setAccent] = useState(initial.accent);
   const [ambientEffects, setAmbientEffects] = useState(initial.ambientEffects);
@@ -67,7 +70,15 @@ export function SettingsModal({ onClose, onResetLayout, onExportLayout, onImport
   };
 
   const save = (reload: boolean) => {
-    saveSettings({ haUrl: haUrl.trim(), haToken: haToken.trim(), theme, accent, ambientEffects });
+    const url = haUrl.trim();
+    const token = haToken.trim();
+    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, rememberOnServer });
+    // Sync the opt-in shared connection on the server.
+    if (rememberOnServer && token) {
+      void saveServerConnection(url, token);
+    } else if (!rememberOnServer && initial.rememberOnServer) {
+      void clearServerConnection();
+    }
     if (reload) {
       window.location.reload();
     } else {
@@ -185,6 +196,25 @@ export function SettingsModal({ onClose, onResetLayout, onExportLayout, onImport
                 </span>
               )}
             </div>
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Remember connection on this server</span>
+                <small>
+                  Store the URL &amp; token on the add-on so new devices (tablets, kiosks)
+                  connect automatically — no need to paste the token on each one. Stored in
+                  the add-on's <code>/data</code>; anyone who can open the dashboard can use
+                  it. You can turn this off anytime.
+                </small>
+              </div>
+              <button
+                className={`ts-switch ${rememberOnServer ? 'on' : ''}`}
+                role="switch"
+                aria-checked={rememberOnServer}
+                onClick={() => setRememberOnServer((s) => !s)}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
           </section>
 
           {/* Appearance */}

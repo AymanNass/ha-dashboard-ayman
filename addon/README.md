@@ -40,6 +40,13 @@ The add-on does **not** store your Home Assistant token. On first open:
 The token is kept in that browser's `localStorage` only — it is never written to
 disk or baked into the image.
 
+> **Tip — set it up once for all your devices:** turn on **Remember connection
+> on this server** in Settings. That stores the URL + token on the add-on's
+> `/data`, so other devices (tablets, kiosks) auto-connect on first open without
+> pasting the token again. It's off by default; turning it back off clears the
+> stored connection. Anyone who can open the dashboard can use the saved
+> connection, so leave it off if you don't want that.
+
 ## Your layout
 
 - A generic starter layout is seeded on first run so you have something to edit.

@@ -12,6 +12,9 @@ dist
 # Local layout state (personal dashboard arrangement)
 layouts.json
 
+# Opt-in shared connection (contains a token — never commit)
+connection.json
+
 # Personal Home Assistant config dumps
 scripts/lovelace-dump.json
 scripts/views.json

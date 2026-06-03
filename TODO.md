@@ -5,7 +5,12 @@
 Currently app settings (HA URL, long-lived token, theme, accent) save to
 **`localStorage`** (`src/settings.ts`). That's per-browser/per-device only.
 
-Options if we want settings to follow across devices:
+> **Done (0.9.3-beta):** opt-in **Remember connection on this server** now syncs
+> the URL + token server-side (`connection.json` / `/data/connection.json`) so
+> new devices auto-connect. Off by default. The remaining items below are about
+> syncing theme/accent too.
+
+Options if we want the rest of the settings to follow across devices:
 
 - [ ] **Server-side `settings.json`** — reuse the existing `/layout` Vite
   middleware pattern (`vite-layout-plugin.ts` + `layouts.json`). No new

@@ -1,8 +1,17 @@
 import type { SceneConfig, PersonConfig, Room, DashView } from './types';
 import { getHaUrl, getHaToken } from './settings';
 
-export const HA_URL = getHaUrl();
-export const HA_TOKEN = getHaToken();
+// Live bindings: ES module imports update when these are reassigned, so calling
+// refreshConnection() after adopting a server-shared connection updates every
+// consumer (image/camera URL builders, the WebSocket hook, etc.).
+export let HA_URL = getHaUrl();
+export let HA_TOKEN = getHaToken();
+
+/** Re-read the effective connection (used after hydrating from the server). */
+export function refreshConnection(): void {
+  HA_URL = getHaUrl();
+  HA_TOKEN = getHaToken();
+}
 
 export const scenes: SceneConfig[] = [
   // Global

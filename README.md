@@ -265,11 +265,17 @@ weather/clock. Particles are suppressed under reduced-motion.
 
 ## Settings persistence
 
-App settings (HA URL, token, theme, accent) currently save to **`localStorage`**
-(per browser/device). The dashboard **layout** saves server-side to
+App settings (HA URL, token, theme, accent) save to **`localStorage`** per
+browser/device by default. The dashboard **layout** saves server-side to
 `layouts.json` via the Vite middleware — shared across devices on the same host,
-and persisted to `/data/layouts.json` when running as the add-on. See
-[TODO.md](./TODO.md) for the cross-device settings options under consideration.
+and persisted to `/data/layouts.json` when running as the add-on.
+
+**Remember connection on this server** (opt-in) — enabling the toggle in
+**Settings → Home Assistant** also stores the URL + token server-side
+(`connection.json`, `/data/connection.json` on the add-on). New devices with no
+local token automatically adopt it on first load, so tablets/kiosks connect
+without pasting the token. It's off by default (token stays per-device); turning
+it off clears the stored connection. The file is gitignored and never committed.
 
 ---
 
