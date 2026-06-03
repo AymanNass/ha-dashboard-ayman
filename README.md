@@ -119,7 +119,8 @@ own Home Assistant, then click **Add**.
    ```
 4. Refresh the store (pull-to-refresh / reload). A new **Dynamic HA Dashboard
    Add-ons** section appears.
-5. Open **Dynamic HA Dashboard** → **Install** → **Start** → **Open Web UI**.
+5. Open **Dynamic HA Dashboard** → **Install** → **Start** → **Open Web UI**
+   (it also appears as **Glance** in the sidebar).
 
 > First install builds from source on your device (clones the repo + `npm run
 > build`), so it can take several minutes and needs internet access. Requires a

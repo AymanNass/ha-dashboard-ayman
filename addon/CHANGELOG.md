@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.2-beta
+
+- Sidebar panel is now named **Glance** (was "Dashboard").
+
 ## 0.9.1-beta
 
 - Fix Docker build failure: declare `ARG BUILD_FROM` in the global scope
