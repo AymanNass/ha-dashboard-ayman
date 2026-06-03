@@ -32,9 +32,11 @@ Then find **Glance — HA Dashboard** in the store, **Install**, **Start**, and
 The add-on does **not** store your Home Assistant token. On first open:
 
 1. Click the **gear / Settings** icon in the dashboard.
-2. Under **Home Assistant**, enter your server URL (e.g.
-   `http://homeassistant.local:8123`) and a **Long-Lived Access Token**
-   (create one in HA → your **Profile → Long-Lived Access Tokens**).
+2. Under **Home Assistant**, enter your server URL and a **Long-Lived Access
+   Token** (create one in HA → your **Profile → Long-Lived Access Tokens**).
+   - Use your HA's **IP address**, e.g. `http://192.168.1.10:8123` — tablets and
+     Fully Kiosk often can't resolve `homeassistant.local`, so the IP form is the
+     reliable choice. The port is **8123** (HA's normal port).
 3. Click **Test connection**, then **Save & reload**.
 
 The token is kept in that browser's `localStorage` only — it is never written to
@@ -72,7 +74,11 @@ If you already built a dashboard on another device:
 
 - The dashboard talks to Home Assistant directly over WebSocket from the
   browser, so make sure the **Server URL** you enter is reachable from the
-  device viewing the dashboard.
+  device viewing the dashboard. On tablets/kiosks use the **IP form**
+  (`http://<HA-IP>:8123`); `homeassistant.local` often won't resolve there.
+- **Two ports, don't mix them:** the **Server URL** setting uses HA's API on
+  **8123**, while a kiosk browser opens the *dashboard* on the add-on's direct
+  port **3000** (see below). There is no port 8124.
 
 ## Port / kiosk access (Fully Kiosk Browser, tablets, wall displays)
 
@@ -90,6 +96,11 @@ it a direct port:
 Then browse to **`http://<home-assistant-ip>:<port>`** — for example
 `http://192.168.1.10:3000` if you entered `3000`. Leaving the box **empty** keeps
 the add-on on Ingress only (sidebar panel).
+
+> Use the HA **IP address** in the kiosk URL (e.g. `http://192.168.1.10:3000`), not
+> `homeassistant.local` — tablets/Fully Kiosk often can't resolve the `.local`
+> name. This dashboard URL uses port **3000**; the **Server URL** inside Settings
+> uses **8123**.
 
 > The box on the **left** is the **host** port (the number you type in your
 > browser). The **`3000/tcp`** label on the **right** is the container's fixed
