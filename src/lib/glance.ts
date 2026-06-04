@@ -102,6 +102,53 @@ function brightnessPct(e: HassEntity): string {
   return typeof bri === 'number' ? `${Math.round((bri / 255) * 100)}%` : 'On';
 }
 
+/**
+ * A single physical device (e.g. an Android TV) often exposes several
+ * `media_player` entities — an ADB/androidtv one plus a Cast/remote one — that
+ * report the same playback. Collapse those so a glance count reflects real
+ * devices, not entities.
+ *
+ * Devices are matched by a normalized friendly name with the transport/
+ * integration suffix tokens that distinguish the duplicates (adb, cast, remote,
+ * androidtv, fire tv…) stripped off. Within a matched group we keep the richest
+ * entity (one that actually carries now-playing metadata), then the shortest
+ * (usually the base) name for a cleaner label.
+ */
+const MEDIA_SOURCE_TOKENS =
+  /\b(adb|cast|remote|androidtv|android\s*tv|google\s*cast|chromecast|fire\s*tv|firetv)\b/g;
+
+function deviceNameKey(e: HassEntity): string {
+  const full = friendly(e)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+  const stripped = full.replace(MEDIA_SOURCE_TOKENS, ' ').replace(/\s+/g, ' ').trim();
+  // If stripping removed everything (e.g. the name *is* "ADB"), keep the full
+  // name so unrelated devices aren't all merged into one empty-keyed group.
+  return stripped || full || e.entity_id;
+}
+
+/** Reduce playing media players to one entity per physical device. */
+function dedupeMediaPlayers(playing: HassEntity[]): HassEntity[] {
+  const groups = new Map<string, HassEntity[]>();
+  for (const e of playing) {
+    const key = deviceNameKey(e);
+    const g = groups.get(key);
+    if (g) g.push(e);
+    else groups.set(key, [e]);
+  }
+  const hasMeta = (e: HassEntity) => !!(e.attributes.media_title as string | undefined);
+  return [...groups.values()].map((group) =>
+    group.reduce((best, e) => {
+      // Prefer an entity that carries now-playing metadata; then the shorter
+      // (usually base) friendly name for a cleaner label.
+      if (hasMeta(e) && !hasMeta(best)) return e;
+      if (hasMeta(e) === hasMeta(best) && friendly(e).length < friendly(best).length) return e;
+      return best;
+    }),
+  );
+}
+
 /** Compute the count + flyout items for one glance button. */
 export function computeMetric(
   metric: GlanceMetric,
@@ -314,12 +361,13 @@ export function computeMetric(
     }
 
     case 'media': {
-      const playing = list.filter(
+      const playingRaw = list.filter(
         (e) =>
           e.entity_id.startsWith('media_player.') &&
           e.state === 'playing' &&
           !skip.has(e.entity_id),
       );
+      const playing = dedupeMediaPlayers(playingRaw);
       const items = playing
         .map<GlanceItem>((e) => {
           const title = e.attributes.media_title as string | undefined;
