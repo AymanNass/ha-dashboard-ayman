@@ -1691,7 +1691,8 @@ body::after {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -18px 30px rgba(0, 0, 0, 0.16),
-    0 10px 26px rgba(0, 0, 0, 0.28);
+    0 1px 2px rgba(0, 0, 0, 0.22),
+    0 12px 30px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.28s ease, border-color 0.2s ease;
   overflow: hidden;
@@ -4329,4 +4330,216 @@ html.vt-active .detail-panel.open > * {
   margin-top: 14px;
   width: 100%;
   justify-content: center;
+}
+
+/* ── Onboarding (first-run guided setup) ── */
+.onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(6, 9, 16, 0.62);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  animation: onboarding-fade 0.4s ease both;
+}
+@keyframes onboarding-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.onboarding-card {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02) 60%),
+    var(--bg-card);
+  border: 1px solid var(--border-glass-light);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  animation: onboarding-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes onboarding-rise {
+  from { opacity: 0; transform: translateY(18px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.onboarding-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.onboarding-logo {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 18px;
+  font-size: 30px;
+  color: var(--accent-orange);
+  background: rgba(var(--accent-rgb), 0.16);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.3), var(--shadow-glow);
+}
+.onboarding-title {
+  margin: 0;
+  font-size: clamp(22px, 2.4vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.onboarding-sub {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.onboarding-steps {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+.onboarding-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.onboarding-step-text {
+  flex: 1;
+}
+.onboarding-card .ts-field {
+  margin-bottom: 14px;
+}
+.onboarding-steps strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.onboarding-step-icon {
+  flex: none;
+  font-size: 19px;
+  color: var(--accent-orange);
+  margin-top: 1px;
+}
+.onboarding-remember {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.onboarding-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+}
+.onboarding-status.ok { color: #34d399; border-color: rgba(52, 211, 153, 0.35); }
+.onboarding-status.fail { color: #f87171; border-color: rgba(248, 113, 113, 0.35); }
+.onboarding-status.testing { color: var(--text-secondary); }
+.onboarding-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.onboarding-connect {
+  flex: 1;
+  justify-content: center;
+}
+.onboarding-skip {
+  display: block;
+  margin: 14px auto 0;
+  padding: 6px 10px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.onboarding-skip:hover { color: var(--text-secondary); }
+
+/* ── Empty page call-to-action ── */
+.page-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: clamp(40px, 8vh, 90px) 24px;
+  color: var(--text-secondary);
+}
+.page-empty-icon {
+  font-size: 52px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.page-empty h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.page-empty p {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+/* ── Skeleton shimmer (initial load) ── */
+.skeleton-tile {
+  cursor: default;
+  pointer-events: none;
+  min-height: 96px;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.sk {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+.sk::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
+  animation: sk-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes sk-shimmer {
+  100% { transform: translateX(100%); }
+}
+.sk-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+.sk-line { height: 11px; }
+.sk-line-lg { width: 65%; }
+.sk-line-sm { width: 40%; }
+@media (prefers-reduced-motion: reduce) {
+  .sk::after { animation: none; }
 }

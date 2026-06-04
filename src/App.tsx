@@ -11,8 +11,9 @@ import { DetailPanel } from './components/DetailPanel';
 import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
 import { PagesManager } from './components/PagesManager';
+import { Onboarding } from './components/Onboarding';
 import { viewRows } from './lib/layout';
-import { scenes } from './config';
+import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity } from './types';
 
 export default function App() {
@@ -25,6 +26,13 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showPages, setShowPages] = useState(false);
   const [scenePicker, setScenePicker] = useState(false);
+  // First-run guided setup shows when no token is configured; can be dismissed
+  // for this session to explore the shell without connecting.
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const needsOnboarding = !HA_TOKEN && !onboardingDismissed;
+  // Actively connecting (token present, nothing streamed yet, no hard error):
+  // show shimmer skeletons instead of an empty grid.
+  const booting = !!HA_TOKEN && !connected && !error && Object.keys(entities).length === 0;
 
   /** Add a new page and jump to it so it can be filled in straight away. */
   const handleAddView = useCallback(() => {
@@ -205,16 +213,21 @@ export default function App() {
           </div>
         </div>
 
-        <DashboardView
-          view={view}
-          entities={entities}
-          onToggle={toggleEntity}
-          onOpenDetail={setDetailEntity}
-          callHA={callHA}
-          getHistory={getHistory}
-          editing={editing}
-          layout={layout}
-        />
+        {booting ? (
+          <SkeletonGrid />
+        ) : (
+          <DashboardView
+            view={view}
+            entities={entities}
+            onToggle={toggleEntity}
+            onOpenDetail={setDetailEntity}
+            callHA={callHA}
+            getHistory={getHistory}
+            editing={editing}
+            layout={layout}
+            onRequestEdit={() => setEditing(true)}
+          />
+        )}
 
         {!editing && viewScenes.length > 0 && (
           <div className="glass-card scenes-card scenes-bottom">
@@ -281,16 +294,41 @@ export default function App() {
         />
       )}
 
-      {error && (
+      {needsOnboarding && <Onboarding onDismiss={() => setOnboardingDismissed(true)} />}
+
+      {error && !needsOnboarding && (
         <div className="connection-bar error">
           <span className="mdi mdi-alert-circle" /> {error}
         </div>
       )}
-      {!connected && !error && (
+      {!connected && !error && !needsOnboarding && (
         <div className="connection-bar connecting">
           <span className="mdi mdi-loading mdi-spin" /> Connecting to Home Assistant...
         </div>
       )}
+    </div>
+  );
+}
+
+/** Shimmer placeholders shown while the first entity snapshot is loading. */
+function SkeletonGrid() {
+  return (
+    <div className="view-rows" aria-hidden="true">
+      <section className="view-row">
+        <div className="row-columns">
+          <div className="row-column">
+            <div className="tile-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div className="tile skeleton-tile" key={i}>
+                  <div className="sk sk-icon" />
+                  <div className="sk sk-line sk-line-lg" />
+                  <div className="sk sk-line sk-line-sm" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

@@ -80,6 +80,8 @@ interface Props {
   getHistory?: (entityId: string, hours?: number) => Promise<number[]>;
   editing: boolean;
   layout: LayoutActions;
+  /** Switch the dashboard into edit mode (used by the empty-page call to action). */
+  onRequestEdit?: () => void;
 }
 
 export function DashboardView(props: Props) {
@@ -108,6 +110,28 @@ export function DashboardView(props: Props) {
   // Running index across all tiles so each gets a slightly later entrance,
   // producing a gentle cascade when the view mounts/switches.
   let tileIndex = 0;
+
+  // A page with no tiles (e.g. a freshly created one) gets a friendly call to
+  // action instead of an empty void.
+  const hasTiles = rows.some((r) =>
+    r.columns.some((c) => c.entities.some((e) => entities[e.entity_id])),
+  );
+  if (!hasTiles) {
+    return (
+      <div className="view-rows">
+        <div className="page-empty">
+          <span className="mdi mdi-view-grid-plus page-empty-icon" />
+          <h3>This page is empty</h3>
+          <p>Add some tiles to bring it to life.</p>
+          {props.onRequestEdit && (
+            <button className="toolbar-btn primary" onClick={props.onRequestEdit}>
+              <span className="mdi mdi-pencil" /> Edit this page
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Compact sections: let short sections nestle side-by-side in a masonry so
   // they fill horizontal space instead of stacking full-width with big vertical

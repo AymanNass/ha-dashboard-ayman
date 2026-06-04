@@ -82,6 +82,27 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     setLocal(null);
   }, [brightness, position]);
 
+  // ── Optimistic toggle feedback ──
+  // On tap we flip the glow immediately, before Home Assistant confirms, so the
+  // tile feels instant. The override clears as soon as the real state streams in
+  // (the effect below), with a timeout fallback in case the call fails.
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const optimisticTimer = useRef<number | null>(null);
+  useEffect(() => {
+    setOptimistic(null);
+    if (optimisticTimer.current != null) {
+      window.clearTimeout(optimisticTimer.current);
+      optimisticTimer.current = null;
+    }
+  }, [entity.state]);
+  useEffect(
+    () => () => {
+      if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
+    },
+    [],
+  );
+  const effectiveActive = optimistic ?? active;
+
   // Live camera refresh: bust the proxy URL cache on an interval.
   const [camBust, setCamBust] = useState(() => Date.now());
   useEffect(() => {
@@ -229,8 +250,8 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
 
   const tappable = TOGGLEABLE.includes(domain);
   // Active (but calm) glass for on lights/switches/fans/media — matches the reference.
-  const on = active && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
-  const warmIcon = active && (domain === 'light' || domain === 'switch');
+  const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
+  const warmIcon = effectiveActive && (domain === 'light' || domain === 'switch');
 
   // Security tint: green = secure (locked/closed), red = open/unlocked.
   // Covers: only garage/door/gate types (not blinds, shades, curtains).
@@ -351,7 +372,14 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
       } as React.CSSProperties}
       onClick={() => {
         if (suppressClick.current) { suppressClick.current = false; return; }
-        return tappable ? onToggle(id) : openDetail(id);
+        if (tappable) {
+          setOptimistic(!effectiveActive);
+          if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
+          optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+          onToggle(id);
+        } else {
+          openDetail(id);
+        }
       }}
       onContextMenu={(e) => { e.preventDefault(); openDetail(id); }}
       onPointerDown={onSlidePointerDown}
