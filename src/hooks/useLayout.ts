@@ -239,6 +239,70 @@ export function useLayout() {
     [mutateView],
   );
 
+  // ── Views (pages) ──
+  /** Append a new empty tile page and return its id so callers can navigate to it. */
+  const addView = useCallback((): string => {
+    const id = `view-${Date.now().toString(36)}`;
+    setViews((prev) => {
+      const next = clone(prev);
+      next.push({
+        id,
+        name: 'New Page',
+        icon: 'mdi-view-dashboard-outline',
+        sections: [],
+        rows: [{ title: '', columns: [{ title: '', entities: [] }] }],
+      });
+      persist(next);
+      return next;
+    });
+    return id;
+  }, [persist]);
+
+  /** Remove a page. The last remaining page is never removed. */
+  const removeView = useCallback(
+    (viewId: string) => {
+      setViews((prev) => {
+        if (prev.length <= 1) return prev;
+        const next = clone(prev).filter((v) => v.id !== viewId);
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  const renameView = useCallback(
+    (viewId: string, name: string) => {
+      mutateView(viewId, (v) => {
+        v.name = name;
+      });
+    },
+    [mutateView],
+  );
+
+  const updateViewIcon = useCallback(
+    (viewId: string, icon: string) => {
+      mutateView(viewId, (v) => {
+        v.icon = icon;
+      });
+    },
+    [mutateView],
+  );
+
+  const moveView = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      setViews((prev) => {
+        if (toIdx < 0 || toIdx >= prev.length || fromIdx === toIdx) return prev;
+        const next = clone(prev);
+        const [v] = next.splice(fromIdx, 1);
+        next.splice(toIdx, 0, v);
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
   const resetLayout = useCallback(() => {
     setViews(withRows(clone(defaultViews)));
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -290,6 +354,11 @@ export function useLayout() {
     removeScene,
     moveScene,
     setGlance,
+    addView,
+    removeView,
+    renameView,
+    updateViewIcon,
+    moveView,
     resetLayout,
     exportLayout,
     importLayout,

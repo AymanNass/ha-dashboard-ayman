@@ -271,6 +271,18 @@ body::after {
   color: var(--accent-orange);
 }
 
+.sidebar-add,
+.sidebar-manage {
+  color: var(--text-secondary);
+}
+.sidebar-add {
+  border: 1px dashed var(--border-glass);
+}
+.sidebar-add:hover,
+.sidebar-manage:hover {
+  color: var(--accent-orange);
+}
+
 .main-content {
   flex: 1;
   height: 100vh;
@@ -4241,4 +4253,80 @@ html.vt-active .detail-panel.open > * {
 
 :root[data-theme='light'] body::before {
   opacity: 0.35;
+}
+
+/* ── Pages manager (in-app page CRUD) ── */
+.pages-manager {
+  width: min(540px, 94vw);
+}
+.pm-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.pm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+}
+.pm-row.is-active {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  background: rgba(var(--accent-rgb), 0.07);
+}
+.pm-preview {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 11px;
+  font-size: 21px;
+  background: var(--bg-glass-hover);
+  color: var(--text-primary);
+}
+.pm-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pm-fields input {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-glass);
+  color: var(--text-primary);
+  font: inherit;
+}
+.pm-fields input:focus {
+  outline: none;
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+.pm-name {
+  font-weight: 600;
+}
+.pm-icon-input {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.pm-tools {
+  display: flex;
+  gap: 2px;
+  flex: none;
+}
+.pm-add {
+  margin-top: 14px;
+  width: 100%;
+  justify-content: center;
 }

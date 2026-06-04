@@ -10,6 +10,7 @@ import { DashboardView } from './components/DashboardView';
 import { DetailPanel } from './components/DetailPanel';
 import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
+import { PagesManager } from './components/PagesManager';
 import { viewRows } from './lib/layout';
 import { scenes } from './config';
 import type { RoomEntity } from './types';
@@ -22,7 +23,27 @@ export default function App() {
   const [detailEntity, setDetailEntity] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPages, setShowPages] = useState(false);
   const [scenePicker, setScenePicker] = useState(false);
+
+  /** Add a new page and jump to it so it can be filled in straight away. */
+  const handleAddView = useCallback(() => {
+    const id = layout.addView();
+    setActiveView(id);
+  }, [layout]);
+
+  /** Remove a page, moving off it first if it's the one being viewed. */
+  const handleRemoveView = useCallback(
+    (id: string) => {
+      setActiveView((cur) => {
+        if (cur !== id) return cur;
+        const remaining = views.filter((v) => v.id !== id);
+        return remaining[0]?.id ?? 'main';
+      });
+      layout.removeView(id);
+    },
+    [layout, views],
+  );
 
   // Map of entity_id -> configured tile (camera, links, quick actions) for the flyout.
   const configFor = useMemo(() => {
@@ -77,7 +98,15 @@ export default function App() {
   return (
     <div className={`app ${editing ? 'app-editing' : ''}`}>
       <AmbientBackdrop entities={entities} />
-      <Sidebar activeView={activeView} onNavigate={setActiveView} onOpenSettings={() => setShowSettings(true)} />
+      <Sidebar
+        views={views}
+        activeView={activeView}
+        editing={editing}
+        onNavigate={setActiveView}
+        onOpenSettings={() => setShowSettings(true)}
+        onAddPage={handleAddView}
+        onManagePages={() => setShowPages(true)}
+      />
 
       <main className="main-content">
         <Header entities={entities} getForecast={getForecast} />
@@ -221,6 +250,20 @@ export default function App() {
           onResetLayout={layout.resetLayout}
           onExportLayout={layout.exportLayout}
           onImportLayout={layout.importLayout}
+        />
+      )}
+
+      {showPages && (
+        <PagesManager
+          views={views}
+          activeView={activeView}
+          onNavigate={setActiveView}
+          onAdd={handleAddView}
+          onRename={layout.renameView}
+          onIcon={layout.updateViewIcon}
+          onMove={layout.moveView}
+          onRemove={handleRemoveView}
+          onClose={() => setShowPages(false)}
         />
       )}
 
