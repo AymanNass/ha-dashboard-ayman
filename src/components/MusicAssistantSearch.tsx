@@ -32,9 +32,10 @@ interface Props {
 const PLAYER_KEY = 'ma-last-player';
 
 /**
- * "Search in Music Assistant" — a launcher tile that opens a search panel.
- * Searches via the music_assistant.search service and plays a tapped result on
- * the chosen media player via music_assistant.play_media.
+ * "Search in Music Assistant" — a launcher tile that opens a right-side flyout
+ * (consistent with the entity detail panel). Searches via the
+ * music_assistant.search service and plays a tapped result on the chosen media
+ * player via music_assistant.play_media.
  */
 export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPlayers, name, icon }: Props) {
   const [open, setOpen] = useState(false);
@@ -50,15 +51,18 @@ export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPl
         </div>
         <span className="mdi mdi-magnify ma-tile-search" aria-hidden="true" />
       </button>
-      {open && (
+
+      <div className={`detail-overlay ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />
+      <div className={`detail-panel ma-flyout ${open ? 'open' : ''}`} aria-hidden={!open}>
         <MusicAssistantPanel
           entities={entities}
           searchMusic={searchMusic}
           playMusic={playMusic}
           getMaPlayers={getMaPlayers}
+          open={open}
           onClose={() => setOpen(false)}
         />
-      )}
+      </div>
     </>
   );
 }
@@ -68,19 +72,23 @@ function MusicAssistantPanel({
   searchMusic,
   playMusic,
   getMaPlayers,
+  open,
   onClose,
 }: {
   entities: HassEntities;
   searchMusic: SearchMusic;
   playMusic: PlayMusic;
   getMaPlayers?: GetMaPlayers;
+  open: boolean;
   onClose: () => void;
 }) {
-  // Snapshot the player list once when the panel opens. This both limits the
-  // choices to Music Assistant players and keeps the <select> options stable so
-  // the native dropdown doesn't close every time entity states stream in.
+  // Load the player list when the flyout opens. This both limits the choices to
+  // Music Assistant players and keeps the <select> options stable so the native
+  // dropdown doesn't close every time entity states stream in. Loading on open
+  // (not mount) ensures Home Assistant has connected and entity names resolve.
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
+    if (!open) return;
     let cancelled = false;
     (async () => {
       const nameOf = (eid: string) => String(entities[eid]?.attributes.friendly_name ?? eid);
@@ -105,9 +113,9 @@ function MusicAssistantPanel({
     return () => {
       cancelled = true;
     };
-    // Open-once snapshot — intentionally not reacting to entity streams.
+    // Refresh the snapshot each open; intentionally not reacting to entity streams.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [open]);
 
   const [term, setTerm] = useState('');
   const [mediaType, setMediaType] = useState('');
@@ -128,13 +136,14 @@ function MusicAssistantPanel({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    if (!open) return;
     inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [open, onClose]);
 
   useEffect(
     () => () => {
@@ -203,48 +212,48 @@ function MusicAssistantPanel({
   };
 
   return (
-    <div className="ts-overlay" onClick={onClose}>
-      <div className="ts-modal ma-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="ts-head ma-head">
-          <h3>
-            <span className="ma-logo mdi mdi-music-circle" />
-            Search in Music Assistant
-          </h3>
-          <button className="edit-icon-btn" title="Close" onClick={onClose}>
-            <span className="mdi mdi-close" />
+    <>
+      <div className="detail-header">
+        <h2 className="ma-flyout-title">
+          <span className="ma-logo mdi mdi-music-circle" />
+          Music Assistant
+        </h2>
+        <button className="detail-close" onClick={onClose} title="Close">
+          <span className="mdi mdi-close" />
+        </button>
+      </div>
+
+      <div className="ma-flyout-body">
+        <div className="ma-search-row">
+          <span className="mdi mdi-magnify" />
+          <input
+            ref={inputRef}
+            className="ma-search-input"
+            placeholder="Type your search term here…"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') runSearch();
+            }}
+          />
+          <button className="ma-search-go" onClick={runSearch} disabled={loading || !term.trim()}>
+            {loading ? <span className="mdi mdi-loading mdi-spin" /> : <span className="mdi mdi-magnify" />}
           </button>
         </div>
 
-        <div className="ts-body ma-body">
-          <div className="ma-search-row">
-            <span className="mdi mdi-magnify" />
-            <input
-              ref={inputRef}
-              className="ma-search-input"
-              placeholder="Type your search term here…"
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') runSearch();
-              }}
-            />
-            <button className="ma-search-go" onClick={runSearch} disabled={loading || !term.trim()}>
-              {loading ? <span className="mdi mdi-loading mdi-spin" /> : <span className="mdi mdi-magnify" />}
-            </button>
-          </div>
-
-          <div className="ma-controls">
-            <label className="ma-field">
-              <span>Media player</span>
-              <select value={player} onChange={(e) => setPlayer(e.target.value)}>
-                {players.length === 0 && <option value="">No media players</option>}
-                {players.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <div className="ma-controls">
+          <label className="ma-field">
+            <span>Media player</span>
+            <select value={player} onChange={(e) => setPlayer(e.target.value)}>
+              {players.length === 0 && <option value="">No media players</option>}
+              {players.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="ma-controls-row">
             <label className="ma-field">
               <span>Media type</span>
               <select value={mediaType} onChange={(e) => setMediaType(e.target.value)}>
@@ -266,89 +275,89 @@ function MusicAssistantPanel({
               />
             </label>
           </div>
-
-          <div className="ma-toggles">
-            <button
-              type="button"
-              className={`ma-chip ${libraryOnly ? 'on' : ''}`}
-              aria-pressed={libraryOnly}
-              onClick={() => setLibraryOnly((v) => !v)}
-            >
-              <span className={`mdi ${libraryOnly ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'}`} />
-              Local library
-            </button>
-            <button
-              type="button"
-              className={`ma-chip ${favouritesOnly ? 'on' : ''}`}
-              aria-pressed={favouritesOnly}
-              onClick={() => setFavouritesOnly((v) => !v)}
-            >
-              <span className={`mdi ${favouritesOnly ? 'mdi-heart' : 'mdi-heart-outline'}`} />
-              Favourites only
-            </button>
-          </div>
-
-          <div className="ma-results">
-            {error && (
-              <div className="ma-empty ma-error">
-                <span className="mdi mdi-alert-circle" /> {error}
-              </div>
-            )}
-            {!error && loading && (
-              <div className="ma-empty">
-                <span className="mdi mdi-loading mdi-spin" /> Searching…
-              </div>
-            )}
-            {!error && !loading && searched && totalResults === 0 && (
-              <div className="ma-empty">
-                <span className="mdi mdi-music-note-off" /> No results found.
-              </div>
-            )}
-            {!error && !loading && !searched && (
-              <div className="ma-empty ma-hint">
-                <span className="mdi mdi-magnify" /> Search your music library and streaming services.
-              </div>
-            )}
-            {!loading &&
-              groups.map((g) => (
-                <div className="ma-group" key={g.key}>
-                  <h4 className="ma-group-title">
-                    <span className={`mdi ${g.icon}`} /> {g.label}
-                  </h4>
-                  <div className="ma-group-items">
-                    {g.items.map((item) => (
-                      <button
-                        type="button"
-                        className="ma-item"
-                        key={item.uri}
-                        onClick={() => play(item)}
-                        title={`Play on selected player`}
-                      >
-                        <span className="ma-item-art">
-                          {item.image ? (
-                            <img src={item.image} alt="" loading="lazy" />
-                          ) : (
-                            <span className={`mdi ${g.icon}`} />
-                          )}
-                          <span className="ma-item-play mdi mdi-play-circle" />
-                        </span>
-                        <span className="ma-item-text">
-                          <span className="ma-item-name">
-                            {item.name}
-                            {item.favorite && <span className="mdi mdi-heart ma-item-fav" />}
-                          </span>
-                          {item.subtitle && <span className="ma-item-sub">{item.subtitle}</span>}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-          </div>
         </div>
 
-        {toast && <div className="ma-toast">{toast}</div>}
+        <div className="ma-toggles">
+          <button
+            type="button"
+            className={`ma-chip ${libraryOnly ? 'on' : ''}`}
+            aria-pressed={libraryOnly}
+            onClick={() => setLibraryOnly((v) => !v)}
+          >
+            <span className={`mdi ${libraryOnly ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'}`} />
+            Local library
+          </button>
+          <button
+            type="button"
+            className={`ma-chip ${favouritesOnly ? 'on' : ''}`}
+            aria-pressed={favouritesOnly}
+            onClick={() => setFavouritesOnly((v) => !v)}
+          >
+            <span className={`mdi ${favouritesOnly ? 'mdi-heart' : 'mdi-heart-outline'}`} />
+            Favourites only
+          </button>
+        </div>
+
+        <div className="ma-results">
+          {error && (
+            <div className="ma-empty ma-error">
+              <span className="mdi mdi-alert-circle" /> {error}
+            </div>
+          )}
+          {!error && loading && (
+            <div className="ma-empty">
+              <span className="mdi mdi-loading mdi-spin" /> Searching…
+            </div>
+          )}
+          {!error && !loading && searched && totalResults === 0 && (
+            <div className="ma-empty">
+              <span className="mdi mdi-music-note-off" /> No results found.
+            </div>
+          )}
+          {!error && !loading && !searched && (
+            <div className="ma-empty ma-hint">
+              <span className="mdi mdi-magnify" /> Search your music library and streaming services.
+            </div>
+          )}
+          {!loading &&
+            groups.map((g) => (
+              <div className="ma-group" key={g.key}>
+                <h4 className="ma-group-title">
+                  <span className={`mdi ${g.icon}`} /> {g.label}
+                </h4>
+                <div className="ma-group-items">
+                  {g.items.map((item) => (
+                    <button
+                      type="button"
+                      className="ma-item"
+                      key={item.uri}
+                      onClick={() => play(item)}
+                      title="Play on selected player"
+                    >
+                      <span className="ma-item-art">
+                        {item.image ? (
+                          <img src={item.image} alt="" loading="lazy" />
+                        ) : (
+                          <span className={`mdi ${g.icon}`} />
+                        )}
+                        <span className="ma-item-play mdi mdi-play-circle" />
+                      </span>
+                      <span className="ma-item-text">
+                        <span className="ma-item-name">
+                          {item.name}
+                          {item.favorite && <span className="mdi mdi-heart ma-item-fav" />}
+                        </span>
+                        {item.subtitle && <span className="ma-item-sub">{item.subtitle}</span>}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
-    </div>
+
+      {toast && <div className="ma-toast">{toast}</div>}
+    </>
   );
 }
