@@ -4,6 +4,7 @@ import { entityIcon, entitySummary, isActiveState, resolveArtwork } from '../lib
 import { useArtworkColor } from '../hooks/useArtworkColor';
 import { runViewTransition, viewTransitionsAvailable } from '../lib/viewTransition';
 import { Sparkline } from './Sparkline';
+import { HA_URL } from '../config';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -63,6 +64,19 @@ function lightColorRgb(attrs: HassEntity['attributes']): [number, number, number
   if (mireds) return kelvinToRgb(1_000_000 / mireds);
   // Default warm bulb tone.
   return [255, 170, 90];
+}
+
+/** Build the proxy URL for a vacuum's companion map camera (`camera.<base>_map`),
+ *  if the integration exposes one. Returns undefined for vacuums without a map. */
+function vacuumMapUrl(entities: HassEntities | undefined, base: string): string | undefined {
+  if (!entities) return undefined;
+  const cam = entities[`camera.${base}_map`];
+  if (!cam || cam.state === 'unavailable') return undefined;
+  const pic = cam.attributes.entity_picture as string | undefined;
+  if (pic) return pic.startsWith('http') ? pic : `${HA_URL}${pic}`;
+  const token = cam.attributes.access_token as string | undefined;
+  if (!token) return undefined;
+  return `${HA_URL}/api/camera_proxy/camera.${base}_map?token=${token}`;
 }
 
 export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span, tall, graph, getHistory, cameraUrl, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex }: Props) {
@@ -280,23 +294,50 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     }
   }
 
-  // ── Vacuum feature tile (battery, status, chips) ──
+  // ── Vacuum feature tile (live map, status, quick actions) ──
   if (isVacuum) {
     const battery = entity.attributes.battery_level as number | undefined;
     const area = entity.attributes.cleaned_area as number | undefined;
     const fan = entity.attributes.fan_speed as string | undefined;
+    const status = (entity.attributes.status as string | undefined) || entity.state;
+    const cleaning = entity.state === 'cleaning';
+    const base = id.split('.')[1];
+    const mapUrl = vacuumMapUrl(entities, base);
+    const quick = (e: React.MouseEvent, service: string) => {
+      e.stopPropagation();
+      callHA('vacuum', service, undefined, { entity_id: id });
+    };
     return (
-      <div className="tile tall vacuum-tile" onClick={() => onOpenDetail(id)}>
+      <div
+        className={`tile tall vacuum-tile ${mapUrl ? 'has-map' : ''} ${cleaning ? 'is-cleaning' : ''}`}
+        onClick={() => onOpenDetail(id)}
+        style={mapUrl ? ({ '--vac-map': `url("${mapUrl}")` } as React.CSSProperties) : undefined}
+      >
+        {mapUrl && <div className="vacuum-map-bg" />}
         <div className="tile-top">
           <span className="mdi mdi-robot-vacuum tile-icon" />
           {battery != null && <span className="vacuum-batt">{battery}% Batt.</span>}
         </div>
-        <div className="vacuum-ring">
-          <span className="mdi mdi-robot-vacuum-variant" />
+        {!mapUrl && (
+          <div className="vacuum-ring">
+            <span className="mdi mdi-robot-vacuum-variant" />
+          </div>
+        )}
+        <div className="vacuum-quick">
+          <button
+            className="vacuum-quick-btn"
+            title={cleaning ? 'Pause' : 'Clean'}
+            onClick={(e) => quick(e, cleaning ? 'pause' : 'start')}
+          >
+            <span className={`mdi ${cleaning ? 'mdi-pause' : 'mdi-play'}`} />
+          </button>
+          <button className="vacuum-quick-btn" title="Dock" onClick={(e) => quick(e, 'return_to_base')}>
+            <span className="mdi mdi-home-import-outline" />
+          </button>
         </div>
         <div className="tile-info">
           <div className="tile-name">{name}</div>
-          <div className="tile-sub">{entitySummary(entity)}</div>
+          <div className="tile-sub">{status}</div>
         </div>
         <div className="vacuum-chips">
           {area != null && <span className="chip">{area} m²</span>}

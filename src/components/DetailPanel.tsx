@@ -165,7 +165,7 @@ export function DetailPanel({
               </div>
             )}
 
-            {domain !== 'climate' && (!cfg.hideState || editing) && (
+            {domain !== 'climate' && domain !== 'vacuum' && (!cfg.hideState || editing) && (
               <div className={`glass-card flyout-section ${cfg.hideState ? 'flyout-dim' : ''}`} style={{ marginBottom: 16, textAlign: 'center', padding: 24, position: 'relative' }}>
                 {editing && <EyeToggle hidden={!!cfg.hideState} onClick={() => toggle('hideState')} />}
                 <div style={{ fontSize: 48, marginBottom: 8, color: getStateColor(entity.state, domain) }}>
@@ -185,7 +185,7 @@ export function DetailPanel({
                 {domain === 'light' && <LightDetail entity={entity} entityId={entityId!} callHA={callHA} />}
                 {domain === 'climate' && <ClimateDetail entity={entity} entityId={entityId!} callHA={callHA} />}
                 {domain === 'cover' && <CoverDetail entity={entity} entityId={entityId!} callHA={callHA} reverse={!!reverseSlider} />}
-                {domain === 'vacuum' && <VacuumDetail entity={entity} entityId={entityId!} callHA={callHA} />}
+                {domain === 'vacuum' && <VacuumDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} />}
                 {domain === 'media_player' && <MediaDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} artworkEntity={artworkEntity} />}
               </div>
             )}
@@ -614,15 +614,227 @@ function CoverDetail({ entity, entityId, callHA, reverse }: EntityProps & { reve
   );
 }
 
-function VacuumDetail({ entity, entityId, callHA }: EntityProps) {
+/** Discover cleanable room segments from the Dreame integration's
+ *  `select.<base>_room_<id>_name` entities (id = segment id). Only visible
+ *  rooms are returned, sorted by segment id. Empty for non-Dreame vacuums. */
+function discoverVacuumRooms(entities: HassEntities, base: string): { id: number; name: string }[] {
+  const rooms: { id: number; name: string }[] = [];
+  const re = new RegExp(`^select\\.${base}_room_(\\d+)_name$`);
+  for (const eid of Object.keys(entities)) {
+    const m = eid.match(re);
+    if (!m) continue;
+    const id = Number(m[1]);
+    const e = entities[eid];
+    const name = e?.state;
+    if (!name || name === 'unavailable' || name === 'unknown') continue;
+    const vis = entities[`select.${base}_room_${id}_visibility`]?.state;
+    if (vis && vis !== 'visible') continue;
+    rooms.push({ id, name });
+  }
+  return rooms.sort((a, b) => a.id - b.id);
+}
+
+/** Live vacuum map. Refreshes reactively when HA pushes a new frame (the camera
+ *  entity's state is a timestamp) and polls every few seconds while cleaning. */
+function VacuumMap({ cam, cameraId }: { cam: HassEntities[string]; cameraId: string }) {
+  const [bust, setBust] = useState(() => Date.now());
+  const ts = cam?.state;
+  useEffect(() => { setBust(Date.now()); }, [ts]);
+
+  const pic = cam?.attributes.entity_picture as string | undefined;
+  const token = cam?.attributes.access_token as string | undefined;
+  const baseUrl = pic
+    ? (pic.startsWith('http') ? pic : `${HA_URL}${pic}`)
+    : token
+      ? `${HA_URL}/api/camera_proxy/${cameraId}?token=${token}`
+      : undefined;
+  if (!baseUrl) return null;
+  const src = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}_=${bust}`;
   return (
-    <div className="glass-card">
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-        <button className="mode-btn" onClick={() => callHA('vacuum', 'start', undefined, { entity_id: entityId })}>Start</button>
-        <button className="mode-btn" onClick={() => callHA('vacuum', 'pause', undefined, { entity_id: entityId })}>Pause</button>
-        <button className="mode-btn" onClick={() => callHA('vacuum', 'return_to_base', undefined, { entity_id: entityId })}>Dock</button>
-        <button className="mode-btn" onClick={() => callHA('vacuum', 'locate', undefined, { entity_id: entityId })}>Locate</button>
+    <div className="vacuum-map glass-card">
+      <img src={src} alt="Vacuum map" />
+    </div>
+  );
+}
+
+/** Small left/percentage bar for a consumable (brush, filter, sensor). */
+function Consumable({ icon, label, pct }: { icon: string; label: string; pct: number }) {
+  const low = pct <= 10;
+  return (
+    <div className={`vac-consumable ${low ? 'is-low' : ''}`}>
+      <span className={`mdi ${icon}`} />
+      <div className="vac-consumable-body">
+        <div className="vac-consumable-top">
+          <span className="vac-consumable-label">{label}</span>
+          <span className="vac-consumable-pct">{pct}%</span>
+        </div>
+        <div className="vac-consumable-bar"><div style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} /></div>
       </div>
+    </div>
+  );
+}
+
+function VacuumDetail({ entity, entityId, callHA, entities }: EntityProps & { entities: HassEntities }) {
+  const a = entity.attributes;
+  const base = entityId.split('.')[1];
+  const state = entity.state;
+
+  const status = (a.status as string) || state;
+  const battery = a.battery_level as number | undefined;
+  const errorRaw = a.error as string | undefined;
+  const hasError = !!errorRaw && !/^(no error|none|)$/i.test(errorRaw);
+  const currentRoom = entities[`sensor.${base}_current_room`]?.state;
+  const area = a.cleaned_area as number | undefined;
+  const time = a.cleaning_time as number | undefined;
+
+  const cleaning = state === 'cleaning';
+  const docked = state === 'docked';
+
+  const fanList = (a.fan_speed_list as string[]) || [];
+  const fan = a.fan_speed as string | undefined;
+
+  const modeSel = entities[`select.${base}_cleaning_mode`];
+  const modeList = (a.cleaning_mode_list as string[]) || [];
+  const mode = a.cleaning_mode as string | undefined;
+  const modeAvailable = !!modeSel && modeSel.state !== 'unavailable' && modeList.length > 0;
+
+  const mapCam = entities[`camera.${base}_map`];
+  const rooms = discoverVacuumRooms(entities, base);
+  const [selRooms, setSelRooms] = useState<number[]>([]);
+  const toggleRoom = (id: number) =>
+    setSelRooms((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
+  const cleanSelected = () => {
+    if (!selRooms.length) return;
+    callHA('dreame_vacuum', 'vacuum_clean_segment', { segments: selRooms }, { entity_id: entityId });
+    setSelRooms([]);
+  };
+
+  const batteryIcon =
+    battery == null ? 'mdi-battery-unknown'
+      : battery >= 95 ? 'mdi-battery'
+        : battery <= 10 ? 'mdi-battery-alert-variant-outline'
+          : `mdi-battery-${Math.round(battery / 10) * 10}`;
+
+  const consumables = [
+    { icon: 'mdi-broom', label: 'Main brush', pct: a.main_brush_left as number | undefined },
+    { icon: 'mdi-broom', label: 'Side brush', pct: a.side_brush_left as number | undefined },
+    { icon: 'mdi-air-filter', label: 'Filter', pct: a.filter_left as number | undefined },
+    { icon: 'mdi-eye-outline', label: 'Sensors', pct: entities[`sensor.${base}_sensor_dirty_left`]?.state },
+  ]
+    .map((c) => ({ ...c, pct: typeof c.pct === 'string' ? parseFloat(c.pct) : c.pct }))
+    .filter((c) => c.pct != null && Number.isFinite(c.pct)) as { icon: string; label: string; pct: number }[];
+
+  return (
+    <div className="vacuum-panel">
+      {mapCam && mapCam.state !== 'unavailable' && (
+        <VacuumMap cam={mapCam} cameraId={`camera.${base}_map`} />
+      )}
+
+      <div className="glass-card vacuum-summary">
+        <div className={`vac-state-dot ${cleaning ? 'is-active' : hasError ? 'is-error' : ''}`}>
+          <span className={`mdi ${cleaning ? 'mdi-robot-vacuum-variant' : hasError ? 'mdi-robot-vacuum-alert' : 'mdi-robot-vacuum'}`} />
+        </div>
+        <div className="vac-summary-text">
+          <div className="vac-status">{hasError ? errorRaw : status}</div>
+          <div className="vac-substatus">
+            {currentRoom && cleaning ? `In ${currentRoom}` : docked ? 'Docked' : ''}
+            {cleaning && area != null ? `${currentRoom ? ' · ' : ''}${area} m²${time != null ? ` · ${time} min` : ''}` : ''}
+          </div>
+        </div>
+        {battery != null && (
+          <div className={`vac-battery ${battery <= 15 ? 'is-low' : ''}`}>
+            <span className={`mdi ${batteryIcon}`} />
+            <span>{battery}%</span>
+          </div>
+        )}
+      </div>
+
+      <div className="vacuum-primary">
+        <button
+          className={`vac-btn vac-btn-primary ${cleaning ? 'is-on' : ''}`}
+          onClick={() => callHA('vacuum', cleaning ? 'pause' : 'start', undefined, { entity_id: entityId })}
+        >
+          <span className={`mdi ${cleaning ? 'mdi-pause' : 'mdi-play'}`} />
+          {cleaning ? 'Pause' : state === 'paused' ? 'Resume' : 'Clean'}
+        </button>
+        <button className="vac-btn" onClick={() => callHA('vacuum', 'stop', undefined, { entity_id: entityId })}>
+          <span className="mdi mdi-stop" />Stop
+        </button>
+        <button className="vac-btn" onClick={() => callHA('vacuum', 'return_to_base', undefined, { entity_id: entityId })}>
+          <span className="mdi mdi-home-import-outline" />Dock
+        </button>
+        <button className="vac-btn" onClick={() => callHA('vacuum', 'locate', undefined, { entity_id: entityId })}>
+          <span className="mdi mdi-map-marker-radius" />Locate
+        </button>
+      </div>
+
+      {fanList.length > 0 && (
+        <div className="vac-section">
+          <div className="vac-section-label">Suction</div>
+          <div className="vac-seg">
+            {fanList.map((f) => (
+              <button
+                key={f}
+                className={`vac-seg-btn ${fan === f ? 'is-on' : ''}`}
+                onClick={() => callHA('vacuum', 'set_fan_speed', { fan_speed: f }, { entity_id: entityId })}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {modeAvailable && (
+        <div className="vac-section">
+          <div className="vac-section-label">Mode</div>
+          <div className="vac-seg">
+            {modeList.map((m) => (
+              <button
+                key={m}
+                className={`vac-seg-btn ${mode === m ? 'is-on' : ''}`}
+                onClick={() => callHA('select', 'select_option', { option: m }, { entity_id: `select.${base}_cleaning_mode` })}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {rooms.length > 0 && (
+        <div className="vac-section">
+          <div className="vac-section-label">
+            Rooms{selRooms.length > 0 ? ` · ${selRooms.length} selected` : ''}
+          </div>
+          <div className="vac-rooms">
+            {rooms.map((r) => (
+              <button
+                key={r.id}
+                className={`vac-room ${selRooms.includes(r.id) ? 'is-on' : ''}`}
+                onClick={() => toggleRoom(r.id)}
+              >
+                {r.name}
+              </button>
+            ))}
+          </div>
+          <button className="vac-btn vac-clean-rooms" disabled={!selRooms.length} onClick={cleanSelected}>
+            <span className="mdi mdi-broom" />
+            {selRooms.length ? `Clean ${selRooms.length} room${selRooms.length > 1 ? 's' : ''}` : 'Select rooms to clean'}
+          </button>
+        </div>
+      )}
+
+      {consumables.length > 0 && (
+        <div className="vac-section">
+          <div className="vac-section-label">Maintenance</div>
+          <div className="vac-consumables">
+            {consumables.map((c) => (
+              <Consumable key={c.label} icon={c.icon} label={c.label} pct={Math.round(c.pct)} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

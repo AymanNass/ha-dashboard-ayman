@@ -1,4 +1,15 @@
 # Changelog
+## 0.9.9.4-beta
+
+- **App-like vacuum control center.** The vacuum card and flyout were rebuilt to
+  feel like the robot's own app. The tile now shows the **live map** as its
+  background with battery, status and quick **Clean / Dock** buttons. Opening the
+  flyout reveals a full control center: a large live map, a status summary
+  (state, docked/charging, battery), primary **Clean / Stop / Dock / Locate**
+  controls, a **suction** segmented selector, a **cleaning-mode** selector (when
+  the vacuum is awake), **per-room selection** with a one-tap "clean selected
+  rooms", and **maintenance** bars for main brush, side brush, filter and
+  sensors. Built for the Dreame (Tasshack `dreame_vacuum`) integration.
 ## 0.9.9.3-beta
 
 - **Manual media-device merge.** When the automatic name matching can't tell that

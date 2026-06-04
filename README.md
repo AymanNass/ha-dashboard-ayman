@@ -206,6 +206,12 @@ layouts.json           Persisted custom layout (on the add-on: /data/layouts.jso
   light and cover tiles.
 - `ClimateCards`, `LockCards`, `VacuumCard`, `CameraGrid`, `SensorWidgets`,
   `RoomCard` / `RoomPanel`, `PersonTracker`, `Sparkline`, `ScenePills`.
+- **App-like vacuum control** — the vacuum tile shows the **live map** as its
+  background with battery, status and quick Clean/Dock buttons; its flyout is a
+  full control center (large live map, status summary, Clean/Stop/Dock/Locate,
+  suction + cleaning-mode selectors, per-room selection with one-tap clean, and
+  maintenance bars for brushes/filter/sensors). Built for the Dreame
+  (Tasshack `dreame_vacuum`) integration.
 - `DashboardView` renders a view's scenes + tile grid; `RoomNav` switches rooms.
 - `DetailPanel` flyout — full controls, camera feed, history graph, scenes, links.
 
