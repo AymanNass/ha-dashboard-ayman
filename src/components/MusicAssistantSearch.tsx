@@ -82,10 +82,9 @@ function MusicAssistantPanel({
   open: boolean;
   onClose: () => void;
 }) {
-  // Load the player list when the flyout opens. This both limits the choices to
-  // Music Assistant players and keeps the <select> options stable so the native
-  // dropdown doesn't close every time entity states stream in. Loading on open
-  // (not mount) ensures Home Assistant has connected and entity names resolve.
+  // Load the player list when the flyout opens. Limited to Music Assistant
+  // players (others can't be targeted by music_assistant.play_media); only falls
+  // back to all media players if the entity registry can't be read at all.
   const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
   useEffect(() => {
     if (!open) return;
@@ -93,16 +92,19 @@ function MusicAssistantPanel({
     (async () => {
       const nameOf = (eid: string) => String(entities[eid]?.attributes.friendly_name ?? eid);
       let ids: string[] = [];
+      let resolvedFromMa = false;
       if (getMaPlayers) {
         try {
           ids = await getMaPlayers();
+          resolvedFromMa = true;
         } catch {
-          ids = [];
+          resolvedFromMa = false;
         }
       }
-      // Fall back to every media_player if MA players can't be resolved (e.g. a
-      // non-admin token can't read the entity registry).
-      if (!ids.length) {
+      // Only fall back to every media_player when the MA list couldn't be
+      // resolved (e.g. a non-admin token can't read the registry). A successful
+      // but empty MA list stays empty rather than showing unsupported players.
+      if (!resolvedFromMa) {
         ids = Object.keys(entities).filter((k) => k.startsWith('media_player.'));
       }
       const list = ids
@@ -242,28 +244,24 @@ function MusicAssistantPanel({
         </div>
 
         <div className="ma-controls">
-          <label className="ma-field">
+          <div className="ma-field">
             <span>Media player</span>
-            <select value={player} onChange={(e) => setPlayer(e.target.value)}>
-              {players.length === 0 && <option value="">No media players</option>}
-              {players.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <MaSelect
+              value={player}
+              placeholder={players.length ? 'Select a player' : 'No Music Assistant players'}
+              options={players.map((p) => ({ value: p.id, label: p.name }))}
+              onChange={setPlayer}
+            />
+          </div>
           <div className="ma-controls-row">
-            <label className="ma-field">
+            <div className="ma-field">
               <span>Media type</span>
-              <select value={mediaType} onChange={(e) => setMediaType(e.target.value)}>
-                {MA_MEDIA_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <MaSelect
+                value={mediaType}
+                options={MA_MEDIA_TYPES.map((t) => ({ value: t.value, label: t.label }))}
+                onChange={setMediaType}
+              />
+            </div>
             <label className="ma-field ma-field-narrow">
               <span>Results</span>
               <input
@@ -361,3 +359,82 @@ function MusicAssistantPanel({
     </>
   );
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Custom dropdown. A native <select> reopens-and-closes when the dashboard
+// re-renders on every entity stream tick, and its option list uses OS styling
+// (often unreadable on the dark theme). This React-controlled menu avoids both.
+// ──────────────────────────────────────────────────────────────────────────
+function MaSelect({
+  value,
+  options,
+  placeholder,
+  onChange,
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const selected = options.find((o) => o.value === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', onDown, true);
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('pointerdown', onDown, true);
+      window.removeEventListener('keydown', onKey, true);
+    };
+  }, [open]);
+
+  return (
+    <div className={`ma-dd ${open ? 'open' : ''}`} ref={ref}>
+      <button
+        type="button"
+        className="ma-dd-button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        disabled={options.length === 0}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className={`ma-dd-value ${selected ? '' : 'placeholder'}`}>
+          {selected ? selected.label : placeholder ?? 'Select…'}
+        </span>
+        <span className="mdi mdi-chevron-down ma-dd-caret" />
+      </button>
+      {open && (
+        <div className="ma-dd-menu" role="listbox">
+          {options.map((o) => (
+            <button
+              type="button"
+              role="option"
+              aria-selected={o.value === value}
+              key={o.value}
+              className={`ma-dd-option ${o.value === value ? 'selected' : ''}`}
+              onClick={() => {
+                onChange(o.value);
+                setOpen(false);
+              }}
+            >
+              <span className="ma-dd-option-label">{o.label}</span>
+              {o.value === value && <span className="mdi mdi-check" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
