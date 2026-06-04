@@ -54,6 +54,11 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Inter contextual alternates + tabular figures so metrics/temps stay aligned. */
+  font-feature-settings: 'cv11' 1, 'ss01' 1, 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.005em;
 }
 
 /* Ambient gradient field behind the glass UI */
@@ -64,12 +69,12 @@ body::before {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(820px 560px at 10% 4%, rgba(var(--accent-rgb), 0.32), transparent 60%),
-    radial-gradient(760px 640px at 90% 8%, rgba(59, 130, 246, 0.28), transparent 60%),
-    radial-gradient(900px 760px at 78% 96%, rgba(168, 85, 247, 0.28), transparent 60%),
-    radial-gradient(680px 560px at 16% 92%, rgba(6, 182, 212, 0.24), transparent 60%);
-  filter: saturate(1.25);
-  animation: ambient-drift 26s ease-in-out infinite alternate;
+    radial-gradient(820px 560px at 10% 4%, rgba(var(--accent-rgb), 0.20), transparent 62%),
+    radial-gradient(760px 640px at 90% 8%, rgba(59, 130, 246, 0.12), transparent 64%),
+    radial-gradient(900px 760px at 78% 96%, rgba(168, 85, 247, 0.12), transparent 64%),
+    radial-gradient(680px 560px at 16% 92%, rgba(6, 182, 212, 0.10), transparent 64%);
+  filter: saturate(1.05);
+  animation: ambient-drift 30s ease-in-out infinite alternate;
 }
 
 /* Subtle fine-grain noise for depth */
@@ -324,9 +329,10 @@ body::after {
 }
 
 .greeting h1 {
-  font-size: 28px;
+  font-size: clamp(24px, 2.4vw, 34px);
   font-weight: 600;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.022em;
+  line-height: 1.05;
 }
 
 .greeting .subtitle {
@@ -814,9 +820,9 @@ body::after {
 
 /* ── Dashboard view (tabs → sections → tiles) ── */
 .view-heading {
-  font-size: 26px;
+  font-size: clamp(22px, 1.9vw, 28px);
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.018em;
   margin: 6px 0 14px;
 }
 
@@ -1765,65 +1771,57 @@ body::after {
   min-height: 0;
 }
 
-/* Active light/switch = warm-glowing highlighted glass */
+/* Active light/switch = calm, slightly elevated glass with a restrained warm wash */
 .tile.on {
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(255, 160, 90, 0.16), transparent 60%),
-    linear-gradient(140deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 65%),
-    rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 160, 90, 0.35);
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 160, 90, 0.09), transparent 62%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 65%),
+    rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 170, 110, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 0 1px rgba(255, 140, 60, 0.08),
-    0 12px 30px rgba(255, 110, 50, 0.16),
-    0 10px 26px rgba(0, 0, 0, 0.26);
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 10px 26px rgba(0, 0, 0, 0.28);
 }
 
 /* Live light color: glow matches the bulb's actual RGB / color temperature. */
 .tile.on.live-light {
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(var(--light-rgb), 0.20), transparent 60%),
-    linear-gradient(140deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 65%),
-    rgba(255, 255, 255, 0.06);
-  border-color: rgba(var(--light-rgb), 0.42);
+    radial-gradient(120% 80% at 50% 0%, rgba(var(--light-rgb), 0.12), transparent 62%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.025) 65%),
+    rgba(255, 255, 255, 0.05);
+  border-color: rgba(var(--light-rgb), 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 0 1px rgba(var(--light-rgb), 0.12),
-    0 12px 32px rgba(var(--light-rgb), 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     0 10px 26px rgba(0, 0, 0, 0.26);
   transition: background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
 }
 
 .tile.on.live-light .tile-icon.warm {
   color: rgb(var(--light-rgb));
-  text-shadow: 0 0 14px rgba(var(--light-rgb), 0.6);
+  text-shadow: 0 0 10px rgba(var(--light-rgb), 0.4);
 }
 
 /* Security tint: green glass when secure (locked/closed) */
 .tile.sec-secure {
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(60, 220, 130, 0.16), transparent 60%),
-    linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 65%),
-    rgba(60, 220, 130, 0.05);
-  border-color: rgba(60, 220, 130, 0.38);
+    radial-gradient(120% 80% at 50% 0%, rgba(60, 220, 130, 0.10), transparent 62%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.025) 65%),
+    rgba(60, 220, 130, 0.035);
+  border-color: rgba(60, 220, 130, 0.24);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 0 1px rgba(40, 200, 120, 0.1),
-    0 12px 30px rgba(30, 200, 110, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     0 10px 26px rgba(0, 0, 0, 0.26);
 }
 
 /* Security tint: red glass when open/unlocked */
 .tile.sec-open {
   background:
-    radial-gradient(120% 80% at 50% 0%, rgba(255, 80, 90, 0.18), transparent 60%),
-    linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03) 65%),
-    rgba(255, 80, 90, 0.06);
-  border-color: rgba(255, 90, 100, 0.42);
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 80, 90, 0.12), transparent 62%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.025) 65%),
+    rgba(255, 80, 90, 0.04);
+  border-color: rgba(255, 90, 100, 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 0 0 1px rgba(255, 70, 80, 0.12),
-    0 12px 30px rgba(255, 60, 70, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     0 10px 26px rgba(0, 0, 0, 0.26);
 }
 
@@ -1920,15 +1918,15 @@ body::after {
 
 /* Warm amber glow on the icon when a light/switch is on (like the pic) */
 .tile-icon.warm {
-  color: #ffb27a;
-  text-shadow: 0 0 16px rgba(255, 140, 60, 0.55);
+  color: #ffc197;
+  text-shadow: 0 0 11px rgba(255, 150, 80, 0.35);
 }
 
 .tile-more {
   border: none;
   background: transparent;
   color: inherit;
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: pointer;
   font-size: 18px;
   padding: 0;
@@ -1938,6 +1936,19 @@ body::after {
 
 .tile-more:hover {
   opacity: 1;
+}
+
+/* On pointer devices keep tiles clean — reveal the "···" only on hover/focus.
+   Touch devices (wall tablets) have no hover, so it stays faintly visible. */
+@media (hover: hover) {
+  .tile-more {
+    opacity: 0;
+  }
+  .tile:hover .tile-more,
+  .tile:focus-within .tile-more,
+  .tile-more:focus-visible {
+    opacity: 0.85;
+  }
 }
 
 .tile-info {

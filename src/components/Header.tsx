@@ -56,6 +56,29 @@ function getWeatherIcon(state: string): string {
   return map[state] || 'mdi-weather-cloudy';
 }
 
+/** Condition-appropriate icon hue so the forecast reads at a glance instead of
+ *  a wall of identical amber: sun amber, rain blue, cloud slate, night indigo. */
+function getWeatherColor(state: string): string {
+  const map: Record<string, string> = {
+    sunny: '#fbbf24',
+    'clear-night': '#a5b4fc',
+    partlycloudy: '#cbd5e1',
+    cloudy: '#94a3b8',
+    rainy: '#60a5fa',
+    pouring: '#3b82f6',
+    snowy: '#bae6fd',
+    'snowy-rainy': '#93c5fd',
+    fog: '#cbd5e1',
+    hail: '#bae6fd',
+    lightning: '#c084fc',
+    'lightning-rainy': '#a78bfa',
+    windy: '#94a3b8',
+    'windy-variant': '#94a3b8',
+    exceptional: '#f87171',
+  };
+  return map[state] || '#cbd5e1';
+}
+
 export function Header({ entities, getForecast }: Props) {
   const weather = entities['weather.forecast_home_2'];
   const temp = weather?.attributes?.temperature as number | undefined;
@@ -107,7 +130,7 @@ export function Header({ entities, getForecast }: Props) {
         {weather && (
           <div className="weather-widget">
           <div className="weather-now">
-            <span className={`mdi ${getWeatherIcon(state)}`} style={{ fontSize: 36, color: '#f59e0b' }} />
+            <span className={`mdi ${getWeatherIcon(state)}`} style={{ fontSize: 36, color: getWeatherColor(state) }} />
             <div>
               <div className="weather-temp">
                 <AnimatedNumber value={Math.round(temp ?? 0)} /><sup>°F</sup>
@@ -126,7 +149,7 @@ export function Header({ entities, getForecast }: Props) {
                       ? 'TODAY'
                       : new Date(d.datetime).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}
                   </div>
-                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 20, color: '#f59e0b' }} />
+                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 20, color: getWeatherColor(d.condition) }} />
                   <div className="temp">
                     {Math.round(d.temperature)}°
                     {d.templow !== undefined && (
