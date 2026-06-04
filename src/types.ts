@@ -36,7 +36,8 @@ export interface RoomEntity {
   actions?: TileAction[];
   /** Per-tile customization of what appears in the flyout (detail panel). */
   flyout?: FlyoutConfig;
-  /** Enable horizontal drag across the tile to dim a light or set a cover's position (shown as fill). */
+  /** Drag across the tile to dim a light / set a cover's position (shown as fill).
+   *  On by default for dimmable lights and non-tall covers; set false to opt out. */
   slideDim?: boolean;
   /** Reverse the position slider direction (useful for covers, e.g. left = open). */
   reverseSlider?: boolean;

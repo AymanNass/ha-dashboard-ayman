@@ -171,8 +171,10 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
   const fromSlider = (raw: number) => (coverReverse ? 100 - raw : raw);
 
   // ── Slide across the tile: lights dim, covers set position ──
-  const slideLight = !!slideDim && domain === 'light' && active;
-  const slideCover = !!slideDim && isCover && !tall;
+  // Enabled by default for dimmable lights and (non-tall) covers; users can opt a
+  // specific tile out by setting slideDim to false in tile settings.
+  const slideLight = slideDim !== false && domain === 'light' && active;
+  const slideCover = slideDim !== false && isCover && !tall;
   const slideEnabled = slideLight || slideCover;
   const dragRef = useRef<{ startX: number; startY: number; width: number; left: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);

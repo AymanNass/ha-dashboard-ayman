@@ -183,7 +183,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
             </div>
           </div>
 
-          {/* Slide to dim (lights only) */}
+          {/* Slide to dim (lights only) — on by default */}
           {re.entity_id.split('.')[0] === 'light' && (
             <label className="ts-toggle-field">
               <div className="ts-toggle-text">
@@ -191,17 +191,17 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
                 <small>Drag across the tile to set brightness when the light is on.</small>
               </div>
               <button
-                className={`ts-switch ${re.slideDim ? 'on' : ''}`}
+                className={`ts-switch ${re.slideDim !== false ? 'on' : ''}`}
                 role="switch"
-                aria-checked={!!re.slideDim}
-                onClick={() => onChange({ slideDim: !re.slideDim })}
+                aria-checked={re.slideDim !== false}
+                onClick={() => onChange({ slideDim: re.slideDim === false ? undefined : false })}
               >
                 <span className="ts-switch-knob" />
               </button>
             </label>
           )}
 
-          {/* Slide to set position (covers only) */}
+          {/* Slide to set position (covers only) — on by default */}
           {re.entity_id.split('.')[0] === 'cover' && (
             <label className="ts-toggle-field">
               <div className="ts-toggle-text">
@@ -209,10 +209,10 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
                 <small>Drag across the tile to open or close the cover to any position.</small>
               </div>
               <button
-                className={`ts-switch ${re.slideDim ? 'on' : ''}`}
+                className={`ts-switch ${re.slideDim !== false ? 'on' : ''}`}
                 role="switch"
-                aria-checked={!!re.slideDim}
-                onClick={() => onChange({ slideDim: !re.slideDim })}
+                aria-checked={re.slideDim !== false}
+                onClick={() => onChange({ slideDim: re.slideDim === false ? undefined : false })}
               >
                 <span className="ts-switch-knob" />
               </button>
