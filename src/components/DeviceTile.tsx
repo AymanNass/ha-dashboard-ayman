@@ -170,22 +170,31 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
   const sliderDisplay = coverReverse ? 100 - sliderVal : sliderVal;
   const fromSlider = (raw: number) => (coverReverse ? 100 - raw : raw);
 
-  // ── Slide-to-dim: drag horizontally across the whole tile to set brightness ──
-  const slideEnabled = !!slideDim && domain === 'light' && active;
+  // ── Slide across the tile: lights dim, covers set position ──
+  const slideLight = !!slideDim && domain === 'light' && active;
+  const slideCover = !!slideDim && isCover && !tall;
+  const slideEnabled = slideLight || slideCover;
   const dragRef = useRef<{ startX: number; startY: number; width: number; left: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
   const holdTimer = useRef<number | null>(null);
   const heldRef = useRef(false);
   const [dragPct, setDragPct] = useState<number | null>(null);
   const brightnessPct = dimmable ? Math.round((brightness! / 255) * 100) : 100;
-  const dimFillPct = dragPct ?? brightnessPct;
+  // Resting fill: brightness for lights, displayed position for covers.
+  const slideRestPct = slideCover ? sliderDisplay : brightnessPct;
+  const dimFillPct = dragPct ?? slideRestPct;
 
-  // The fill takes on the light's real color, and its intensity tracks brightness
-  // so the tile visibly dims along with the bulb (while keeping the glass look).
-  const [lr, lg, lb] = slideEnabled ? lightColorRgb(entity.attributes) : [255, 170, 90];
-  const dimIntensity = 0.1 + (dimFillPct / 100) * 0.28; // 0.10 → 0.38 alpha (keeps glass)
-  const lightFill = `rgba(${lr}, ${lg}, ${lb}, ${dimIntensity})`;
-  const lightEdge = `rgba(${lr}, ${lg}, ${lb}, ${Math.min(0.7, dimIntensity + 0.22)})`;
+  // Light fill takes the bulb's real color and tracks brightness; cover fill uses
+  // a cool neutral tint and tracks the open position. Both keep the glass look.
+  const [lr, lg, lb] = slideLight ? lightColorRgb(entity.attributes) : [255, 170, 90];
+  const dimIntensity = 0.1 + (dimFillPct / 100) * 0.28; // 0.10 → 0.38 alpha
+  const coverIntensity = 0.14 + (dimFillPct / 100) * 0.26;
+  const slideFill = slideCover
+    ? `rgba(150, 192, 236, ${coverIntensity})`
+    : `rgba(${lr}, ${lg}, ${lb}, ${dimIntensity})`;
+  const slideEdge = slideCover
+    ? `rgba(176, 210, 245, ${Math.min(0.75, coverIntensity + 0.25)})`
+    : `rgba(${lr}, ${lg}, ${lb}, ${Math.min(0.7, dimIntensity + 0.22)})`;
 
   const HOLD_MS = 450; // press-and-hold (no movement) opens the flyout
   const MOVE_THRESHOLD = 6; // px of travel before a press becomes a drag
@@ -235,7 +244,11 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
     if (slideEnabled && d && d.moved && dragPct != null) {
       suppressClick.current = true;
-      callHA('light', 'turn_on', { brightness_pct: dragPct }, { entity_id: id });
+      if (slideCover) {
+        callHA('cover', 'set_cover_position', { position: fromSlider(dragPct) }, { entity_id: id });
+      } else {
+        callHA('light', 'turn_on', { brightness_pct: dragPct }, { entity_id: id });
+      }
       // Keep the dragged fill visible briefly until the new state streams in.
       window.setTimeout(() => setDragPct(null), 500);
     }
@@ -361,8 +374,8 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
         ...(slideEnabled
           ? {
               '--dim': `${dimFillPct}%`,
-              '--dim-fill': lightFill,
-              '--dim-edge': lightEdge,
+              '--dim-fill': slideFill,
+              '--dim-edge': slideEdge,
               touchAction: 'pan-y',
             }
           : {}),
@@ -376,6 +389,8 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
           setOptimistic(!effectiveActive);
           if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
           optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+          onToggle(id);
+        } else if (slideCover) {
           onToggle(id);
         } else {
           openDetail(id);

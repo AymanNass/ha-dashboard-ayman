@@ -201,6 +201,24 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
             </label>
           )}
 
+          {/* Slide to set position (covers only) */}
+          {re.entity_id.split('.')[0] === 'cover' && (
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Slide to set position</span>
+                <small>Drag across the tile to open or close the cover to any position.</small>
+              </div>
+              <button
+                className={`ts-switch ${re.slideDim ? 'on' : ''}`}
+                role="switch"
+                aria-checked={!!re.slideDim}
+                onClick={() => onChange({ slideDim: !re.slideDim })}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
+          )}
+
           {/* Reverse position slider (covers only) */}
           {re.entity_id.split('.')[0] === 'cover' && (
             <label className="ts-toggle-field">
