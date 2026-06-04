@@ -74,6 +74,7 @@ export const METRIC_OPTIONS: { metric: GlanceMetric; name: string }[] = [
 export const DEFAULT_GLANCE: GlanceButtonConfig[] = [
   { id: 'g-lights', metric: 'lights', flyout: true },
   { id: 'g-climate', metric: 'climate', flyout: true },
+  { id: 'g-locks', metric: 'locks', flyout: true },
   { id: 'g-people', metric: 'people', flyout: true },
   { id: 'g-media', metric: 'media', flyout: true },
 ];

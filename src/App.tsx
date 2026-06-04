@@ -82,7 +82,7 @@ export default function App() {
       <main className="main-content">
         <Header entities={entities} getForecast={getForecast} />
 
-        {activeView === 'main' && (
+        {view.kind !== 'cameras' && view.kind !== 'sensors' && (
           <GlanceStrip
             entities={entities}
             glance={view.glance}
