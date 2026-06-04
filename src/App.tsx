@@ -17,7 +17,7 @@ import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity } from './types';
 
 export default function App() {
-  const { entities, connected, error, callHA, getForecast, getHistory, searchMusic, playMusic } = useHomeAssistant();
+  const { entities, connected, error, callHA, getForecast, getHistory, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
   const layout = useLayout();
   const { views } = layout;
   const [activeView, setActiveView] = useState<string>('main');
@@ -228,6 +228,7 @@ export default function App() {
             onRequestEdit={() => setEditing(true)}
             searchMusic={searchMusic}
             playMusic={playMusic}
+            getMaPlayers={getMaPlayers}
           />
         )}
 

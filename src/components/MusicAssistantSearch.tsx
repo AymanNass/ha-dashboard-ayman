@@ -16,10 +16,14 @@ export type SearchMusic = (opts: {
 
 export type PlayMusic = (player: string, mediaId: string, mediaType?: string) => Promise<void>;
 
+export type GetMaPlayers = () => Promise<string[]>;
+
 interface Props {
   entities: HassEntities;
   searchMusic: SearchMusic;
   playMusic: PlayMusic;
+  /** Resolve the media players provided by Music Assistant (others can't be targeted). */
+  getMaPlayers?: GetMaPlayers;
   /** Tile display name + icon (from the tile config / special-tile registry). */
   name: string;
   icon: string;
@@ -32,7 +36,7 @@ const PLAYER_KEY = 'ma-last-player';
  * Searches via the music_assistant.search service and plays a tapped result on
  * the chosen media player via music_assistant.play_media.
  */
-export function MusicAssistantSearch({ entities, searchMusic, playMusic, name, icon }: Props) {
+export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPlayers, name, icon }: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -51,6 +55,7 @@ export function MusicAssistantSearch({ entities, searchMusic, playMusic, name, i
           entities={entities}
           searchMusic={searchMusic}
           playMusic={playMusic}
+          getMaPlayers={getMaPlayers}
           onClose={() => setOpen(false)}
         />
       )}
@@ -62,21 +67,47 @@ function MusicAssistantPanel({
   entities,
   searchMusic,
   playMusic,
+  getMaPlayers,
   onClose,
 }: {
   entities: HassEntities;
   searchMusic: SearchMusic;
   playMusic: PlayMusic;
+  getMaPlayers?: GetMaPlayers;
   onClose: () => void;
 }) {
-  const players = useMemo(
-    () =>
-      Object.values(entities)
-        .filter((e) => e.entity_id.startsWith('media_player.'))
-        .map((e) => ({ id: e.entity_id, name: String(e.attributes.friendly_name ?? e.entity_id) }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    [entities],
-  );
+  // Snapshot the player list once when the panel opens. This both limits the
+  // choices to Music Assistant players and keeps the <select> options stable so
+  // the native dropdown doesn't close every time entity states stream in.
+  const [players, setPlayers] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const nameOf = (eid: string) => String(entities[eid]?.attributes.friendly_name ?? eid);
+      let ids: string[] = [];
+      if (getMaPlayers) {
+        try {
+          ids = await getMaPlayers();
+        } catch {
+          ids = [];
+        }
+      }
+      // Fall back to every media_player if MA players can't be resolved (e.g. a
+      // non-admin token can't read the entity registry).
+      if (!ids.length) {
+        ids = Object.keys(entities).filter((k) => k.startsWith('media_player.'));
+      }
+      const list = ids
+        .map((id) => ({ id, name: nameOf(id) }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      if (!cancelled) setPlayers(list);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // Open-once snapshot — intentionally not reacting to entity streams.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [term, setTerm] = useState('');
   const [mediaType, setMediaType] = useState('');
@@ -112,9 +143,13 @@ function MusicAssistantPanel({
     [],
   );
 
-  // Default the player to the first one if none chosen yet.
+  // Default to the first player, or fix a saved selection that isn't a valid
+  // Music Assistant player (e.g. left over from a previous list).
   useEffect(() => {
-    if (!player && players.length) setPlayer(players[0].id);
+    if (!players.length) return;
+    if (!player || !players.some((p) => p.id === player)) {
+      setPlayer(players[0].id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [players]);
 

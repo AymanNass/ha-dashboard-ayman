@@ -21,7 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { DashView, DashRow, RoomEntity } from '../types';
 import { DeviceTile } from './DeviceTile';
 import { CameraGrid } from './CameraGrid';
-import { MusicAssistantSearch, type SearchMusic, type PlayMusic } from './MusicAssistantSearch';
+import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
@@ -88,6 +88,8 @@ interface Props {
   searchMusic?: SearchMusic;
   /** Music Assistant playback (for the special MA search tile). */
   playMusic?: PlayMusic;
+  /** Resolve Music Assistant media players (for the special MA search tile). */
+  getMaPlayers?: GetMaPlayers;
 }
 
 export function DashboardView(props: Props) {
@@ -182,6 +184,7 @@ function Tile({
   enterIndex,
   searchMusic,
   playMusic,
+  getMaPlayers,
 }: { re: RoomEntity; enterIndex?: number } & Props) {
   // Special (non-entity) tiles render their own card.
   if (isSpecialTile(re.entity_id)) {
@@ -192,6 +195,7 @@ function Tile({
           entities={entities}
           searchMusic={searchMusic}
           playMusic={playMusic}
+          getMaPlayers={getMaPlayers}
           name={re.name || def.name}
           icon={re.icon || def.icon}
         />

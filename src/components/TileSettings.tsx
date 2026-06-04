@@ -237,7 +237,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
             </label>
           )}
 
-          {/* Now-playing artwork background (media players only) */}
+          {/* Now-playing artwork background (media players only) — on by default */}
           {re.entity_id.split('.')[0] === 'media_player' && (
             <label className="ts-toggle-field">
               <div className="ts-toggle-text">
@@ -245,10 +245,10 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
                 <small>Use the now-playing thumbnail as the tile background.</small>
               </div>
               <button
-                className={`ts-switch ${re.mediaArtwork ? 'on' : ''}`}
+                className={`ts-switch ${re.mediaArtwork !== false ? 'on' : ''}`}
                 role="switch"
-                aria-checked={!!re.mediaArtwork}
-                onClick={() => onChange({ mediaArtwork: !re.mediaArtwork })}
+                aria-checked={re.mediaArtwork !== false}
+                onClick={() => onChange({ mediaArtwork: re.mediaArtwork === false ? undefined : false })}
               >
                 <span className="ts-switch-knob" />
               </button>
@@ -256,7 +256,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
           )}
 
           {/* Artwork source entity (media players only) */}
-          {re.entity_id.split('.')[0] === 'media_player' && re.mediaArtwork && (
+          {re.entity_id.split('.')[0] === 'media_player' && re.mediaArtwork !== false && (
             <div className="ts-field">
               <span>Artwork source</span>
               <small className="ts-hint">Pull the thumbnail from a companion player (e.g. an Android TV/ADB entity) when this one has no artwork. Leave on Auto to detect it automatically.</small>

@@ -114,11 +114,11 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     ? `${cameraUrl}${cameraUrl.includes('?') ? '&' : '?'}_=${camBust}`
     : undefined;
 
-  // Now-playing artwork background for media tiles (opt-in via `mediaArtwork`).
-  // Resolves the configured entity's own picture, an explicit companion entity,
-  // or a matching companion player on the same device.
+  // Now-playing artwork background for media tiles (on by default; opt out via
+  // `mediaArtwork: false`). Resolves the configured entity's own picture, an
+  // explicit companion entity, or a matching companion player on the same device.
   const artworkUrl =
-    mediaArtwork && domain === 'media_player' && !['off', 'unavailable', 'standby'].includes(entity.state)
+    mediaArtwork !== false && domain === 'media_player' && !['off', 'unavailable', 'standby'].includes(entity.state)
       ? resolveArtwork(entity, id, entities ?? {}, artworkEntity)
       : undefined;
   // Ambient tint pulled from the artwork's dominant color.

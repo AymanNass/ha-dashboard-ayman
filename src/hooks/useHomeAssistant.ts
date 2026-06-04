@@ -178,5 +178,25 @@ export function useHomeAssistant() {
     [callHA],
   );
 
-  return { entities, connected, error, callHA, getState, getForecast, getHistory, searchMusic, playMusic };
+  // The media players you can play to are the ones provided by the Music
+  // Assistant integration. Resolve them from the entity registry (platform ===
+  // 'music_assistant') and cache the result.
+  const maPlayerIds = useRef<string[] | undefined>(undefined);
+  const getMaPlayers = useCallback(async (): Promise<string[]> => {
+    if (maPlayerIds.current !== undefined) return maPlayerIds.current;
+    if (!connRef.current) return [];
+    try {
+      const reg = (await connRef.current.sendMessagePromise({
+        type: 'config/entity_registry/list',
+      })) as Array<{ entity_id: string; platform: string }>;
+      maPlayerIds.current = reg
+        .filter((r) => r.platform === 'music_assistant' && r.entity_id.startsWith('media_player.'))
+        .map((r) => r.entity_id);
+    } catch {
+      maPlayerIds.current = [];
+    }
+    return maPlayerIds.current;
+  }, []);
+
+  return { entities, connected, error, callHA, getState, getForecast, getHistory, searchMusic, playMusic, getMaPlayers };
 }

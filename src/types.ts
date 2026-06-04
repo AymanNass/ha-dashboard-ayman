@@ -41,7 +41,7 @@ export interface RoomEntity {
   slideDim?: boolean;
   /** Reverse the position slider direction (useful for covers, e.g. left = open). */
   reverseSlider?: boolean;
-  /** Show the now-playing artwork as the tile background (media players). */
+  /** Show the now-playing artwork as the tile background (media players). On by default; set false to opt out. */
   mediaArtwork?: boolean;
   /** Companion media_player entity to pull now-playing artwork from (media players). */
   artworkEntity?: string;
