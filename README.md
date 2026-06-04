@@ -154,6 +154,7 @@ src/
     layout.ts          viewRows() and layout helpers
     tileSize.ts        Tile span/size logic
     glance.ts          At-a-glance metric catalog + computeMetric()
+    mediaDevices.ts    Media de-dup: friendlyName, deviceNameKey, group/dedupe (+ manual merges)
     colorExtract.ts    Canvas-based dominant-color extraction
     viewTransition.ts  View Transitions API wrapper (shared-element morphs)
     haptics.ts         navigator.vibrate + delegated press listener
@@ -200,11 +201,42 @@ layouts.json           Persisted custom layout (on the add-on: /data/layouts.jso
 
 ### Tiles & cards
 - `DeviceTile` — lights, switches, media players, covers, locks, buttons, etc.
-  with slide-to-dim, live artwork backgrounds, and per-domain controls.
+  with slide-to-dim, **slide-to-set-position for covers**, live artwork
+  backgrounds, and per-domain controls. Slide gestures are on by default for all
+  light and cover tiles.
 - `ClimateCards`, `LockCards`, `VacuumCard`, `CameraGrid`, `SensorWidgets`,
   `RoomCard` / `RoomPanel`, `PersonTracker`, `Sparkline`, `ScenePills`.
 - `DashboardView` renders a view's scenes + tile grid; `RoomNav` switches rooms.
 - `DetailPanel` flyout — full controls, camera feed, history graph, scenes, links.
+
+### Media & Music Assistant
+- **Auto "Now Playing" media view** (`MediaAutoView`, page `kind: 'media'`) —
+  automatically lists every media device and shows transport controls only when
+  something is actually playing on that device. No manual tile placement needed.
+- **Media de-duplication** (`lib/mediaDevices.ts`) — one physical device that
+  exposes several `media_player` entities (e.g. an Android TV with ADB + Cast +
+  remote) is collapsed to a single entry. The same matching rule feeds the Media
+  page, the header subtitle, and the at-a-glance strip so they always agree.
+- **Manual merge** — when name heuristics can't tell two entities are the same
+  device (abbreviations, possessives), select them in the Media page edit mode
+  and **Merge into one**; a badge + split button let you undo. Persists on the
+  view (`view.mediaMerge`).
+- **Per-page controls (edit mode)** — type-ahead device filter to show/hide
+  devices, a **Small / Medium / Large** tile-size selector (fixed-width columns
+  so a lone playing tile doesn't span the page), and a toggle for the Music
+  Assistant button.
+- **Music Assistant search** (`MusicAssistantSearch`) — search the MA library
+  (artists, albums, tracks, playlists) from a right-side flyout and tap a result
+  to play it on any MA player. Player list is filtered to MA devices via the
+  entity registry; a custom dark-theme dropdown stays readable and open while
+  choosing; artwork shows by default (opt-out per tile).
+
+### In-app page management
+- **PagesManager** — create, rename, re-icon, reorder, and delete pages directly
+  in the app, no layout JSON editing by hand.
+- **Guided onboarding & empty states** — first-run guidance, friendlier
+  empty/loading states, and optimistic toggles (tiles respond instantly and
+  reconcile with HA).
 
 ### Theming
 - 4 themes: **Midnight, Slate, OLED Black, Light** (Settings modal).
