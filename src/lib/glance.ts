@@ -1,6 +1,7 @@
 import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
-import { persons } from '../config';
+import { resolvePersons } from './persons';
 import type { GlanceButtonConfig, GlanceMetric } from '../types';
+import { dedupeMediaPlayers } from './mediaDevices';
 
 /** How a flyout list row can be toggled, if at all. */
 export type ToggleKind = 'switch' | 'lock' | 'cover' | null;
@@ -74,6 +75,7 @@ export const METRIC_OPTIONS: { metric: GlanceMetric; name: string }[] = [
 export const DEFAULT_GLANCE: GlanceButtonConfig[] = [
   { id: 'g-lights', metric: 'lights', flyout: true },
   { id: 'g-climate', metric: 'climate', flyout: true },
+  { id: 'g-locks', metric: 'locks', flyout: true },
   { id: 'g-people', metric: 'people', flyout: true },
   { id: 'g-media', metric: 'media', flyout: true },
 ];
@@ -284,7 +286,7 @@ export function computeMetric(
     }
 
     case 'people': {
-      const items = persons
+      const items = resolvePersons(entities)
         .map<GlanceItem | null>((p) => {
           const e = entities[p.entity_id];
           if (!e) return null;
@@ -313,12 +315,13 @@ export function computeMetric(
     }
 
     case 'media': {
-      const playing = list.filter(
+      const playingRaw = list.filter(
         (e) =>
           e.entity_id.startsWith('media_player.') &&
           e.state === 'playing' &&
           !skip.has(e.entity_id),
       );
+      const playing = dedupeMediaPlayers(playingRaw);
       const items = playing
         .map<GlanceItem>((e) => {
           const title = e.attributes.media_title as string | undefined;

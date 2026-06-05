@@ -239,12 +239,186 @@ export function useLayout() {
     [mutateView],
   );
 
+  // ── Views (pages) ──
+  /** Append a new empty tile page and return its id so callers can navigate to it. */
+  const addView = useCallback((): string => {
+    const id = `view-${Date.now().toString(36)}`;
+    setViews((prev) => {
+      const next = clone(prev);
+      next.push({
+        id,
+        name: 'New Page',
+        icon: 'mdi-view-dashboard-outline',
+        sections: [],
+        rows: [{ title: '', columns: [{ title: '', entities: [] }] }],
+      });
+      persist(next);
+      return next;
+    });
+    return id;
+  }, [persist]);
+
+  /** Remove a page. The last remaining page is never removed. */
+  const removeView = useCallback(
+    (viewId: string) => {
+      setViews((prev) => {
+        if (prev.length <= 1) return prev;
+        const next = clone(prev).filter((v) => v.id !== viewId);
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  const renameView = useCallback(
+    (viewId: string, name: string) => {
+      mutateView(viewId, (v) => {
+        v.name = name;
+      });
+    },
+    [mutateView],
+  );
+
+  const updateViewIcon = useCallback(
+    (viewId: string, icon: string) => {
+      mutateView(viewId, (v) => {
+        v.icon = icon;
+      });
+    },
+    [mutateView],
+  );
+
+  const moveView = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      setViews((prev) => {
+        if (toIdx < 0 || toIdx >= prev.length || fromIdx === toIdx) return prev;
+        const next = clone(prev);
+        const [v] = next.splice(fromIdx, 1);
+        next.splice(toIdx, 0, v);
+        persist(next);
+        return next;
+      });
+    },
+    [persist],
+  );
+
+  /** Switch a page between a normal tile grid and the auto "Now Playing" media view. */
+  const setViewKind = useCallback(
+    (viewId: string, kind: DashView['kind']) => {
+      mutateView(viewId, (v) => {
+        if (kind === 'tiles') delete v.kind;
+        else v.kind = kind;
+      });
+    },
+    [mutateView],
+  );
+
+  /** Hide/show a specific media_player on a `kind: 'media'` page. */
+  /** Hide/show media_player(s) on a `kind: 'media'` page. Pass all of a device's
+   *  member entity_ids so the whole device toggles together. With `hidden`
+   *  omitted it toggles based on the first id's current state. */
+  const toggleMediaExclude = useCallback(
+    (viewId: string, entityId: string | string[], hidden?: boolean) => {
+      const ids = Array.isArray(entityId) ? entityId : [entityId];
+      mutateView(viewId, (v) => {
+        const set = new Set(v.mediaExclude ?? []);
+        const makeHidden = hidden ?? !set.has(ids[0]);
+        for (const id of ids) {
+          if (makeHidden) set.add(id);
+          else set.delete(id);
+        }
+        v.mediaExclude = [...set];
+      });
+    },
+    [mutateView],
+  );
+
+  /** Toggle the Music Assistant search button on a `kind: 'media'` page. */
+  const toggleMediaSearch = useCallback(
+    (viewId: string) => {
+      mutateView(viewId, (v) => {
+        if (v.mediaHideSearch) delete v.mediaHideSearch;
+        else v.mediaHideSearch = true;
+      });
+    },
+    [mutateView],
+  );
+
+  /** Manually merge the given media_player entity_ids into one device, folding in
+   *  any existing merge group that overlaps them. */
+  const mergeMediaDevices = useCallback(
+    (viewId: string, entityIds: string[]) => {
+      mutateView(viewId, (v) => {
+        const existing = v.mediaMerge ?? [];
+        const union = new Set(entityIds);
+        const rest: string[][] = [];
+        for (const g of existing) {
+          if (g.some((id) => union.has(id))) g.forEach((id) => union.add(id));
+          else rest.push(g);
+        }
+        rest.push([...union]);
+        v.mediaMerge = rest;
+      });
+    },
+    [mutateView],
+  );
+
+  /** Split a manually-merged device back apart (remove merge groups overlapping
+   *  any of the given entity_ids). */
+  const unmergeMediaDevices = useCallback(
+    (viewId: string, entityIds: string[]) => {
+      mutateView(viewId, (v) => {
+        if (!v.mediaMerge) return;
+        const ids = new Set(entityIds);
+        v.mediaMerge = v.mediaMerge.filter((g) => !g.some((id) => ids.has(id)));
+        if (!v.mediaMerge.length) delete v.mediaMerge;
+      });
+    },
+    [mutateView],
+  );
+
+  /** Set the media page tile width. */
+  const setMediaTileSize = useCallback(
+    (viewId: string, size: DashView['mediaTileSize']) => {
+      mutateView(viewId, (v) => {
+        if (!size || size === 'medium') delete v.mediaTileSize;
+        else v.mediaTileSize = size;
+      });
+    },
+    [mutateView],
+  );
+
   const resetLayout = useCallback(() => {
     setViews(withRows(clone(defaultViews)));
     if (saveTimer.current) clearTimeout(saveTimer.current);
     setSaving(true);
     fetch(ENDPOINT, { method: 'DELETE' }).finally(() => setSaving(false));
   }, []);
+
+  /** Replace the layout with a minimal, generic starter so a new user can build
+   *  from a clean slate with no code: one empty Home page plus a zero-config
+   *  Media page that auto-fills with whatever is playing. */
+  const startBlank = useCallback(() => {
+    const blank: DashView[] = [
+      {
+        id: 'main',
+        name: 'Home',
+        icon: 'mdi-home',
+        sections: [],
+        rows: [{ title: '', columns: [{ title: '', entities: [] }] }],
+      },
+      {
+        id: 'media',
+        name: 'Media',
+        icon: 'mdi-speaker',
+        kind: 'media',
+        sections: [],
+      },
+    ];
+    setViews(withRows(clone(blank)));
+    persist(withRows(clone(blank)));
+  }, [persist]);
 
   /** Serialize the current layout to a pretty JSON string (for export/download). */
   const exportLayout = useCallback(() => {
@@ -290,7 +464,19 @@ export function useLayout() {
     removeScene,
     moveScene,
     setGlance,
+    addView,
+    removeView,
+    renameView,
+    updateViewIcon,
+    moveView,
+    setViewKind,
+    toggleMediaExclude,
+    toggleMediaSearch,
+    mergeMediaDevices,
+    unmergeMediaDevices,
+    setMediaTileSize,
     resetLayout,
+    startBlank,
     exportLayout,
     importLayout,
   };

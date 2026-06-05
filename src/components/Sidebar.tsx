@@ -1,12 +1,24 @@
-import { views } from '../config';
+import type { DashView } from '../types';
 
 interface Props {
+  views: DashView[];
   activeView: string;
+  editing: boolean;
   onNavigate: (view: string) => void;
   onOpenSettings: () => void;
+  onAddPage: () => void;
+  onManagePages: () => void;
 }
 
-export function Sidebar({ activeView, onNavigate, onOpenSettings }: Props) {
+export function Sidebar({
+  views,
+  activeView,
+  editing,
+  onNavigate,
+  onOpenSettings,
+  onAddPage,
+  onManagePages,
+}: Props) {
   return (
     <nav className="sidebar">
       <div className="sidebar-logo">
@@ -22,6 +34,20 @@ export function Sidebar({ activeView, onNavigate, onOpenSettings }: Props) {
           <span className={`mdi ${view.icon}`} />
         </button>
       ))}
+      {editing && (
+        <>
+          <button className="sidebar-btn sidebar-add" onClick={onAddPage} title="Add page">
+            <span className="mdi mdi-plus" />
+          </button>
+          <button
+            className="sidebar-btn sidebar-manage"
+            onClick={onManagePages}
+            title="Manage pages"
+          >
+            <span className="mdi mdi-playlist-edit" />
+          </button>
+        </>
+      )}
       <button
         className="sidebar-btn sidebar-settings"
         onClick={onOpenSettings}

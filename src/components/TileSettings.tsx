@@ -183,7 +183,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
             </div>
           </div>
 
-          {/* Slide to dim (lights only) */}
+          {/* Slide to dim (lights only) — on by default */}
           {re.entity_id.split('.')[0] === 'light' && (
             <label className="ts-toggle-field">
               <div className="ts-toggle-text">
@@ -191,10 +191,28 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
                 <small>Drag across the tile to set brightness when the light is on.</small>
               </div>
               <button
-                className={`ts-switch ${re.slideDim ? 'on' : ''}`}
+                className={`ts-switch ${re.slideDim !== false ? 'on' : ''}`}
                 role="switch"
-                aria-checked={!!re.slideDim}
-                onClick={() => onChange({ slideDim: !re.slideDim })}
+                aria-checked={re.slideDim !== false}
+                onClick={() => onChange({ slideDim: re.slideDim === false ? undefined : false })}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
+          )}
+
+          {/* Slide to set position (covers only) — on by default */}
+          {re.entity_id.split('.')[0] === 'cover' && (
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Slide to set position</span>
+                <small>Drag across the tile to open or close the cover to any position.</small>
+              </div>
+              <button
+                className={`ts-switch ${re.slideDim !== false ? 'on' : ''}`}
+                role="switch"
+                aria-checked={re.slideDim !== false}
+                onClick={() => onChange({ slideDim: re.slideDim === false ? undefined : false })}
               >
                 <span className="ts-switch-knob" />
               </button>
@@ -219,7 +237,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
             </label>
           )}
 
-          {/* Now-playing artwork background (media players only) */}
+          {/* Now-playing artwork background (media players only) — on by default */}
           {re.entity_id.split('.')[0] === 'media_player' && (
             <label className="ts-toggle-field">
               <div className="ts-toggle-text">
@@ -227,10 +245,10 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
                 <small>Use the now-playing thumbnail as the tile background.</small>
               </div>
               <button
-                className={`ts-switch ${re.mediaArtwork ? 'on' : ''}`}
+                className={`ts-switch ${re.mediaArtwork !== false ? 'on' : ''}`}
                 role="switch"
-                aria-checked={!!re.mediaArtwork}
-                onClick={() => onChange({ mediaArtwork: !re.mediaArtwork })}
+                aria-checked={re.mediaArtwork !== false}
+                onClick={() => onChange({ mediaArtwork: re.mediaArtwork === false ? undefined : false })}
               >
                 <span className="ts-switch-knob" />
               </button>
@@ -238,7 +256,7 @@ export function TileSettings({ re, entities, onChange, onRemove, onClose, callHA
           )}
 
           {/* Artwork source entity (media players only) */}
-          {re.entity_id.split('.')[0] === 'media_player' && re.mediaArtwork && (
+          {re.entity_id.split('.')[0] === 'media_player' && re.mediaArtwork !== false && (
             <div className="ts-field">
               <span>Artwork source</span>
               <small className="ts-hint">Pull the thumbnail from a companion player (e.g. an Android TV/ADB entity) when this one has no artwork. Leave on Auto to detect it automatically.</small>

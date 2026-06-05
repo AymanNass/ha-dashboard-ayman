@@ -1,4 +1,131 @@
 # Changelog
+## 0.9.9.10-beta
+
+- **Refreshed README screenshots and motion clips.** Regenerated the full
+  screenshot set and animation GIFs to reflect the latest UI, and added new
+  captures for the **vacuum control center** (live map, room select, suction &
+  cleaning mode) and **Music Assistant** (search + active-player casting).
+
+## 0.9.9.9-beta
+
+- **Music Assistant dropdown lists only active players.** Players you disable in
+  Music Assistant stay in Home Assistant's entity registry but go `unavailable`,
+  so they were still cluttering the speaker dropdown. The list now filters to
+  players with a live, available state — disabled/offline players drop off, while
+  enabled players (including **sync/speaker groups**) remain. If the
+  previously-selected player is no longer available, the picker auto-selects the
+  first one.
+## 0.9.9.8-beta
+
+- **No-code setup: people, weather, and a blank slate.** Removed the last pieces of
+  hard-coded personal data so anyone can set the dashboard up entirely from the
+  UI:
+  - **People auto-discover.** The header greeting, People tracker and the
+    at-a-glance People button now list every `person.*` entity automatically (a
+    `config.persons` entry still overrides a display name).
+  - **Weather auto-discovers + is selectable.** Fixes the weather widget
+    disappearing when the hard-coded `weather.forecast_home_2` entity didn't
+    exist. The header forecast and ambient backdrop now resolve any `weather.*`
+    entity, and a new **Settings → Appearance → Weather entity** picker lets you
+    choose which one (or leave it on **Auto**).
+  - **Start blank.** A new **Settings → Dashboard data → Start blank** button
+    clears everything to an empty Home page plus an auto-filling Media page, so a
+    new user can build their own dashboard from scratch (the old reset is now
+    **Reset to default**).
+- **Vacuum cards are fully self-service** too — adding any `vacuum.*` entity from
+  the tile picker applies the live-map tile and app-like flyout automatically,
+  documented in the README.
+## 0.9.9.7-beta
+
+- **Vacuum tile quick buttons no longer float mid-map.** After the tile was resized
+  to a square, the Clean/Dock quick-action buttons (positioned with `margin-top:
+  auto`) ended up parked in the middle of the map. They now anchor to the
+  bottom-right corner, opposite the name/status text.
+## 0.9.9.6-beta
+
+- **Vacuum tile shows the whole map.** The vacuum tile no longer stretches to fill
+  the row and crop the map. It now matches the map's aspect ratio with a capped
+  width, so the entire floor plan (every room) is visible in a compact,
+  glanceable card instead of a wide, cropped strip.
+## 0.9.9.5-beta
+
+- **Vacuum cleaning-mode selector (Vac & Mop / Vac / Mop).** The vacuum flyout now
+  always shows a **Mode** selector with friendly labels — **Vac & Mop**, **Vac**,
+  **Mop** and **Vac → Mop** (sweep-then-mop). It's driven by the robot's own
+  `cleaning_mode_list` so it stays visible even while docked, instead of relying
+  on the `cleaning_mode` select entity that the integration hides whenever the
+  mop pad isn't mounted.
+- **Calmer vacuum tile map.** The live map used as the vacuum tile background no
+  longer flashes every few seconds. The volatile per-frame cache-buster is
+  stripped from the tile's map URL so the thumbnail stays stable; the flyout map
+  still updates live.
+## 0.9.9.4-beta
+
+- **App-like vacuum control center.** The vacuum card and flyout were rebuilt to
+  feel like the robot's own app. The tile now shows the **live map** as its
+  background with battery, status and quick **Clean / Dock** buttons. Opening the
+  flyout reveals a full control center: a large live map, a status summary
+  (state, docked/charging, battery), primary **Clean / Stop / Dock / Locate**
+  controls, a **suction** segmented selector, a **cleaning-mode** selector (when
+  the vacuum is awake), **per-room selection** with a one-tap "clean selected
+  rooms", and **maintenance** bars for main brush, side brush, filter and
+  sensors. Built for the Dreame (Tasshack `dreame_vacuum`) integration.
+## 0.9.9.3-beta
+
+- **Manual media-device merge.** When the automatic name matching can't tell that
+  two `media_player` entities are the same physical device (abbreviations like
+  "LR" vs "Living Room", or possessives), you can now merge them by hand. In the
+  Media page's edit mode, tick two or more devices and choose **Merge into one**;
+  merged devices show a badge and a **split** button to undo.
+- **Media tile size.** A **Small / Medium / Large** selector in the Media page
+  edit mode controls how wide the now-playing tiles are. Tiles now use
+  fixed-width columns, so a single playing device no longer stretches across the
+  whole page.
+## 0.9.9.2-beta
+
+- **Smarter media de-duplication everywhere.** One physical device that exposes
+  several `media_player` entities (e.g. an Android TV with ADB + Cast + remote)
+  is now collapsed to a single entry on the Media page, in the header subtitle,
+  and in the at-a-glance strip — using one shared matching rule so the three
+  surfaces always agree.
+## 0.9.9.1-beta
+
+- **Media page device filter + Music Assistant button.** The Media page edit
+  mode gains a type-ahead filter to quickly find devices to show/hide, and a
+  toggle to surface the Music Assistant search button right on the page.
+## 0.9.9.0-beta
+
+- **Auto "Now Playing" media view.** A new media page type automatically lists
+  every media device, shows transport controls only when something is actually
+  playing on that device, and lets you hide/show devices in edit mode — no manual
+  tile placement required.
+## 0.9.8.0-beta
+
+- **Music Assistant search card.** Search your Music Assistant library (artists,
+  albums, tracks, playlists) from a right-side flyout and tap a result to play it
+  on any Music Assistant player. Artwork shows by default (opt-out per tile), the
+  player list is filtered to Music Assistant devices, and the picker uses a custom
+  dark-theme dropdown that stays readable and open while you choose.
+## 0.9.7.1-beta
+
+- **Slide covers like lights.** Cover tiles get a slide-to-set-position gesture
+  matching the light slide-to-dim, and both gestures are **on by default** for all
+  light and cover tiles (still toggleable per tile in settings).
+## 0.9.7.0-beta
+
+- **Guided onboarding & empty states.** First-run guidance, friendlier empty and
+  loading states, optimistic toggles (tiles respond instantly and reconcile with
+  HA), and extra depth/polish across the UI.
+## 0.9.6.0-beta
+
+- **In-app page management.** Create, rename, re-icon, reorder, and delete pages
+  directly in the app — no editing layout JSON by hand.
+## 0.9.5.0-beta
+
+- **Visual refinement pass.** Calmer ambient field, fluid (viewport-scaled)
+  typography, unified tile styling, and multi-color weather glyphs. The summary
+  strip now appears on all tile pages, with security entities excluded from the
+  glance defaults.
 ## 0.9.4.0-beta
 
 - **Header people bubble.** Moved the People avatars into the header's top-right,

@@ -36,11 +36,12 @@ export interface RoomEntity {
   actions?: TileAction[];
   /** Per-tile customization of what appears in the flyout (detail panel). */
   flyout?: FlyoutConfig;
-  /** Enable horizontal drag across the tile to dim a light (brightness shown as fill). */
+  /** Drag across the tile to dim a light / set a cover's position (shown as fill).
+   *  On by default for dimmable lights and non-tall covers; set false to opt out. */
   slideDim?: boolean;
   /** Reverse the position slider direction (useful for covers, e.g. left = open). */
   reverseSlider?: boolean;
-  /** Show the now-playing artwork as the tile background (media players). */
+  /** Show the now-playing artwork as the tile background (media players). On by default; set false to opt out. */
   mediaArtwork?: boolean;
   /** Companion media_player entity to pull now-playing artwork from (media players). */
   artworkEntity?: string;
@@ -103,8 +104,9 @@ export interface DashView {
   id: string;
   name: string;
   icon: string;
-  /** Special render kind for non-tile views. Defaults to a sectioned tile grid. */
-  kind?: 'tiles' | 'cameras' | 'sensors';
+  /** Special render kind for non-tile views. Defaults to a sectioned tile grid.
+   *  'media' auto-fills with every media_player, showing only active ones. */
+  kind?: 'tiles' | 'cameras' | 'sensors' | 'media';
   /** Scene entity_ids (from the scenes catalog) relevant to this view. */
   scenes?: string[];
   /** Legacy flat sections; auto-converted to single-column rows when `rows` is absent. */
@@ -113,6 +115,14 @@ export interface DashView {
   rows?: DashRow[];
   /** User-configured "at a glance" summary buttons shown above this view. */
   glance?: GlanceButtonConfig[];
+  /** For `kind: 'media'`, media_player entity_ids the user has hidden. */
+  mediaExclude?: string[];
+  /** For `kind: 'media'`, hide the Music Assistant search button (shown by default). */
+  mediaHideSearch?: boolean;
+  /** For `kind: 'media'`, groups of entity_ids the user manually merged into one device. */
+  mediaMerge?: string[][];
+  /** For `kind: 'media'`, the tile width on the page (defaults to medium). */
+  mediaTileSize?: 'small' | 'medium' | 'large';
 }
 
 /** The metric a glance button summarizes. Drives both its count and its flyout. */

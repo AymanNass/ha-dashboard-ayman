@@ -21,8 +21,11 @@ import { CSS } from '@dnd-kit/utilities';
 import type { DashView, DashRow, RoomEntity } from '../types';
 import { DeviceTile } from './DeviceTile';
 import { CameraGrid } from './CameraGrid';
+import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
+import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
+import { groupMediaPlayers, pickRepresentative, deviceNameKey } from '../lib/mediaDevices';
 import { HA_URL } from '../config';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
@@ -69,6 +72,11 @@ export interface LayoutActions {
   removeTile: (viewId: string, rowIdx: number, colIdx: number, entIdx: number) => void;
   addTile: (viewId: string, rowIdx: number, colIdx: number, entity: RoomEntity) => void;
   updateTile: (viewId: string, rowIdx: number, colIdx: number, entIdx: number, patch: Partial<RoomEntity>) => void;
+  toggleMediaExclude: (viewId: string, entityId: string | string[], hidden?: boolean) => void;
+  toggleMediaSearch: (viewId: string) => void;
+  mergeMediaDevices: (viewId: string, entityIds: string[]) => void;
+  unmergeMediaDevices: (viewId: string, entityIds: string[]) => void;
+  setMediaTileSize: (viewId: string, size: DashView['mediaTileSize']) => void;
 }
 
 interface Props {
@@ -80,6 +88,14 @@ interface Props {
   getHistory?: (entityId: string, hours?: number) => Promise<number[]>;
   editing: boolean;
   layout: LayoutActions;
+  /** Switch the dashboard into edit mode (used by the empty-page call to action). */
+  onRequestEdit?: () => void;
+  /** Music Assistant search (for the special MA search tile). */
+  searchMusic?: SearchMusic;
+  /** Music Assistant playback (for the special MA search tile). */
+  playMusic?: PlayMusic;
+  /** Resolve Music Assistant media players (for the special MA search tile). */
+  getMaPlayers?: GetMaPlayers;
 }
 
 export function DashboardView(props: Props) {
@@ -100,6 +116,10 @@ export function DashboardView(props: Props) {
     );
   }
 
+  if (view.kind === 'media') {
+    return <MediaAutoView {...props} />;
+  }
+
   if (editing) {
     return <EditableView {...props} />;
   }
@@ -108,6 +128,28 @@ export function DashboardView(props: Props) {
   // Running index across all tiles so each gets a slightly later entrance,
   // producing a gentle cascade when the view mounts/switches.
   let tileIndex = 0;
+
+  // A page with no tiles (e.g. a freshly created one) gets a friendly call to
+  // action instead of an empty void. Special (non-entity) tiles count too.
+  const hasTiles = rows.some((r) =>
+    r.columns.some((c) => c.entities.some((e) => entities[e.entity_id] || isSpecialTile(e.entity_id))),
+  );
+  if (!hasTiles) {
+    return (
+      <div className="view-rows">
+        <div className="page-empty">
+          <span className="mdi mdi-view-grid-plus page-empty-icon" />
+          <h3>This page is empty</h3>
+          <p>Add some tiles to bring it to life.</p>
+          {props.onRequestEdit && (
+            <button className="toolbar-btn primary" onClick={props.onRequestEdit}>
+              <span className="mdi mdi-pencil" /> Edit this page
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // Compact sections: let short sections nestle side-by-side in a masonry so
   // they fill horizontal space instead of stacking full-width with big vertical
@@ -126,7 +168,7 @@ export function DashboardView(props: Props) {
                 {col.title && <h3 className="column-title">{col.title}</h3>}
                 <div className="tile-grid">
                   {col.entities
-                    .filter((e) => entities[e.entity_id])
+                    .filter((e) => entities[e.entity_id] || isSpecialTile(e.entity_id))
                     .map((re) => (
                       <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} {...props} />
                     ))}
@@ -150,7 +192,28 @@ function Tile({
   getHistory,
   view,
   enterIndex,
+  searchMusic,
+  playMusic,
+  getMaPlayers,
 }: { re: RoomEntity; enterIndex?: number } & Props) {
+  // Special (non-entity) tiles render their own card.
+  if (isSpecialTile(re.entity_id)) {
+    const def = SPECIAL_TILES[re.entity_id];
+    if (re.entity_id === 'music_assistant.search' && searchMusic && playMusic) {
+      return (
+        <MusicAssistantSearch
+          entities={entities}
+          searchMusic={searchMusic}
+          playMusic={playMusic}
+          getMaPlayers={getMaPlayers}
+          name={re.name || def.name}
+          icon={re.icon || def.icon}
+        />
+      );
+    }
+    return null;
+  }
+
   const entity = entities[re.entity_id];
   if (!entity) return null;
   const name = re.name || (entity.attributes.friendly_name as string);
@@ -179,9 +242,318 @@ function Tile({
 }
 
 // ──────────────────────────────────────────────────────────────────────────
+// Auto media view (kind: 'media'): every media_player is available; only the
+// ones currently in use (playing/paused/buffering) are shown, minus the user's
+// hidden list. In edit mode the user picks which devices are available.
+// ──────────────────────────────────────────────────────────────────────────
+
+/** A media player is "in use" when it's doing something other than off/idle. */
+const MEDIA_INACTIVE = new Set(['off', 'idle', 'unavailable', 'standby', 'unknown', '']);
+const isMediaActive = (state: string) => !MEDIA_INACTIVE.has(state);
+
+function allMediaPlayers(entities: HassEntities) {
+  return Object.values(entities)
+    .filter((e) => e.entity_id.startsWith('media_player.'))
+    .sort((a, b) => {
+      const an = String(a.attributes.friendly_name ?? a.entity_id);
+      const bn = String(b.attributes.friendly_name ?? b.entity_id);
+      return an.localeCompare(bn);
+    });
+}
+
+function MediaAutoView(props: Props) {
+  const { view, entities, editing, layout, searchMusic, playMusic, getMaPlayers } = props;
+  const exclude = useMemo(() => new Set(view.mediaExclude ?? []), [view.mediaExclude]);
+  const players = useMemo(() => allMediaPlayers(entities), [entities]);
+  const mergeGroups = view.mediaMerge ?? [];
+  // Collapse the many media_player entities a single device exposes (Cast/ADB/
+  // AirPlay/Kodi…) into one device, plus any manual merges. Members travel
+  // together so hiding a device hides all of its entities.
+  const devices = useMemo(
+    () => groupMediaPlayers(players, mergeGroups),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [players, JSON.stringify(mergeGroups)],
+  );
+  const size = view.mediaTileSize ?? 'medium';
+  const showSearch = !view.mediaHideSearch;
+  const [filter, setFilter] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const maTile =
+    showSearch && searchMusic && playMusic ? (
+      <MusicAssistantSearch
+        entities={entities}
+        searchMusic={searchMusic}
+        playMusic={playMusic}
+        getMaPlayers={getMaPlayers}
+        name={SPECIAL_TILES['music_assistant.search'].name}
+        icon={SPECIAL_TILES['music_assistant.search'].icon}
+      />
+    ) : null;
+
+  if (editing) {
+    const q = filter.trim().toLowerCase();
+    const isMerged = (members: typeof players) => {
+      // A device is "manually merged" if its members span >1 heuristic key.
+      const keys = new Set(members.map((m) => deviceNameKey(m)));
+      return keys.size > 1;
+    };
+    const rows = devices.map((members) => {
+      const rep = pickRepresentative(members);
+      const ids = members.map((m) => m.entity_id);
+      const hidden = members.some((m) => exclude.has(m.entity_id));
+      const active = members.find((m) => isMediaActive(m.state));
+      const matches =
+        !q ||
+        members.some(
+          (m) =>
+            String(m.attributes.friendly_name ?? m.entity_id).toLowerCase().includes(q) ||
+            m.entity_id.toLowerCase().includes(q),
+        );
+      return {
+        key: rep.entity_id,
+        name: String(rep.attributes.friendly_name ?? rep.entity_id),
+        state: active ? active.state : 'idle',
+        count: members.length,
+        ids,
+        hidden,
+        matches,
+        merged: isMerged(members),
+      };
+    });
+    const shown = rows.filter((r) => !r.hidden && r.matches);
+    const hidden = rows.filter((r) => r.hidden && r.matches);
+
+    const toggleSelect = (key: string) =>
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      });
+
+    const selectedRows = rows.filter((r) => selected.has(r.key));
+    const doMerge = () => {
+      const ids = selectedRows.flatMap((r) => r.ids);
+      if (ids.length) layout.mergeMediaDevices(view.id, ids);
+      setSelected(new Set());
+    };
+
+    return (
+      <div className="view-rows">
+        <div className="media-edit-intro">
+          <span className="mdi mdi-information-outline" /> This page automatically shows media
+          devices while they’re playing. Choose which devices can appear here.
+        </div>
+
+        <label className="media-search-toggle">
+          <div className="media-search-toggle-text">
+            <span>
+              <span className="mdi mdi-music-circle" /> Music Assistant search button
+            </span>
+            <small>Show a search-and-play button at the top of this page.</small>
+          </div>
+          <button
+            type="button"
+            className={`ts-switch ${showSearch ? 'on' : ''}`}
+            role="switch"
+            aria-checked={showSearch}
+            onClick={() => layout.toggleMediaSearch(view.id)}
+          >
+            <span className="ts-switch-knob" />
+          </button>
+        </label>
+
+        <div className="media-size-row">
+          <span className="media-size-label">Tile size</span>
+          <div className="media-size-options">
+            {(['small', 'medium', 'large'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                className={`media-size-btn ${size === s ? 'on' : ''}`}
+                onClick={() => layout.setMediaTileSize(view.id, s)}
+              >
+                {s[0].toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="media-manage">
+          <div className="media-filter">
+            <span className="mdi mdi-magnify" />
+            <input
+              className="media-filter-input"
+              placeholder="Filter devices…"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            />
+            {filter && (
+              <button className="media-filter-clear" title="Clear" onClick={() => setFilter('')}>
+                <span className="mdi mdi-close" />
+              </button>
+            )}
+          </div>
+
+          {selected.size >= 2 && (
+            <div className="media-merge-bar">
+              <span>
+                <span className="mdi mdi-merge" /> {selected.size} devices selected
+              </span>
+              <div className="media-merge-actions">
+                <button className="toolbar-btn" onClick={() => setSelected(new Set())}>
+                  Clear
+                </button>
+                <button className="toolbar-btn primary" onClick={doMerge}>
+                  <span className="mdi mdi-merge" /> Merge into one
+                </button>
+              </div>
+            </div>
+          )}
+
+          <h3 className="media-manage-title">Shown ({shown.length})</h3>
+          <div className="media-manage-grid">
+            {shown.map((r) => (
+              <div
+                className={`media-manage-row ${selected.has(r.key) ? 'is-selected' : ''}`}
+                key={r.key}
+              >
+                <button
+                  className="media-select"
+                  title={selected.has(r.key) ? 'Deselect' : 'Select to merge'}
+                  onClick={() => toggleSelect(r.key)}
+                >
+                  <span
+                    className={`mdi ${selected.has(r.key) ? 'mdi-checkbox-marked-circle' : 'mdi-checkbox-blank-circle-outline'}`}
+                  />
+                </button>
+                <span className="mdi mdi-cast-variant media-manage-icon" />
+                <div className="media-manage-text">
+                  <span className="media-manage-name">
+                    {r.name}
+                    {r.merged && (
+                      <span className="media-merged-badge" title="Manually merged">
+                        <span className="mdi mdi-merge" />
+                      </span>
+                    )}
+                  </span>
+                  <span className="media-manage-state">
+                    {isMediaActive(r.state) ? r.state : 'idle'}
+                    {r.count > 1 && ` · ${r.count} entities`}
+                  </span>
+                </div>
+                {r.merged && (
+                  <button
+                    className="edit-icon-btn"
+                    title="Split this merged device apart"
+                    onClick={() => layout.unmergeMediaDevices(view.id, r.ids)}
+                  >
+                    <span className="mdi mdi-call-split" />
+                  </button>
+                )}
+                <button
+                  className="edit-icon-btn danger"
+                  title="Hide this device from the page"
+                  onClick={() => layout.toggleMediaExclude(view.id, r.ids, true)}
+                >
+                  <span className="mdi mdi-eye-off" />
+                </button>
+              </div>
+            ))}
+            {shown.length === 0 && (
+              <div className="edit-empty">
+                {q ? 'No shown devices match your filter.' : 'No media devices available.'}
+              </div>
+            )}
+          </div>
+
+          {hidden.length > 0 && (
+            <>
+              <h3 className="media-manage-title media-manage-title-muted">Hidden ({hidden.length})</h3>
+              <div className="media-manage-grid">
+                {hidden.map((r) => (
+                  <div className="media-manage-row is-hidden" key={r.key}>
+                    <span className="mdi mdi-cast-off media-manage-icon" />
+                    <div className="media-manage-text">
+                      <span className="media-manage-name">{r.name}</span>
+                    </div>
+                    <button
+                      className="edit-icon-btn"
+                      title="Show this device on the page"
+                      onClick={() => layout.toggleMediaExclude(view.id, r.ids, false)}
+                    >
+                      <span className="mdi mdi-eye" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Read mode: one tile per device that has an active member and isn't hidden.
+  const active = devices
+    .filter((members) => !members.some((m) => exclude.has(m.entity_id)))
+    .map((members) => members.filter((m) => isMediaActive(m.state)))
+    .filter((activeMembers) => activeMembers.length > 0)
+    .map((activeMembers) => pickRepresentative(activeMembers, true));
+
+  if (active.length === 0) {
+    return (
+      <div className="view-rows" key={view.id}>
+        {maTile && (
+          <section className="view-row">
+            <div className="row-columns">
+              <div className="row-column">
+                <div className={`tile-grid media-grid media-grid-${size}`}>{maTile}</div>
+              </div>
+            </div>
+          </section>
+        )}
+        <div className="page-empty">
+          <span className="mdi mdi-music-note-off page-empty-icon" />
+          <h3>Nothing playing</h3>
+          <p>Media devices appear here while they’re playing.</p>
+        </div>
+      </div>
+    );
+  }
+
+  let tileIndex = 0;
+  return (
+    <div className="view-rows" key={view.id}>
+      <section className="view-row">
+        <div className="row-columns">
+          <div className="row-column">
+            <div className={`tile-grid media-grid media-grid-${size}`}>
+              {maTile}
+              {active.map((e) => (
+                <DeviceTile
+                  key={e.entity_id}
+                  entity={e}
+                  name={String(e.attributes.friendly_name ?? e.entity_id)}
+                  callHA={props.callHA}
+                  onToggle={props.onToggle}
+                  onOpenDetail={props.onOpenDetail}
+                  mediaArtwork
+                  entities={entities}
+                  enterIndex={tileIndex++}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // Editable view: a stack of named rows, each divided into named columns.
-// Drag tiles within/between any column (across rows too); manage rows, columns,
-// and tiles. Local state mirrors the saved layout and commits on drop.
 // ──────────────────────────────────────────────────────────────────────────
 
 interface Item {
@@ -529,11 +901,15 @@ function SortableTile({
     zIndex: isDragging ? 5 : undefined,
   };
 
-  const name = entity
-    ? item.re.name || (entity.attributes.friendly_name as string)
-    : item.re.entity_id;
+  const special = isSpecialTile(item.re.entity_id);
+  const specialDef = special ? SPECIAL_TILES[item.re.entity_id] : null;
+  const name = special
+    ? item.re.name || specialDef!.name
+    : entity
+      ? item.re.name || (entity.attributes.friendly_name as string)
+      : item.re.entity_id;
   const domain = item.re.entity_id.split('.')[0];
-  const missing = !entity;
+  const missing = !entity && !special;
 
   return (
     <div
@@ -543,7 +919,18 @@ function SortableTile({
       {...attributes}
       {...listeners}
     >
-      {missing ? (
+      {special ? (
+        <div className="tile ma-tile ma-tile-edit">
+          <div className="tile-top">
+            <span className={`mdi ${item.re.icon || specialDef!.icon} tile-icon ma-tile-icon`} />
+          </div>
+          <div className="tile-info">
+            <div className="tile-name">{name}</div>
+            <div className="tile-sub">Search &amp; play</div>
+          </div>
+          <span className="mdi mdi-magnify ma-tile-search" aria-hidden="true" />
+        </div>
+      ) : missing ? (
         <div className="tile edit-missing-tile">
           <span className="mdi mdi-help-circle-outline tile-icon" />
           <div className="tile-info">
@@ -636,6 +1023,21 @@ export function EntityPicker({
   }, [onClose]);
 
   const allowed = domainFilter ?? PICKER_DOMAINS;
+
+  // Special (non-entity) cards — only offered in the general add-tile picker
+  // (no domain filter), not in scene/exclude pickers.
+  const specials = useMemo(() => {
+    if (domainFilter) return [];
+    const q = query.trim().toLowerCase();
+    return Object.entries(SPECIAL_TILES)
+      .filter(([id, def]) => {
+        if (existing.has(id)) return false;
+        if (!q) return true;
+        return def.name.toLowerCase().includes(q) || id.toLowerCase().includes(q);
+      })
+      .map(([id, def]) => ({ id, ...def }));
+  }, [domainFilter, query, existing]);
+
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     return Object.values(entities)
@@ -672,7 +1074,17 @@ export function EntityPicker({
           </button>
         </div>
         <div className="picker-list">
-          {results.length === 0 && <div className="picker-empty">No matching entities.</div>}
+          {specials.map((s) => (
+            <button key={s.id} className="picker-item picker-special" onClick={() => onPick(s.id)}>
+              <span className="picker-item-name">
+                <span className={`mdi ${s.icon} picker-special-icon`} /> {s.name}
+              </span>
+              <span className="picker-special-badge">Card</span>
+            </button>
+          ))}
+          {results.length === 0 && specials.length === 0 && (
+            <div className="picker-empty">No matching entities.</div>
+          )}
           {results.map((e) => {
             const name = String(e.attributes.friendly_name ?? e.entity_id);
             return (

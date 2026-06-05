@@ -27,6 +27,8 @@ motion and ambient effects.
 | **Main dashboard** — editable tile/room layout | **Media flyout** — now-playing artwork, scrubber, transport |
 | ![Light flyout](screenshots/21-flyout-light.png) | ![Edit mode](screenshots/30-edit-mode.png) |
 | **Light flyout** — brightness, color, live glow | **Edit mode** — drag-and-drop tile arrangement |
+| ![Vacuum control center](screenshots/26-vacuum-flyout.png) | ![Music Assistant](screenshots/27-music-assistant.png) |
+| **Vacuum control center** — live map, room select, suction & mode | **Music Assistant** — search and cast to active players |
 | ![Settings](screenshots/40-settings.png) | ![Ambient — rain](screenshots/50-ambient-rain.png) |
 | **Settings** — themes, accent color, connection | **Ambient backdrop** — weather-reactive rain (with lightning in thunderstorms) |
 | ![Ambient — snow](screenshots/51-ambient-snow.png) | ![Ambient — night](screenshots/52-ambient-night.png) |
@@ -70,6 +72,14 @@ Stills don't do the motion justice — these short clips show the live animation
 
 ![Edit mode](media/05-edit-mode.gif)
 
+**Vacuum control center** — app-like flyout with live map, room select, suction & cleaning mode
+
+![Vacuum control center](media/07-vacuum.gif)
+
+**Music Assistant** — search and cast to active players
+
+![Music Assistant](media/08-music-assistant.gif)
+
 ---
 
 ## Quick start
@@ -96,6 +106,37 @@ default**.
 
 Copy `.env.example` → `.env` to set a URL/token at build time, or enter them in
 the in-app Settings modal (saved to `localStorage`).
+
+### Set up from scratch — no code required
+
+Everything below is done in the running app; you never edit `config.ts` or
+`layouts.json` by hand:
+
+1. **Connect.** On first launch the **guided onboarding** asks for your HA URL and
+   a long-lived token (create one in HA → *Profile → Security*), with a **Test**
+   button to confirm before saving.
+2. **Start blank.** Open **Settings → Dashboard data → Start blank** to clear the
+   sample layout and begin with an empty **Home** page plus a zero-config
+   **Media** page. (**Reset to default** restores the bundled sample instead.)
+3. **Add pages.** Use **PagesManager** to create, rename, re-icon, reorder, and
+   delete pages.
+4. **Add tiles.** In **Edit mode**, click **+ Add Tile** and pick any entity from
+   the searchable picker (lights, switches, covers, locks, climate, media,
+   **vacuum**, sensors, scenes, scripts, buttons, and more). Drag to arrange;
+   open **per-tile settings** for camera entity, links, quick actions, flyout
+   options, slider direction, and size.
+5. **Add scenes.** Each page has a scene picker; scenes you add show with their HA
+   friendly name and icon automatically.
+6. **People appear automatically.** Every `person.*` entity is discovered and
+   shown in the header / People tracker — no configuration needed.
+7. **Weather appears automatically.** The header forecast + ambient backdrop pick
+   up any `weather.*` entity; choose a specific one in Settings → Appearance if
+   you have several.
+8. **Theme it.** Pick a theme + accent color in Settings.
+
+The bundled `config.ts` catalogs (sample `scenes`, `persons`, and `rooms`) are
+only a starting **seed**; a connected user can replace all of it from the UI, and
+**Start blank** gives them a clean slate to do so.
 
 ---
 
@@ -141,19 +182,22 @@ import/export.
 src/
   main.tsx            App bootstrap: applyTheme(), installHaptics()
   App.tsx             Top-level shell: sidebar, header, views, detail flyout
-  config.ts           Static catalogs: HA_URL/TOKEN, scenes[], persons[]
+  config.ts           Seed catalogs (sample scenes[]/persons[]/rooms[], HA_URL/TOKEN); replaceable from the UI
   settings.ts         App settings (localStorage) + applyTheme()
   types.ts            Shared layout / entity types
 
   hooks/
     useHomeAssistant.ts  WebSocket connection, entity state, callHA, history/forecast
-    useLayout.ts         Loads/saves the layout (views, tiles, glance); export/import
+    useLayout.ts         Loads/saves the layout (views, tiles, glance); export/import; startBlank/reset
     useArtworkColor.ts   Extracts a dominant color from now-playing artwork
 
   lib/
     layout.ts          viewRows() and layout helpers
     tileSize.ts        Tile span/size logic
     glance.ts          At-a-glance metric catalog + computeMetric()
+    mediaDevices.ts    Media de-dup: friendlyName, deviceNameKey, group/dedupe (+ manual merges)
+    persons.ts         resolvePersons(): auto-discover person.* (config names override)
+    weather.ts         resolveWeatherId(): auto-discover/select the weather.* entity
     colorExtract.ts    Canvas-based dominant-color extraction
     viewTransition.ts  View Transitions API wrapper (shared-element morphs)
     haptics.ts         navigator.vibrate + delegated press listener
@@ -197,14 +241,67 @@ layouts.json           Persisted custom layout (on the add-on: /data/layouts.jso
   flyout config, reverse slider, custom artwork entity, tile size/span.
 - **Layout export / import** (Settings → Dashboard data) — download the full
   layout as JSON and re-import it on a new device or deploy.
+- **Start blank / Reset** (Settings → Dashboard data) — **Start blank** wipes the
+  layout to an empty Home page + auto-filling Media page for a clean no-code
+  start; **Reset to default** restores the bundled sample layout.
+- **Auto-discovered people** — every `person.*` entity shows in the header and
+  People tracker with its friendly name, no config needed (a `config.persons`
+  entry can still override the display name).
+- **Weather, no hard-coding** — the header forecast and ambient backdrop
+  auto-discover a `weather.*` entity; pick a specific one in **Settings →
+  Appearance → Weather entity** (or leave it on **Auto**).
 
 ### Tiles & cards
 - `DeviceTile` — lights, switches, media players, covers, locks, buttons, etc.
-  with slide-to-dim, live artwork backgrounds, and per-domain controls.
+  with slide-to-dim, **slide-to-set-position for covers**, live artwork
+  backgrounds, and per-domain controls. Slide gestures are on by default for all
+  light and cover tiles.
 - `ClimateCards`, `LockCards`, `VacuumCard`, `CameraGrid`, `SensorWidgets`,
   `RoomCard` / `RoomPanel`, `PersonTracker`, `Sparkline`, `ScenePills`.
+- **App-like vacuum control** — the vacuum tile shows the **live map** as its
+  background with battery, status and quick Clean/Dock buttons; its flyout is a
+  full control center (large live map, status summary, Clean/Stop/Dock/Locate,
+  suction + cleaning-mode selectors with friendly **Vac & Mop / Vac / Mop / Vac →
+  Mop** labels, per-room selection with one-tap clean, and maintenance bars for
+  brushes/filter/sensors). Built for the Dreame (Tasshack `dreame_vacuum`)
+  integration. **Add it yourself** by picking any `vacuum.*` entity in the tile
+  picker — the rich tile + flyout apply automatically, and the map, rooms, modes
+  and consumables are all auto-discovered from the entity's companion
+  `camera.*_map` and `select.*` entities (it degrades gracefully for non-Dreame
+  vacuums).
 - `DashboardView` renders a view's scenes + tile grid; `RoomNav` switches rooms.
 - `DetailPanel` flyout — full controls, camera feed, history graph, scenes, links.
+
+### Media & Music Assistant
+- **Auto "Now Playing" media view** (`MediaAutoView`, page `kind: 'media'`) —
+  automatically lists every media device and shows transport controls only when
+  something is actually playing on that device. No manual tile placement needed.
+- **Media de-duplication** (`lib/mediaDevices.ts`) — one physical device that
+  exposes several `media_player` entities (e.g. an Android TV with ADB + Cast +
+  remote) is collapsed to a single entry. The same matching rule feeds the Media
+  page, the header subtitle, and the at-a-glance strip so they always agree.
+- **Manual merge** — when name heuristics can't tell two entities are the same
+  device (abbreviations, possessives), select them in the Media page edit mode
+  and **Merge into one**; a badge + split button let you undo. Persists on the
+  view (`view.mediaMerge`).
+- **Per-page controls (edit mode)** — type-ahead device filter to show/hide
+  devices, a **Small / Medium / Large** tile-size selector (fixed-width columns
+  so a lone playing tile doesn't span the page), and a toggle for the Music
+  Assistant button.
+- **Music Assistant search** (`MusicAssistantSearch`) — search the MA library
+  (artists, albums, tracks, playlists) from a right-side flyout and tap a result
+  to play it on any MA player. Player list is filtered to MA devices via the
+  entity registry and narrowed to **only active (available) players** — players
+  disabled in Music Assistant drop off, while sync/speaker groups remain; a
+  custom dark-theme dropdown stays readable and open while choosing; artwork
+  shows by default (opt-out per tile).
+
+### In-app page management
+- **PagesManager** — create, rename, re-icon, reorder, and delete pages directly
+  in the app, no layout JSON editing by hand.
+- **Guided onboarding & empty states** — first-run guidance, friendlier
+  empty/loading states, and optimistic toggles (tiles respond instantly and
+  reconcile with HA).
 
 ### Theming
 - 4 themes: **Midnight, Slate, OLED Black, Light** (Settings modal).

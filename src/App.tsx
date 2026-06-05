@@ -10,19 +10,48 @@ import { DashboardView } from './components/DashboardView';
 import { DetailPanel } from './components/DetailPanel';
 import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
+import { PagesManager } from './components/PagesManager';
+import { Onboarding } from './components/Onboarding';
 import { viewRows } from './lib/layout';
-import { scenes } from './config';
+import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity } from './types';
 
 export default function App() {
-  const { entities, connected, error, callHA, getForecast, getHistory } = useHomeAssistant();
+  const { entities, connected, error, callHA, getForecast, getHistory, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
   const layout = useLayout();
   const { views } = layout;
   const [activeView, setActiveView] = useState<string>('main');
   const [detailEntity, setDetailEntity] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showPages, setShowPages] = useState(false);
   const [scenePicker, setScenePicker] = useState(false);
+  // First-run guided setup shows when no token is configured; can be dismissed
+  // for this session to explore the shell without connecting.
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const needsOnboarding = !HA_TOKEN && !onboardingDismissed;
+  // Actively connecting (token present, nothing streamed yet, no hard error):
+  // show shimmer skeletons instead of an empty grid.
+  const booting = !!HA_TOKEN && !connected && !error && Object.keys(entities).length === 0;
+
+  /** Add a new page and jump to it so it can be filled in straight away. */
+  const handleAddView = useCallback(() => {
+    const id = layout.addView();
+    setActiveView(id);
+  }, [layout]);
+
+  /** Remove a page, moving off it first if it's the one being viewed. */
+  const handleRemoveView = useCallback(
+    (id: string) => {
+      setActiveView((cur) => {
+        if (cur !== id) return cur;
+        const remaining = views.filter((v) => v.id !== id);
+        return remaining[0]?.id ?? 'main';
+      });
+      layout.removeView(id);
+    },
+    [layout, views],
+  );
 
   // Map of entity_id -> configured tile (camera, links, quick actions) for the flyout.
   const configFor = useMemo(() => {
@@ -77,12 +106,20 @@ export default function App() {
   return (
     <div className={`app ${editing ? 'app-editing' : ''}`}>
       <AmbientBackdrop entities={entities} />
-      <Sidebar activeView={activeView} onNavigate={setActiveView} onOpenSettings={() => setShowSettings(true)} />
+      <Sidebar
+        views={views}
+        activeView={activeView}
+        editing={editing}
+        onNavigate={setActiveView}
+        onOpenSettings={() => setShowSettings(true)}
+        onAddPage={handleAddView}
+        onManagePages={() => setShowPages(true)}
+      />
 
       <main className="main-content">
         <Header entities={entities} getForecast={getForecast} />
 
-        {activeView === 'main' && (
+        {view.kind !== 'cameras' && view.kind !== 'sensors' && (
           <GlanceStrip
             entities={entities}
             glance={view.glance}
@@ -176,16 +213,24 @@ export default function App() {
           </div>
         </div>
 
-        <DashboardView
-          view={view}
-          entities={entities}
-          onToggle={toggleEntity}
-          onOpenDetail={setDetailEntity}
-          callHA={callHA}
-          getHistory={getHistory}
-          editing={editing}
-          layout={layout}
-        />
+        {booting ? (
+          <SkeletonGrid />
+        ) : (
+          <DashboardView
+            view={view}
+            entities={entities}
+            onToggle={toggleEntity}
+            onOpenDetail={setDetailEntity}
+            callHA={callHA}
+            getHistory={getHistory}
+            editing={editing}
+            layout={layout}
+            onRequestEdit={() => setEditing(true)}
+            searchMusic={searchMusic}
+            playMusic={playMusic}
+            getMaPlayers={getMaPlayers}
+          />
+        )}
 
         {!editing && viewScenes.length > 0 && (
           <div className="glass-card scenes-card scenes-bottom">
@@ -218,9 +263,26 @@ export default function App() {
       {showSettings && (
         <SettingsModal
           onClose={() => setShowSettings(false)}
+          entities={entities}
           onResetLayout={layout.resetLayout}
+          onStartBlank={layout.startBlank}
           onExportLayout={layout.exportLayout}
           onImportLayout={layout.importLayout}
+        />
+      )}
+
+      {showPages && (
+        <PagesManager
+          views={views}
+          activeView={activeView}
+          onNavigate={setActiveView}
+          onAdd={handleAddView}
+          onRename={layout.renameView}
+          onIcon={layout.updateViewIcon}
+          onMove={layout.moveView}
+          onRemove={handleRemoveView}
+          onSetKind={layout.setViewKind}
+          onClose={() => setShowPages(false)}
         />
       )}
 
@@ -238,16 +300,41 @@ export default function App() {
         />
       )}
 
-      {error && (
+      {needsOnboarding && <Onboarding onDismiss={() => setOnboardingDismissed(true)} />}
+
+      {error && !needsOnboarding && (
         <div className="connection-bar error">
           <span className="mdi mdi-alert-circle" /> {error}
         </div>
       )}
-      {!connected && !error && (
+      {!connected && !error && !needsOnboarding && (
         <div className="connection-bar connecting">
           <span className="mdi mdi-loading mdi-spin" /> Connecting to Home Assistant...
         </div>
       )}
+    </div>
+  );
+}
+
+/** Shimmer placeholders shown while the first entity snapshot is loading. */
+function SkeletonGrid() {
+  return (
+    <div className="view-rows" aria-hidden="true">
+      <section className="view-row">
+        <div className="row-columns">
+          <div className="row-column">
+            <div className="tile-grid">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div className="tile skeleton-tile" key={i}>
+                  <div className="sk sk-icon" />
+                  <div className="sk sk-line sk-line-lg" />
+                  <div className="sk sk-line sk-line-sm" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

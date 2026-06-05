@@ -4,6 +4,7 @@ import { entityIcon, entitySummary, isActiveState, resolveArtwork } from '../lib
 import { useArtworkColor } from '../hooks/useArtworkColor';
 import { runViewTransition, viewTransitionsAvailable } from '../lib/viewTransition';
 import { Sparkline } from './Sparkline';
+import { HA_URL } from '../config';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -65,6 +66,27 @@ function lightColorRgb(attrs: HassEntity['attributes']): [number, number, number
   return [255, 170, 90];
 }
 
+/** Build the proxy URL for a vacuum's companion map camera (`camera.<base>_map`),
+ *  if the integration exposes one. Returns undefined for vacuums without a map. */
+function vacuumMapUrl(entities: HassEntities | undefined, base: string): string | undefined {
+  if (!entities) return undefined;
+  const cam = entities[`camera.${base}_map`];
+  if (!cam || cam.state === 'unavailable') return undefined;
+  const pic = cam.attributes.entity_picture as string | undefined;
+  if (pic) {
+    const url = pic.startsWith('http') ? pic : `${HA_URL}${pic}`;
+    // Strip the volatile `&v=<timestamp>` cache-buster HA appends on every map
+    // frame so the tile background stays stable instead of reloading (and
+    // flashing) every few seconds. The signed `token` is preserved, and the
+    // tile still refreshes when that token rotates. The flyout map keeps the
+    // live, per-frame URL.
+    return url.replace(/[?&]v=\d+/, '');
+  }
+  const token = cam.attributes.access_token as string | undefined;
+  if (!token) return undefined;
+  return `${HA_URL}/api/camera_proxy/camera.${base}_map?token=${token}`;
+}
+
 export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span, tall, graph, getHistory, cameraUrl, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex }: Props) {
   const id = entity.entity_id;
   const domain = id.split('.')[0];
@@ -82,6 +104,27 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     setLocal(null);
   }, [brightness, position]);
 
+  // ── Optimistic toggle feedback ──
+  // On tap we flip the glow immediately, before Home Assistant confirms, so the
+  // tile feels instant. The override clears as soon as the real state streams in
+  // (the effect below), with a timeout fallback in case the call fails.
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const optimisticTimer = useRef<number | null>(null);
+  useEffect(() => {
+    setOptimistic(null);
+    if (optimisticTimer.current != null) {
+      window.clearTimeout(optimisticTimer.current);
+      optimisticTimer.current = null;
+    }
+  }, [entity.state]);
+  useEffect(
+    () => () => {
+      if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
+    },
+    [],
+  );
+  const effectiveActive = optimistic ?? active;
+
   // Live camera refresh: bust the proxy URL cache on an interval.
   const [camBust, setCamBust] = useState(() => Date.now());
   useEffect(() => {
@@ -93,11 +136,11 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     ? `${cameraUrl}${cameraUrl.includes('?') ? '&' : '?'}_=${camBust}`
     : undefined;
 
-  // Now-playing artwork background for media tiles (opt-in via `mediaArtwork`).
-  // Resolves the configured entity's own picture, an explicit companion entity,
-  // or a matching companion player on the same device.
+  // Now-playing artwork background for media tiles (on by default; opt out via
+  // `mediaArtwork: false`). Resolves the configured entity's own picture, an
+  // explicit companion entity, or a matching companion player on the same device.
   const artworkUrl =
-    mediaArtwork && domain === 'media_player' && !['off', 'unavailable', 'standby'].includes(entity.state)
+    mediaArtwork !== false && domain === 'media_player' && !['off', 'unavailable', 'standby'].includes(entity.state)
       ? resolveArtwork(entity, id, entities ?? {}, artworkEntity)
       : undefined;
   // Ambient tint pulled from the artwork's dominant color.
@@ -149,22 +192,33 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
   const sliderDisplay = coverReverse ? 100 - sliderVal : sliderVal;
   const fromSlider = (raw: number) => (coverReverse ? 100 - raw : raw);
 
-  // ── Slide-to-dim: drag horizontally across the whole tile to set brightness ──
-  const slideEnabled = !!slideDim && domain === 'light' && active;
+  // ── Slide across the tile: lights dim, covers set position ──
+  // Enabled by default for dimmable lights and (non-tall) covers; users can opt a
+  // specific tile out by setting slideDim to false in tile settings.
+  const slideLight = slideDim !== false && domain === 'light' && active;
+  const slideCover = slideDim !== false && isCover && !tall;
+  const slideEnabled = slideLight || slideCover;
   const dragRef = useRef<{ startX: number; startY: number; width: number; left: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
   const holdTimer = useRef<number | null>(null);
   const heldRef = useRef(false);
   const [dragPct, setDragPct] = useState<number | null>(null);
   const brightnessPct = dimmable ? Math.round((brightness! / 255) * 100) : 100;
-  const dimFillPct = dragPct ?? brightnessPct;
+  // Resting fill: brightness for lights, displayed position for covers.
+  const slideRestPct = slideCover ? sliderDisplay : brightnessPct;
+  const dimFillPct = dragPct ?? slideRestPct;
 
-  // The fill takes on the light's real color, and its intensity tracks brightness
-  // so the tile visibly dims along with the bulb (while keeping the glass look).
-  const [lr, lg, lb] = slideEnabled ? lightColorRgb(entity.attributes) : [255, 170, 90];
-  const dimIntensity = 0.1 + (dimFillPct / 100) * 0.28; // 0.10 → 0.38 alpha (keeps glass)
-  const lightFill = `rgba(${lr}, ${lg}, ${lb}, ${dimIntensity})`;
-  const lightEdge = `rgba(${lr}, ${lg}, ${lb}, ${Math.min(0.7, dimIntensity + 0.22)})`;
+  // Light fill takes the bulb's real color and tracks brightness; cover fill uses
+  // a cool neutral tint and tracks the open position. Both keep the glass look.
+  const [lr, lg, lb] = slideLight ? lightColorRgb(entity.attributes) : [255, 170, 90];
+  const dimIntensity = 0.1 + (dimFillPct / 100) * 0.28; // 0.10 → 0.38 alpha
+  const coverIntensity = 0.14 + (dimFillPct / 100) * 0.26;
+  const slideFill = slideCover
+    ? `rgba(150, 192, 236, ${coverIntensity})`
+    : `rgba(${lr}, ${lg}, ${lb}, ${dimIntensity})`;
+  const slideEdge = slideCover
+    ? `rgba(176, 210, 245, ${Math.min(0.75, coverIntensity + 0.25)})`
+    : `rgba(${lr}, ${lg}, ${lb}, ${Math.min(0.7, dimIntensity + 0.22)})`;
 
   const HOLD_MS = 450; // press-and-hold (no movement) opens the flyout
   const MOVE_THRESHOLD = 6; // px of travel before a press becomes a drag
@@ -214,7 +268,11 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
     if (slideEnabled && d && d.moved && dragPct != null) {
       suppressClick.current = true;
-      callHA('light', 'turn_on', { brightness_pct: dragPct }, { entity_id: id });
+      if (slideCover) {
+        callHA('cover', 'set_cover_position', { position: fromSlider(dragPct) }, { entity_id: id });
+      } else {
+        callHA('light', 'turn_on', { brightness_pct: dragPct }, { entity_id: id });
+      }
       // Keep the dragged fill visible briefly until the new state streams in.
       window.setTimeout(() => setDragPct(null), 500);
     }
@@ -229,8 +287,8 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
 
   const tappable = TOGGLEABLE.includes(domain);
   // Active (but calm) glass for on lights/switches/fans/media — matches the reference.
-  const on = active && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
-  const warmIcon = active && (domain === 'light' || domain === 'switch');
+  const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
+  const warmIcon = effectiveActive && (domain === 'light' || domain === 'switch');
 
   // Security tint: green = secure (locked/closed), red = open/unlocked.
   // Covers: only garage/door/gate types (not blinds, shades, curtains).
@@ -244,23 +302,50 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
     }
   }
 
-  // ── Vacuum feature tile (battery, status, chips) ──
+  // ── Vacuum feature tile (live map, status, quick actions) ──
   if (isVacuum) {
     const battery = entity.attributes.battery_level as number | undefined;
     const area = entity.attributes.cleaned_area as number | undefined;
     const fan = entity.attributes.fan_speed as string | undefined;
+    const status = (entity.attributes.status as string | undefined) || entity.state;
+    const cleaning = entity.state === 'cleaning';
+    const base = id.split('.')[1];
+    const mapUrl = vacuumMapUrl(entities, base);
+    const quick = (e: React.MouseEvent, service: string) => {
+      e.stopPropagation();
+      callHA('vacuum', service, undefined, { entity_id: id });
+    };
     return (
-      <div className="tile tall vacuum-tile" onClick={() => onOpenDetail(id)}>
+      <div
+        className={`tile tall vacuum-tile ${mapUrl ? 'has-map' : ''} ${cleaning ? 'is-cleaning' : ''}`}
+        onClick={() => onOpenDetail(id)}
+        style={mapUrl ? ({ '--vac-map': `url("${mapUrl}")` } as React.CSSProperties) : undefined}
+      >
+        {mapUrl && <div className="vacuum-map-bg" />}
         <div className="tile-top">
           <span className="mdi mdi-robot-vacuum tile-icon" />
           {battery != null && <span className="vacuum-batt">{battery}% Batt.</span>}
         </div>
-        <div className="vacuum-ring">
-          <span className="mdi mdi-robot-vacuum-variant" />
+        {!mapUrl && (
+          <div className="vacuum-ring">
+            <span className="mdi mdi-robot-vacuum-variant" />
+          </div>
+        )}
+        <div className="vacuum-quick">
+          <button
+            className="vacuum-quick-btn"
+            title={cleaning ? 'Pause' : 'Clean'}
+            onClick={(e) => quick(e, cleaning ? 'pause' : 'start')}
+          >
+            <span className={`mdi ${cleaning ? 'mdi-pause' : 'mdi-play'}`} />
+          </button>
+          <button className="vacuum-quick-btn" title="Dock" onClick={(e) => quick(e, 'return_to_base')}>
+            <span className="mdi mdi-home-import-outline" />
+          </button>
         </div>
         <div className="tile-info">
           <div className="tile-name">{name}</div>
-          <div className="tile-sub">{entitySummary(entity)}</div>
+          <div className="tile-sub">{status}</div>
         </div>
         <div className="vacuum-chips">
           {area != null && <span className="chip">{area} m²</span>}
@@ -340,8 +425,8 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
         ...(slideEnabled
           ? {
               '--dim': `${dimFillPct}%`,
-              '--dim-fill': lightFill,
-              '--dim-edge': lightEdge,
+              '--dim-fill': slideFill,
+              '--dim-edge': slideEdge,
               touchAction: 'pan-y',
             }
           : {}),
@@ -351,7 +436,16 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
       } as React.CSSProperties}
       onClick={() => {
         if (suppressClick.current) { suppressClick.current = false; return; }
-        return tappable ? onToggle(id) : openDetail(id);
+        if (tappable) {
+          setOptimistic(!effectiveActive);
+          if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
+          optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+          onToggle(id);
+        } else if (slideCover) {
+          onToggle(id);
+        } else {
+          openDetail(id);
+        }
       }}
       onContextMenu={(e) => { e.preventDefault(); openDetail(id); }}
       onPointerDown={onSlidePointerDown}

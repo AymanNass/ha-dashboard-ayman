@@ -35,13 +35,16 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 
 ## Features
 
-- [ ] **Music Assistant "play media" tile** — a control like the one on
+- [x] ~~**Music Assistant "play media" tile**~~ — a control like the one on
   `home.djphoria.com/lovelace/4`: pick a speaker/target media_player, then
-  search & pick something to play via Music Assistant. Needs a media browser /
-  search UI + the MA `play_media` / `media_player.play_media` service call.
-- [ ] **Add pages from edit mode** — in edit mode, allow creating additional
+  search & pick something to play via Music Assistant. **Done (0.9.8.0):**
+  `MusicAssistantSearch` flyout searches the MA library and taps-to-play on any
+  MA player (filtered via the entity registry); see also the auto "Now Playing"
+  media view (0.9.9.0) with de-dup + manual merge + tile-size options.
+- [x] ~~**Add pages from edit mode**~~ — in edit mode, allow creating additional
   pages in the left navigation panel (add/rename/reorder/remove views), not just
-  editing tiles within an existing page.
+  editing tiles within an existing page. **Done (0.9.6.0):** in-app
+  `PagesManager` (create, rename, re-icon, reorder, delete).
 
 ## Deployment
 
@@ -134,6 +137,7 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 ### Performance polish (makes it *feel* premium)
 
 - [ ] 60fps everything — GPU-only transforms, `will-change` hints, no layout thrash.
-- [ ] Optimistic UI everywhere — toggles reflect instantly before HA confirms.
+- [x] ~~Optimistic UI everywhere — toggles reflect instantly before HA confirms.~~
+  **Done (0.9.7.0):** tiles respond immediately and reconcile with HA state.
 - [ ] Skeleton shimmer on first load instead of empty tiles.
 

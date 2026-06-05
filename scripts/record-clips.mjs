@@ -48,14 +48,21 @@ async function closeFlyout(page) {
 /**
  * Record one clip. `fn(page)` performs the interaction; the surrounding context
  * captures it to a .webm which we then transcode to `<name>.mp4`.
+ *
+ * `tail` (seconds) keeps only the final N seconds of the recording. Each
+ * Playwright context records from creation, which on this app includes a slow
+ * one-off wait while the headless browser adopts the server-shared HA
+ * connection before tiles render. For flyout clips the meaningful interaction
+ * happens at the end, so trimming to the tail drops that dead lead-in and keeps
+ * the GIFs small without changing what's shown.
  */
-async function clip(browser, name, fn, { startPath = '/' } = {}) {
+async function clip(browser, name, fn, { startPath = '/', tail } = {}) {
   const ctx = await browser.newContext({
     viewport: VIEWPORT,
     recordVideo: { dir: RAW, size: VIEWPORT },
   });
   const page = await ctx.newPage();
-  await page.goto(`${BASE}${startPath}`, { waitUntil: 'networkidle' });
+  await page.goto(`${BASE}${startPath}`, { waitUntil: 'domcontentloaded' });
   await waitReady(page);
   await fn(page);
   await sleep(600);
@@ -65,7 +72,10 @@ async function clip(browser, name, fn, { startPath = '/' } = {}) {
 
   const mp4 = `${OUT}${name}.mp4`;
   await run('ffmpeg', [
-    '-y', '-i', webm,
+    '-y',
+    // -sseof seeks from the end, keeping only the last `tail` seconds.
+    ...(tail ? ['-sseof', `-${tail}`] : []),
+    '-i', webm,
     '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,fps=30',
     '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '24',
     '-movflags', '+faststart',
@@ -125,7 +135,7 @@ async function main() {
         return;
       }
     }
-  });
+  }, { tail: 8 });
 
   // 3. Ambient weather — the rain particle layer.
   await clip(
@@ -191,7 +201,7 @@ async function main() {
         return;
       }
     }
-  });
+  }, { tail: 13 });
 
   // 5. Edit mode — enter, lift & move a tile, exit.
   await clip(browser, '05-edit-mode', async (page) => {
@@ -231,6 +241,39 @@ async function main() {
     },
     { startPath: '/?precip=storm&tod=night' },
   );
+
+  // 7. Vacuum control center — open the app-like flyout (live map + controls).
+  await clip(browser, '07-vacuum', async (page) => {
+    const vac = page.locator('.sidebar-btn[title="Vacuum"]').first();
+    if (!(await vac.count())) return;
+    await vac.click();
+    await sleep(1800);
+    const tile = page.locator('.vacuum-tile').first();
+    if (!(await tile.count())) return;
+    await tile.click();
+    await page
+      .waitForSelector('.detail-panel.open .vacuum-panel', { timeout: 8000 })
+      .catch(() => {});
+    // Hold on the open control center (the clip ends here, so the GIF loops on
+    // the fully-revealed panel rather than closing it).
+    await sleep(3200);
+  }, { tail: 7 });
+
+  // 8. Music Assistant — open the flyout and reveal the active-player dropdown.
+  await clip(browser, '08-music-assistant', async (page) => {
+    const media = page.locator('.sidebar-btn[title="Media"]').first();
+    if (!(await media.count())) return;
+    await media.click();
+    await sleep(1200);
+    const maTile = page.locator('.ma-tile').first();
+    if (!(await maTile.count())) return;
+    await maTile.click();
+    await page.waitForSelector('.ma-flyout.open', { timeout: 6000 }).catch(() => {});
+    await sleep(1200);
+    await page.locator('.ma-flyout .ma-dd-button').first().click().catch(() => {});
+    // Hold on the open dropdown (the active-player list) for the loop.
+    await sleep(2600);
+  }, { tail: 7 });
 
   await browser.close();
 
