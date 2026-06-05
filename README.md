@@ -27,6 +27,8 @@ motion and ambient effects.
 | **Main dashboard** — editable tile/room layout | **Media flyout** — now-playing artwork, scrubber, transport |
 | ![Light flyout](screenshots/21-flyout-light.png) | ![Edit mode](screenshots/30-edit-mode.png) |
 | **Light flyout** — brightness, color, live glow | **Edit mode** — drag-and-drop tile arrangement |
+| ![Vacuum control center](screenshots/26-vacuum-flyout.png) | ![Music Assistant](screenshots/27-music-assistant.png) |
+| **Vacuum control center** — live map, room select, suction & mode | **Music Assistant** — search and cast to active players |
 | ![Settings](screenshots/40-settings.png) | ![Ambient — rain](screenshots/50-ambient-rain.png) |
 | **Settings** — themes, accent color, connection | **Ambient backdrop** — weather-reactive rain (with lightning in thunderstorms) |
 | ![Ambient — snow](screenshots/51-ambient-snow.png) | ![Ambient — night](screenshots/52-ambient-night.png) |
@@ -69,6 +71,14 @@ Stills don't do the motion justice — these short clips show the live animation
 **Edit mode** — drag-and-drop tile arrangement
 
 ![Edit mode](media/05-edit-mode.gif)
+
+**Vacuum control center** — app-like flyout with live map, room select, suction & cleaning mode
+
+![Vacuum control center](media/07-vacuum.gif)
+
+**Music Assistant** — search and cast to active players
+
+![Music Assistant](media/08-music-assistant.gif)
 
 ---
 

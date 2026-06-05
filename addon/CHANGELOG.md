@@ -1,4 +1,11 @@
 # Changelog
+## 0.9.9.10-beta
+
+- **Refreshed README screenshots and motion clips.** Regenerated the full
+  screenshot set and animation GIFs to reflect the latest UI, and added new
+  captures for the **vacuum control center** (live map, room select, suction &
+  cleaning mode) and **Music Assistant** (search + active-player casting).
+
 ## 0.9.9.9-beta
 
 - **Music Assistant dropdown lists only active players.** Players you disable in

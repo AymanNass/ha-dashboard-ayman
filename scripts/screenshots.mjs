@@ -134,6 +134,61 @@ async function run() {
   }
   if (!lightShot) console.log('no light tile with brightness found — skipped light flyout');
 
+  // 2.5 Vacuum — the app-like tile (live map) + control-center flyout.
+  const vacBtn = page.locator('.sidebar-btn[title="Vacuum"]').first();
+  if (await vacBtn.count()) {
+    await vacBtn.click();
+    await sleep(1800); // let the map image load
+    await shot(page, '25-vacuum');
+    const vacTile = page.locator('.vacuum-tile').first();
+    if (await vacTile.count()) {
+      await vacTile.click();
+      const ok = await page
+        .waitForSelector('.detail-panel.open .vacuum-panel', { timeout: 8000 })
+        .then(() => true)
+        .catch(() => false);
+      if (ok) {
+        await sleep(1800);
+        await shot(page, '26-vacuum-flyout');
+      } else {
+        console.log('vacuum flyout did not open — skipped');
+      }
+      await closeFlyout(page);
+    }
+  } else {
+    console.log('no Vacuum view — skipped vacuum shots');
+  }
+
+  // 2.6 Music Assistant — search & play flyout with the active-player dropdown open.
+  const mediaBtn = page.locator('.sidebar-btn[title="Media"]').first();
+  if (await mediaBtn.count()) {
+    await mediaBtn.click();
+    await sleep(1200);
+    const maTile = page.locator('.ma-tile').first();
+    if (await maTile.count()) {
+      await maTile.click();
+      const ok = await page
+        .waitForSelector('.ma-flyout.open', { timeout: 6000 })
+        .then(() => true)
+        .catch(() => false);
+      if (ok) {
+        await sleep(900);
+        // Open the player dropdown so the (active-only) speaker list shows.
+        await page.locator('.ma-flyout .ma-dd-button').first().click().catch(() => {});
+        await sleep(700);
+        await shot(page, '27-music-assistant');
+        await page.keyboard.press('Escape').catch(() => {});
+      } else {
+        console.log('MA flyout did not open — skipped');
+      }
+      await closeFlyout(page);
+    } else {
+      console.log('no Music Assistant tile on Media view — skipped MA shot');
+    }
+  } else {
+    console.log('no Media view — skipped MA shot');
+  }
+
   // 3. Edit mode — capture on the home view.
   await navButtons.first().click();
   await sleep(900);
