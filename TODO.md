@@ -12,14 +12,14 @@ Currently app settings (HA URL, long-lived token, theme, accent) save to
 
 Options if we want the rest of the settings to follow across devices:
 
-- [ ] **Server-side `settings.json`** — reuse the existing `/layout` Vite
+- [ ] **Server-side `settings.json`** ([#7](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/7)) — reuse the existing `/layout` Vite
   middleware pattern (`vite-layout-plugin.ts` + `layouts.json`). No new
   dependency. Syncs across all devices/browsers.
   - ⚠️ Caveat: the long-lived token would be written to disk in plaintext on
     the host. Fine on a private LAN, but a conscious decision.
   - Possible compromise: sync only theme/accent/URL via `settings.json`, keep
     the **token in `localStorage`** so it never hits disk.
-- [ ] **Store settings in Home Assistant itself** — survives + syncs, more work.
+- [ ] **Store settings in Home Assistant itself** ([#8](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/8)) — survives + syncs, more work.
 - [ ] SQLite — **not worth it** for ~4 fields of flat prefs (decided against).
 
 Decision: leaving as `localStorage` for now since it works on a single device.
@@ -66,6 +66,21 @@ Decision: leaving as `localStorage` for now since it works on a single device.
     an existing dashboard can be moved onto a fresh deploy without rebuilding.
     `useLayout` exposes `exportLayout()` / `importLayout()`. (Personal layout
     backup captured locally for redeploy.)
+- [ ] **Automate template/layout backups via HA automations** ([#9](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/9)) — provide a way to
+  schedule recurring backups of the layout (`layouts.json` / the export JSON)
+  driven by Home Assistant automations (e.g. a REST command or service the
+  add-on exposes that an HA automation can call on a schedule), so the dashboard
+  config is snapshotted automatically without manual Export. Document the
+  example automation in the wiki.
+- [ ] **Glance button exclusions should be global per button type, not per page.**
+  ([#10](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/10))
+  Right now the "at a glance" exclude list (e.g. which `light.*` entities don't
+  count toward **lights on**) is stored per view (`view.glance`), so excluding a
+  tablet/kiosk light on one page doesn't carry to other pages that use the same
+  button. Make a button's exclusions consistent across every page that uses that
+  button type — e.g. store exclusions keyed by button metric/type at the layout
+  level and have per-view glance configs reference them, so the count is the same
+  everywhere.
 
 ## High-end polish ideas
 
@@ -112,9 +127,9 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 
 ### Depth & materials
 
-- [ ] Layered parallax glass — slight pointer-tracking 3D tilt on tiles.
-- [ ] Specular highlight — faint moving sheen across glass cards on hover.
-- [ ] Better elevation — multi-layer shadows + inner highlight stroke.
+- [ ] Layered parallax glass — slight pointer-tracking 3D tilt on tiles. ([#11](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/11))
+- [ ] Specular highlight — faint moving sheen across glass cards on hover. ([#12](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/12))
+- [ ] Better elevation — multi-layer shadows + inner highlight stroke. ([#13](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/13))
 
 ### Information density, done elegantly
 
@@ -122,22 +137,22 @@ Decision: leaving as `localStorage` for now since it works on a single device.
   sections sit side-by-side and fill the screen width (keeping section headings)
   instead of leaving tall vertical gaps. On by default; toggle in
   Settings → Appearance.~~
-- [ ] Sparklines on more tiles (climate/sensor) using the existing `Sparkline`.
-- [ ] Quiet status dots that pulse only on change.
-- [ ] Smart grouping — collapse an idle room into one tile, expand on tap.
+- [ ] Sparklines on more tiles (climate/sensor) using the existing `Sparkline`. ([#14](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/14))
+- [ ] Quiet status dots that pulse only on change. ([#15](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/15))
+- [ ] Smart grouping — collapse an idle room into one tile, expand on tap. ([#16](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/16))
 
 ### Delightful extras
 
-- [ ] Scene transition flash — quick full-screen color wash matching the scene.
-- [ ] Now-playing lock-screen mode — full-bleed album art takeover on tap.
-- [ ] Voice/Assist floating mic button into HA Assist.
-- [ ] Idle "screensaver" — drift to clock + ambient art for wall-tablet use.
-- [ ] Pull-to-refresh with a custom elastic indicator.
+- [ ] Scene transition flash — quick full-screen color wash matching the scene. ([#17](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/17))
+- [ ] Now-playing lock-screen mode — full-bleed album art takeover on tap. ([#18](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/18))
+- [ ] Voice/Assist floating mic button into HA Assist. ([#19](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/19))
+- [ ] Idle "screensaver" — drift to clock + ambient art for wall-tablet use. ([#20](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/20))
+- [ ] Pull-to-refresh with a custom elastic indicator. ([#21](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/21))
 
 ### Performance polish (makes it *feel* premium)
 
-- [ ] 60fps everything — GPU-only transforms, `will-change` hints, no layout thrash.
+- [ ] 60fps everything — GPU-only transforms, `will-change` hints, no layout thrash. ([#22](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/22))
 - [x] ~~Optimistic UI everywhere — toggles reflect instantly before HA confirms.~~
   **Done (0.9.7.0):** tiles respond immediately and reconcile with HA state.
-- [ ] Skeleton shimmer on first load instead of empty tiles.
+- [ ] Skeleton shimmer on first load instead of empty tiles. ([#23](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/23))
 
