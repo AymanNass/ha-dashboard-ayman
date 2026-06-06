@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { views as defaultViews } from '../config';
 import { syncSections, withRows } from '../lib/layout';
+import { applyMediaOverride } from '../lib/mediaDevices';
 import { getExportableSettings, applyImportedSettings } from '../settings';
 import type { DashRow, DashView, GlanceButtonConfig, MediaTileConfig, NocConfig, NocMetric, NocNode, RoomEntity, TileSize } from '../types';
 
@@ -409,15 +410,7 @@ export function useLayout() {
   const updateMediaDevices = useCallback(
     (viewId: string, entityIds: string[], patch: Partial<MediaTileConfig>) => {
       mutateView(viewId, (v) => {
-        const overrides = { ...(v.mediaOverrides ?? {}) };
-        for (const entityId of entityIds) {
-          const prev = overrides[entityId] ?? {};
-          const next: MediaTileConfig = { ...prev, ...patch };
-          if (next.mediaArtwork !== false) delete next.mediaArtwork;
-          if (!next.artworkEntity) delete next.artworkEntity;
-          if (Object.keys(next).length === 0) delete overrides[entityId];
-          else overrides[entityId] = next;
-        }
+        const overrides = applyMediaOverride(v.mediaOverrides ?? {}, entityIds, patch);
         if (Object.keys(overrides).length === 0) delete v.mediaOverrides;
         else v.mediaOverrides = overrides;
       });

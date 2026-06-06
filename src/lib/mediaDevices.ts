@@ -1,4 +1,5 @@
 import type { HassEntity } from 'home-assistant-js-websocket';
+import type { MediaTileConfig } from '../types';
 
 // Shared Music/media player device de-duplication. A single physical device
 // (e.g. an Android TV) commonly exposes several `media_player` entities — an
@@ -113,34 +114,125 @@ export function dedupeMediaPlayers(
 /**
  * Collapse synchronized speaker groups so a grouped set shows a single card.
  *
- * Home Assistant exposes `group_members` (an array of entity_ids) on grouped
- * media players, and by HA convention the FIRST id is the group leader/master
- * (Cast groups, Sonos, Music Assistant and Squeezebox all follow this). When
- * several shown devices belong to the same playback group, we keep only the
- * leader's card and drop the subordinate members — so e.g. a "Kitchen Group"
- * plus its "Kitchen Speaker" / "Kitchen Speaker 2" members render as one card.
+ * Real-world grouping is exposed three different ways depending on the
+ * integration, so this layers three signals (all gated behind one card list):
  *
- * `shown` is one representative entity per physical device (already de-duped);
- * `devices` is the full grouping so a leader that is a non-representative entity
- * still resolves to its device. A member is only dropped when its leader maps to
- * a *different* shown device, so a lone playing speaker never disappears.
+ * 1. **Standard `group_members`** (Google Cast, Sonos, Squeezebox) — HA lists
+ *    the synced members and, by convention, `group_members[0]` is the leader.
+ *    A member whose leader is also showing is dropped.
+ * 2. **Music Assistant `active_queue`** — MA sync groups share one queue id
+ *    across the group and its member players (e.g. `syncgroup_…`). Members that
+ *    share a queue collapse to the `mass_player_type: 'group'` card (or, if the
+ *    group isn't shown, the first member).
+ * 3. **Silent passive endpoints** — when an MA group is actively playing, the
+ *    raw per-speaker output entities it drives (Snapcast/satellite players)
+ *    appear as bare `playing` tiles with *no* metadata (no title, app_id, queue,
+ *    player type or group_members). Those are the group's outputs, so they're
+ *    hidden too. This only runs while a group is playing, so an independent
+ *    speaker is never hidden.
+ *
+ * `shown` is one representative entity per physical device (already de-duped and
+ * filtered to active devices); `devices` is the full grouping so a leader that
+ * is a non-representative entity still resolves to its device. A member is only
+ * dropped when its leader/group maps to a *different* shown device, so a lone
+ * playing speaker never disappears.
  */
 export function collapseSpeakerGroups(
   shown: HassEntity[],
   devices: HassEntity[][],
 ): HassEntity[] {
+  if (shown.length < 2) return shown;
+
   const deviceOf = new Map<string, number>();
   devices.forEach((g, i) => g.forEach((m) => deviceOf.set(m.entity_id, i)));
   const shownDeviceIdx = new Set(shown.map((e) => deviceOf.get(e.entity_id)));
-  return shown.filter((e) => {
+  const drop = new Set<string>();
+
+  // ── Signal 1: standard group_members leader convention ──
+  for (const e of shown) {
     const gm = e.attributes.group_members as string[] | undefined;
-    if (!Array.isArray(gm) || gm.length < 2) return true; // not in a group
+    if (!Array.isArray(gm) || gm.length < 2) continue;
     const leader = gm[0];
-    if (!leader || leader === e.entity_id) return true; // this device is the leader
+    if (!leader || leader === e.entity_id) continue;
     const myIdx = deviceOf.get(e.entity_id);
     const leaderIdx = deviceOf.get(leader);
-    if (leaderIdx === undefined || leaderIdx === myIdx) return true;
-    return !shownDeviceIdx.has(leaderIdx); // member: hide when leader is shown
-  });
+    if (leaderIdx === undefined || leaderIdx === myIdx) continue;
+    if (shownDeviceIdx.has(leaderIdx)) drop.add(e.entity_id);
+  }
+
+  // ── Signal 2: Music Assistant active_queue ──
+  const byQueue = new Map<string, HassEntity[]>();
+  for (const e of shown) {
+    const q = e.attributes.active_queue as string | undefined;
+    if (!q) continue;
+    const list = byQueue.get(q);
+    if (list) list.push(e);
+    else byQueue.set(q, [e]);
+  }
+  let maGroupPlaying = shown.some((e) => e.attributes.mass_player_type === 'group');
+  for (const members of byQueue.values()) {
+    if (members.length < 2) continue;
+    const group = members.find((m) => m.attributes.mass_player_type === 'group');
+    if (group) maGroupPlaying = true;
+    const keep = group ?? members[0];
+    for (const m of members) if (m !== keep) drop.add(m.entity_id);
+  }
+
+  // ── Signal 3: silent passive endpoints while a group is playing ──
+  if (maGroupPlaying) {
+    for (const e of shown) {
+      if (drop.has(e.entity_id)) continue;
+      const a = e.attributes;
+      if (a.mass_player_type === 'group') continue; // never drop the group itself
+      const bare =
+        !a.media_title &&
+        !a.app_id &&
+        !a.mass_player_type &&
+        !a.active_queue &&
+        !(Array.isArray(a.group_members) && a.group_members.length > 0);
+      if (bare) drop.add(e.entity_id);
+    }
+  }
+
+  return shown.filter((e) => !drop.has(e.entity_id));
+}
+
+// ── Per-device artwork / media overrides ──
+// A Now Playing device can bundle several media_player entities (Cast/ADB/MA…),
+// so artwork settings are stored per member entity_id and merged when read.
+
+/**
+ * Effective artwork/media config for a device, merging the stored overrides of
+ * all its member entity_ids (later members win). Returns an empty object when no
+ * member has an override — i.e. the page defaults (artwork shown, auto source).
+ */
+export function mediaConfigFor(
+  ids: string[],
+  overrides: Record<string, MediaTileConfig>,
+): MediaTileConfig {
+  return ids.reduce<MediaTileConfig>((acc, id) => ({ ...acc, ...(overrides[id] ?? {}) }), {});
+}
+
+/**
+ * Apply an artwork/media patch to every member entity of a device, returning a
+ * NEW overrides map with defaults pruned so the saved layout stays minimal:
+ * `mediaArtwork` is only kept when explicitly `false` (the non-default), and an
+ * empty `artworkEntity` (Auto) is dropped. Entries that become empty are removed
+ * entirely. Pure — does not mutate the input.
+ */
+export function applyMediaOverride(
+  overrides: Record<string, MediaTileConfig>,
+  ids: string[],
+  patch: Partial<MediaTileConfig>,
+): Record<string, MediaTileConfig> {
+  const next = { ...overrides };
+  for (const id of ids) {
+    const merged: MediaTileConfig = { ...(next[id] ?? {}), ...patch };
+    if (merged.mediaArtwork !== false) delete merged.mediaArtwork;
+    if (!merged.artworkEntity) delete merged.artworkEntity;
+    if (Object.keys(merged).length === 0) delete next[id];
+    else next[id] = merged;
+  }
+  return next;
 }
 

@@ -1,13 +1,15 @@
 {
   "name": "ha-dashboard",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "screenshots": "node scripts/screenshots.mjs",
     "record": "node scripts/record-clips.mjs"
   },
@@ -25,6 +27,7 @@
     "@vitejs/plugin-react": "^4.4.1",
     "playwright": "^1.60.0",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^2.1.9"
   }
 }

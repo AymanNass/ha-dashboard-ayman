@@ -1,4 +1,24 @@
 # Changelog
+## 1.1.1
+
+- **Now Playing page collapses grouped speakers.** When speakers are playing in a
+  synchronized group, the page now shows a single **group** card instead of the
+  group plus each member speaker. It recognises three grouping styles: standard
+  `group_members` (Cast / Sonos / Squeezebox), **Music Assistant** sync groups
+  (shared `active_queue`), and the silent passive speaker outputs an MA group
+  drives (Snapcast / satellite endpoints with no metadata). A lone playing speaker
+  is never hidden. Turn it off per page with **Combine grouped speakers** in the
+  page's edit controls.
+- **Per-device artwork & media settings on the Now Playing page.** Each device row
+  has an **Artwork and media settings** button (image icon) to toggle **Show
+  artwork** and pick an **Artwork source** (borrow album art from a companion
+  player). This restores and improves the artwork control that was previously only
+  available before per-device show/hide was added. Saved per device in the layout
+  backup.
+- **Regression tests.** Added a Vitest suite covering media device de-duplication,
+  speaker-group collapsing and the per-device artwork overrides so settings like
+  artwork configuration can't silently regress again. Run with `npm test`.
+
 ## 1.1.0
 
 - **Switch port maps on NOC device nodes.** Switch nodes now show a UniFi-style

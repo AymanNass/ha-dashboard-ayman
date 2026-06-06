@@ -26,7 +26,7 @@ import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlaye
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
-import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups } from '../lib/mediaDevices';
+import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups, mediaConfigFor as computeMediaConfig } from '../lib/mediaDevices';
 import { HA_URL } from '../config';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
@@ -315,7 +315,7 @@ function MediaAutoView(props: Props) {
   const [settingsIds, setSettingsIds] = useState<string[] | null>(null);
 
   const mediaConfigFor = (ids: string[]): MediaTileConfig =>
-    ids.reduce<MediaTileConfig>((acc, id) => ({ ...acc, ...(mediaOverrides[id] ?? {}) }), {});
+    computeMediaConfig(ids, mediaOverrides);
 
   const maTile =
     showSearch && searchMusic && playMusic ? (
