@@ -109,3 +109,38 @@ export function dedupeMediaPlayers(
 ): HassEntity[] {
   return groupMediaPlayers(players, merges).map((g) => pickRepresentative(g, preferMeta));
 }
+
+/**
+ * Collapse synchronized speaker groups so a grouped set shows a single card.
+ *
+ * Home Assistant exposes `group_members` (an array of entity_ids) on grouped
+ * media players, and by HA convention the FIRST id is the group leader/master
+ * (Cast groups, Sonos, Music Assistant and Squeezebox all follow this). When
+ * several shown devices belong to the same playback group, we keep only the
+ * leader's card and drop the subordinate members — so e.g. a "Kitchen Group"
+ * plus its "Kitchen Speaker" / "Kitchen Speaker 2" members render as one card.
+ *
+ * `shown` is one representative entity per physical device (already de-duped);
+ * `devices` is the full grouping so a leader that is a non-representative entity
+ * still resolves to its device. A member is only dropped when its leader maps to
+ * a *different* shown device, so a lone playing speaker never disappears.
+ */
+export function collapseSpeakerGroups(
+  shown: HassEntity[],
+  devices: HassEntity[][],
+): HassEntity[] {
+  const deviceOf = new Map<string, number>();
+  devices.forEach((g, i) => g.forEach((m) => deviceOf.set(m.entity_id, i)));
+  const shownDeviceIdx = new Set(shown.map((e) => deviceOf.get(e.entity_id)));
+  return shown.filter((e) => {
+    const gm = e.attributes.group_members as string[] | undefined;
+    if (!Array.isArray(gm) || gm.length < 2) return true; // not in a group
+    const leader = gm[0];
+    if (!leader || leader === e.entity_id) return true; // this device is the leader
+    const myIdx = deviceOf.get(e.entity_id);
+    const leaderIdx = deviceOf.get(leader);
+    if (leaderIdx === undefined || leaderIdx === myIdx) return true;
+    return !shownDeviceIdx.has(leaderIdx); // member: hide when leader is shown
+  });
+}
+

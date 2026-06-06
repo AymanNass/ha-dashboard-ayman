@@ -48,6 +48,13 @@ export interface RoomEntity {
   type?: 'light' | 'switch' | 'cover' | 'lock' | 'climate' | 'camera' | 'media_player' | 'vacuum' | 'sensor' | 'binary_sensor' | 'scene' | 'script';
 }
 
+export interface MediaTileConfig {
+  /** Show the now-playing artwork as the tile background (media players). On by default; set false to opt out. */
+  mediaArtwork?: boolean;
+  /** Companion media_player entity to pull now-playing artwork from (media players). */
+  artworkEntity?: string;
+}
+
 /** Controls which sections/attributes are visible in a tile's flyout. */
 export interface FlyoutConfig {
   hideState?: boolean;
@@ -123,6 +130,11 @@ export interface DashView {
   mediaMerge?: string[][];
   /** For `kind: 'media'`, the tile width on the page (defaults to medium). */
   mediaTileSize?: 'small' | 'medium' | 'large';
+  /** For `kind: 'media'`, show every grouped speaker separately instead of
+   *  collapsing a synchronized speaker group to a single (group) card. */
+  mediaSplitGroups?: boolean;
+  /** For `kind: 'media'`, per-device artwork overrides keyed by member entity_id. */
+  mediaOverrides?: Record<string, MediaTileConfig>;
   /** When set on a `kind: 'sensors'` view, render the enterprise NOC overview
    *  instead of the classic sensor grid. Fully user-built via the UI. */
   noc?: NocConfig;

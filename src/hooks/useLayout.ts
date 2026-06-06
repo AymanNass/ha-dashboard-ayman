@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { views as defaultViews } from '../config';
 import { syncSections, withRows } from '../lib/layout';
 import { getExportableSettings, applyImportedSettings } from '../settings';
-import type { DashRow, DashView, GlanceButtonConfig, NocConfig, NocMetric, NocNode, RoomEntity, TileSize } from '../types';
+import type { DashRow, DashView, GlanceButtonConfig, MediaTileConfig, NocConfig, NocMetric, NocNode, RoomEntity, TileSize } from '../types';
 
 // Resolve the layout API relative to the app's base path so it works behind
 // HA Ingress (served under /api/hassio_ingress/<token>/) as well as at root.
@@ -393,6 +393,38 @@ export function useLayout() {
     [mutateView],
   );
 
+  /** Toggle whether synchronized speaker groups are collapsed to one card
+   *  (default) or shown as separate cards on a `kind: 'media'` page. */
+  const toggleMediaSplitGroups = useCallback(
+    (viewId: string) => {
+      mutateView(viewId, (v) => {
+        if (v.mediaSplitGroups) delete v.mediaSplitGroups;
+        else v.mediaSplitGroups = true;
+      });
+    },
+    [mutateView],
+  );
+
+  /** Patch artwork settings for every entity that belongs to a media device. */
+  const updateMediaDevices = useCallback(
+    (viewId: string, entityIds: string[], patch: Partial<MediaTileConfig>) => {
+      mutateView(viewId, (v) => {
+        const overrides = { ...(v.mediaOverrides ?? {}) };
+        for (const entityId of entityIds) {
+          const prev = overrides[entityId] ?? {};
+          const next: MediaTileConfig = { ...prev, ...patch };
+          if (next.mediaArtwork !== false) delete next.mediaArtwork;
+          if (!next.artworkEntity) delete next.artworkEntity;
+          if (Object.keys(next).length === 0) delete overrides[entityId];
+          else overrides[entityId] = next;
+        }
+        if (Object.keys(overrides).length === 0) delete v.mediaOverrides;
+        else v.mediaOverrides = overrides;
+      });
+    },
+    [mutateView],
+  );
+
   // ── Per-board header widget visibility ──
   const setHeaderVisibility = useCallback(
     (viewId: string, patch: Partial<Pick<DashView, 'hideGreeting' | 'hideWeather' | 'hidePeople'>>) => {
@@ -636,6 +668,8 @@ export function useLayout() {
     mergeMediaDevices,
     unmergeMediaDevices,
     setMediaTileSize,
+    toggleMediaSplitGroups,
+    updateMediaDevices,
     setHeaderVisibility,
     setNoc,
     addNocNode,

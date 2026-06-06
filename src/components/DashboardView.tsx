@@ -18,7 +18,7 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { DashView, DashRow, RoomEntity, NocConfig, NocNode, NocMetric } from '../types';
+import type { DashView, DashRow, MediaTileConfig, RoomEntity, NocConfig, NocNode, NocMetric } from '../types';
 import { DeviceTile } from './DeviceTile';
 import { CameraGrid } from './CameraGrid';
 import { NocView } from './NocView';
@@ -26,7 +26,7 @@ import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlaye
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
-import { groupMediaPlayers, pickRepresentative, deviceNameKey } from '../lib/mediaDevices';
+import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups } from '../lib/mediaDevices';
 import { HA_URL } from '../config';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
@@ -78,6 +78,8 @@ export interface LayoutActions {
   mergeMediaDevices: (viewId: string, entityIds: string[]) => void;
   unmergeMediaDevices: (viewId: string, entityIds: string[]) => void;
   setMediaTileSize: (viewId: string, size: DashView['mediaTileSize']) => void;
+  toggleMediaSplitGroups: (viewId: string) => void;
+  updateMediaDevices: (viewId: string, entityIds: string[], patch: Partial<MediaTileConfig>) => void;
   setHeaderVisibility: (
     viewId: string,
     patch: Partial<Pick<DashView, 'hideGreeting' | 'hideWeather' | 'hidePeople'>>,
@@ -295,6 +297,7 @@ function allMediaPlayers(entities: HassEntities) {
 function MediaAutoView(props: Props) {
   const { view, entities, editing, layout, searchMusic, playMusic, getMaPlayers } = props;
   const exclude = useMemo(() => new Set(view.mediaExclude ?? []), [view.mediaExclude]);
+  const mediaOverrides = view.mediaOverrides ?? {};
   const players = useMemo(() => allMediaPlayers(entities), [entities]);
   const mergeGroups = view.mediaMerge ?? [];
   // Collapse the many media_player entities a single device exposes (Cast/ADB/
@@ -309,6 +312,10 @@ function MediaAutoView(props: Props) {
   const showSearch = !view.mediaHideSearch;
   const [filter, setFilter] = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [settingsIds, setSettingsIds] = useState<string[] | null>(null);
+
+  const mediaConfigFor = (ids: string[]): MediaTileConfig =>
+    ids.reduce<MediaTileConfig>((acc, id) => ({ ...acc, ...(mediaOverrides[id] ?? {}) }), {});
 
   const maTile =
     showSearch && searchMusic && playMusic ? (
@@ -334,6 +341,7 @@ function MediaAutoView(props: Props) {
       const ids = members.map((m) => m.entity_id);
       const hidden = members.some((m) => exclude.has(m.entity_id));
       const active = members.find((m) => isMediaActive(m.state));
+      const config = mediaConfigFor(ids);
       const matches =
         !q ||
         members.some(
@@ -350,6 +358,7 @@ function MediaAutoView(props: Props) {
         hidden,
         matches,
         merged: isMerged(members),
+        config,
       };
     });
     const shown = rows.filter((r) => !r.hidden && r.matches);
@@ -390,6 +399,27 @@ function MediaAutoView(props: Props) {
             role="switch"
             aria-checked={showSearch}
             onClick={() => layout.toggleMediaSearch(view.id)}
+          >
+            <span className="ts-switch-knob" />
+          </button>
+        </label>
+
+        <label className="media-search-toggle">
+          <div className="media-search-toggle-text">
+            <span>
+              <span className="mdi mdi-speaker-multiple" /> Combine grouped speakers
+            </span>
+            <small>
+              When speakers are grouped, show only the group card instead of the group plus
+              each member.
+            </small>
+          </div>
+          <button
+            type="button"
+            className={`ts-switch ${!view.mediaSplitGroups ? 'on' : ''}`}
+            role="switch"
+            aria-checked={!view.mediaSplitGroups}
+            onClick={() => layout.toggleMediaSplitGroups(view.id)}
           >
             <span className="ts-switch-knob" />
           </button>
@@ -474,6 +504,13 @@ function MediaAutoView(props: Props) {
                     {r.count > 1 && ` · ${r.count} entities`}
                   </span>
                 </div>
+                <button
+                  className="edit-icon-btn"
+                  title="Artwork and media settings"
+                  onClick={() => setSettingsIds(r.ids)}
+                >
+                  <span className="mdi mdi-image-edit-outline" />
+                </button>
                 {r.merged && (
                   <button
                     className="edit-icon-btn"
@@ -511,6 +548,13 @@ function MediaAutoView(props: Props) {
                     </div>
                     <button
                       className="edit-icon-btn"
+                      title="Artwork and media settings"
+                      onClick={() => setSettingsIds(r.ids)}
+                    >
+                      <span className="mdi mdi-image-edit-outline" />
+                    </button>
+                    <button
+                      className="edit-icon-btn"
                       title="Show this device on the page"
                       onClick={() => layout.toggleMediaExclude(view.id, r.ids, false)}
                     >
@@ -522,6 +566,16 @@ function MediaAutoView(props: Props) {
             </>
           )}
         </div>
+
+        {settingsIds && (
+          <MediaDeviceSettings
+            entityIds={settingsIds}
+            entities={entities}
+            config={mediaConfigFor(settingsIds)}
+            onChange={(patch) => layout.updateMediaDevices(view.id, settingsIds, patch)}
+            onClose={() => setSettingsIds(null)}
+          />
+        )}
       </div>
     );
   }
@@ -532,6 +586,11 @@ function MediaAutoView(props: Props) {
     .map((members) => members.filter((m) => isMediaActive(m.state)))
     .filter((activeMembers) => activeMembers.length > 0)
     .map((activeMembers) => pickRepresentative(activeMembers, true));
+
+  // Collapse synchronized speaker groups (e.g. a Cast "Kitchen Group" plus its
+  // member speakers) to just the group's card, unless the page opts to show
+  // every grouped speaker separately.
+  const visible = view.mediaSplitGroups ? active : collapseSpeakerGroups(active, devices);
 
   if (active.length === 0) {
     return (
@@ -562,23 +621,134 @@ function MediaAutoView(props: Props) {
           <div className="row-column">
             <div className={`tile-grid media-grid media-grid-${size}`}>
               {maTile}
-              {active.map((e) => (
-                <DeviceTile
-                  key={e.entity_id}
-                  entity={e}
-                  name={String(e.attributes.friendly_name ?? e.entity_id)}
-                  callHA={props.callHA}
-                  onToggle={props.onToggle}
-                  onOpenDetail={props.onOpenDetail}
-                  mediaArtwork
-                  entities={entities}
-                  enterIndex={tileIndex++}
-                />
-              ))}
+              {visible.map((e) => {
+                const members = devices.find((group) => group.some((m) => m.entity_id === e.entity_id)) ?? [e];
+                const config = mediaConfigFor(members.map((m) => m.entity_id));
+                return (
+                  <DeviceTile
+                    key={e.entity_id}
+                    entity={e}
+                    name={String(e.attributes.friendly_name ?? e.entity_id)}
+                    callHA={props.callHA}
+                    onToggle={props.onToggle}
+                    onOpenDetail={props.onOpenDetail}
+                    mediaArtwork={config.mediaArtwork}
+                    artworkEntity={config.artworkEntity}
+                    entities={entities}
+                    enterIndex={tileIndex++}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function MediaDeviceSettings({
+  entityIds,
+  entities,
+  config,
+  onChange,
+  onClose,
+}: {
+  entityIds: string[];
+  entities: HassEntities;
+  config: MediaTileConfig;
+  onChange: (patch: Partial<MediaTileConfig>) => void;
+  onClose: () => void;
+}) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const nameOf = (id: string) => String(entities[id]?.attributes.friendly_name ?? id);
+  const title = nameOf(entityIds[0]);
+
+  return (
+    <div className="ts-overlay" onClick={onClose}>
+      <div className="ts-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="ts-head">
+          <h3>Media Tile</h3>
+          <button className="edit-icon-btn" title="Close" onClick={onClose}>
+            <span className="mdi mdi-close" />
+          </button>
+        </div>
+
+        <div className="ts-body">
+          <div className="ts-entity">{title}</div>
+          {entityIds.length > 1 && <small className="ts-hint">Applies to all {entityIds.length} linked entities for this device.</small>}
+
+          <label className="ts-toggle-field">
+            <div className="ts-toggle-text">
+              <span>Show artwork</span>
+              <small>Use the now-playing thumbnail as the tile background.</small>
+            </div>
+            <button
+              className={`ts-switch ${config.mediaArtwork !== false ? 'on' : ''}`}
+              role="switch"
+              aria-checked={config.mediaArtwork !== false}
+              onClick={() => onChange({ mediaArtwork: config.mediaArtwork === false ? undefined : false })}
+            >
+              <span className="ts-switch-knob" />
+            </button>
+          </label>
+
+          {config.mediaArtwork !== false && (
+            <div className="ts-field">
+              <span>Artwork source</span>
+              <small className="ts-hint">Pull the thumbnail from a companion player when this one has no artwork. Leave on Auto to detect it automatically.</small>
+              <div className="ts-chip-row">
+                {config.artworkEntity ? (
+                  <span className="ts-chip">
+                    {nameOf(config.artworkEntity)}
+                    <button onClick={() => onChange({ artworkEntity: undefined })} title="Remove">
+                      <span className="mdi mdi-close" />
+                    </button>
+                  </span>
+                ) : (
+                  <button className="ts-add" onClick={() => setPickerOpen(true)}>
+                    <span className="mdi mdi-image-search" /> Auto
+                  </button>
+                )}
+                {config.artworkEntity && (
+                  <button className="ts-add" onClick={() => setPickerOpen(true)}>
+                    <span className="mdi mdi-pencil" /> Change
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="ts-footer">
+          <button className="toolbar-btn primary" onClick={onClose}>
+            <span className="mdi mdi-check" /> Done
+          </button>
+        </div>
+      </div>
+
+      {pickerOpen && (
+        <EntityPicker
+          entities={entities}
+          existing={new Set(entityIds)}
+          domainFilter={['media_player']}
+          title="Search media players for artwork…"
+          onClose={() => setPickerOpen(false)}
+          onPick={(id) => {
+            onChange({ artworkEntity: id });
+            setPickerOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -89,10 +89,13 @@ export default function App() {
   const configFor = useMemo(() => {
     const map: Record<string, RoomEntity> = {};
     for (const v of views) {
+      for (const [entityId, cfg] of Object.entries(v.mediaOverrides ?? {})) {
+        map[entityId] = { ...(map[entityId] ?? { entity_id: entityId }), ...cfg };
+      }
       for (const row of viewRows(v)) {
         for (const col of row.columns) {
           for (const e of col.entities) {
-            if (e.camera || e.links?.length || e.actions?.length || e.flyout || e.reverseSlider || e.artworkEntity) map[e.entity_id] = e;
+            if (e.camera || e.links?.length || e.actions?.length || e.flyout || e.reverseSlider || e.artworkEntity || e.mediaArtwork === false) map[e.entity_id] = e;
           }
         }
       }
