@@ -26,7 +26,7 @@ import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlaye
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
-import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups, mediaConfigFor as computeMediaConfig } from '../lib/mediaDevices';
+import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups, mediaConfigFor as computeMediaConfig, artworkPickerExclusions } from '../lib/mediaDevices';
 import { HA_URL } from '../config';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
@@ -739,7 +739,7 @@ function MediaDeviceSettings({
       {pickerOpen && (
         <EntityPicker
           entities={entities}
-          existing={new Set()}
+          existing={artworkPickerExclusions(entityIds)}
           domainFilter={['media_player']}
           title="Search media players for artwork…"
           onClose={() => setPickerOpen(false)}

@@ -214,6 +214,20 @@ export function mediaConfigFor(
 }
 
 /**
+ * Entity ids to EXCLUDE from the artwork-source picker for a given device.
+ *
+ * The artwork source is almost always a *sibling* player on the same physical
+ * device (e.g. `media_player.mb_tv` carries the picture for the playing
+ * `media_player.mb_tv_cast`), so — unlike the add-tile picker — we must NOT
+ * exclude the device's own member entities, or the right source becomes
+ * unpickable. Returns an empty set. Kept as a named helper so this intent is
+ * pinned by a regression test and can't silently revert to excluding siblings.
+ */
+export function artworkPickerExclusions(_deviceEntityIds: string[]): Set<string> {
+  return new Set<string>();
+}
+
+/**
  * Apply an artwork/media patch to every member entity of a device, returning a
  * NEW overrides map with defaults pruned so the saved layout stays minimal:
  * `mediaArtwork` is only kept when explicitly `false` (the non-default), and an

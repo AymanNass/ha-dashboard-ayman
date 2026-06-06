@@ -7,6 +7,7 @@ import {
   collapseSpeakerGroups,
   mediaConfigFor,
   applyMediaOverride,
+  artworkPickerExclusions,
 } from './mediaDevices';
 
 /** Build a minimal fake media_player entity for tests. */
@@ -128,6 +129,21 @@ describe('collapseSpeakerGroups', () => {
     const shown = [bare, named];
     const visible = collapseSpeakerGroups(shown, shown.map((e) => [e]));
     expect(visible).toHaveLength(2);
+  });
+});
+
+describe('artworkPickerExclusions (artwork-source regression guard)', () => {
+  it('does NOT exclude the device\'s own member entities', () => {
+    // The companion that carries the picture is almost always a sibling on the
+    // same physical device (e.g. media_player.mb_tv for media_player.mb_tv_cast).
+    // Excluding members would make the correct source unpickable — the bug this
+    // guards against. The artwork picker must offer every media_player.
+    const deviceMembers = ['media_player.mb_tv', 'media_player.mb_tv_cast', 'media_player.mb_tv_remote'];
+    const excluded = artworkPickerExclusions(deviceMembers);
+    expect(excluded.size).toBe(0);
+    for (const id of deviceMembers) {
+      expect(excluded.has(id)).toBe(false);
+    }
   });
 });
 
