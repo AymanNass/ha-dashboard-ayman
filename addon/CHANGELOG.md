@@ -1,4 +1,12 @@
 # Changelog
+## 1.1.2
+
+- **Fixed: artwork source couldn't pick a same-device player.** The **Artwork
+  source** picker excluded every player belonging to the same device, so the
+  companion entity that actually carries the album art (e.g. the base TV player
+  versus its Cast endpoint) could not be selected. The picker now lists every
+  media player. Added a regression test pinning this so it can't break again.
+
 ## 1.1.1
 
 - **Now Playing page collapses grouped speakers.** When speakers are playing in a
