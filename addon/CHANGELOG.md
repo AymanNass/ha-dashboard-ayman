@@ -1,4 +1,11 @@
 # Changelog
+## 1.1.6
+
+- **Improved: the first-load skeleton now mirrors your actual layout.** While the
+  first entity snapshot is loading, the shimmer placeholders match the current
+  page's real rows, column headings, tile counts and sizes — so when live data
+  arrives, tiles land exactly where their placeholders were with no layout shift.
+
 ## 1.1.5
 
 - **New: layered parallax glass — tiles tilt toward the pointer.** On

@@ -15,9 +15,11 @@ import { PagesManager } from './components/PagesManager';
 import { PageDots } from './components/PageDots';
 import { Onboarding } from './components/Onboarding';
 import { viewRows } from './lib/layout';
+import { effectiveSize, sizeToSpan } from './lib/tileSize';
+import { getSettings } from './settings';
 import { runNavTransition } from './lib/viewTransition';
 import { scenes, HA_TOKEN } from './config';
-import type { RoomEntity } from './types';
+import type { RoomEntity, DashView } from './types';
 
 export default function App() {
   const { entities, connected, error, callHA, getForecast, getHistory, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
@@ -34,8 +36,15 @@ export default function App() {
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const needsOnboarding = !HA_TOKEN && !onboardingDismissed;
   // Actively connecting (token present, nothing streamed yet, no hard error):
-  // show shimmer skeletons instead of an empty grid.
-  const booting = !!HA_TOKEN && !connected && !error && Object.keys(entities).length === 0;
+  // show shimmer skeletons instead of an empty grid. In dev, `?skeleton` forces
+  // this state so the loading look can be previewed without a real cold start.
+  const forceSkeleton =
+    import.meta.env.DEV &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).has('skeleton');
+  const booting =
+    forceSkeleton ||
+    (!!HA_TOKEN && !connected && !error && Object.keys(entities).length === 0);
 
   /** Add a new page and jump to it so it can be filled in straight away. */
   const handleAddView = useCallback(() => {
@@ -257,7 +266,7 @@ export default function App() {
         </div>
 
         {booting ? (
-          <SkeletonGrid />
+          <SkeletonGrid view={view} />
         ) : (
           <DashboardView
             view={view}
@@ -371,25 +380,76 @@ export default function App() {
   );
 }
 
-/** Shimmer placeholders shown while the first entity snapshot is loading. */
-function SkeletonGrid() {
-  return (
-    <div className="view-rows" aria-hidden="true">
-      <section className="view-row">
-        <div className="row-columns">
-          <div className="row-column">
-            <div className="tile-grid">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div className="tile skeleton-tile" key={i}>
-                  <div className="sk sk-icon" />
-                  <div className="sk sk-line sk-line-lg" />
-                  <div className="sk sk-line sk-line-sm" />
-                </div>
-              ))}
+/** Shimmer placeholders shown while the first entity snapshot is loading.
+ *
+ *  The layout (rows/columns/tiles + their sizes) is already known at boot — it
+ *  loads from the add-on independently of the Home Assistant connection — so the
+ *  skeleton mirrors the *actual* current view: same row/column headings, same
+ *  tile counts, same spans. When the first entity snapshot streams in and the
+ *  real grid renders, tiles land exactly where their placeholders were, so there
+ *  is no layout shift or reflow. */
+function SkeletonGrid({ view }: { view: DashView }) {
+  const rows = viewRows(view);
+  const compact = getSettings().compactSections && view.kind !== 'sensors';
+
+  // Mirror the real grid's tile slots (with their spans). Falls back to a
+  // generic block for views whose layout has no entity tiles (e.g. an empty or
+  // camera/media page) so the shimmer still has a plausible shape.
+  const slots = rows.flatMap((row, ri) =>
+    row.columns.flatMap((col, ci) =>
+      col.entities.map((re, ei) => ({ key: `${ri}-${ci}-${ei}`, re })),
+    ),
+  );
+
+  if (!slots.length) {
+    return (
+      <div className="view-rows" aria-hidden="true">
+        <section className="view-row">
+          <div className="row-columns">
+            <div className="row-column">
+              <div className="tile-grid">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <SkeletonTile key={i} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`view-rows ${compact ? 'compact' : ''}`} aria-hidden="true">
+      {rows.map((row, ri) => (
+        <section className="view-row" key={ri}>
+          {row.title && <h2 className="row-title">{row.title}</h2>}
+          <div className={`row-columns ${row.columns.length > 1 ? 'multi' : ''}`}>
+            {row.columns.map((col, ci) => (
+              <div className="row-column" key={ci}>
+                {col.title && <h3 className="column-title">{col.title}</h3>}
+                <div className="tile-grid">
+                  {col.entities.map((re, ei) => {
+                    const { span, tall } = sizeToSpan(effectiveSize(re, undefined));
+                    return <SkeletonTile key={ei} span={span} tall={tall} />;
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/** One shimmer tile, sized to match the real tile it stands in for. */
+function SkeletonTile({ span, tall }: { span?: boolean; tall?: boolean }) {
+  return (
+    <div className={`tile skeleton-tile ${span ? 'span' : ''} ${tall ? 'tall' : ''}`}>
+      <div className="sk sk-icon" />
+      <div className="sk sk-line sk-line-lg" />
+      <div className="sk sk-line sk-line-sm" />
     </div>
   );
 }

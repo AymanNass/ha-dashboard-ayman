@@ -156,5 +156,5 @@ Decision: leaving as `localStorage` for now since it works on a single device.
 - [ ] 60fps everything — GPU-only transforms, `will-change` hints, no layout thrash. ([#22](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/22))
 - [x] ~~Optimistic UI everywhere — toggles reflect instantly before HA confirms.~~
   **Done (0.9.7.0):** tiles respond immediately and reconcile with HA state.
-- [ ] Skeleton shimmer on first load instead of empty tiles. ([#23](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/23))
+- [x] Skeleton shimmer on first load instead of empty tiles. ([#23](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/23))
 
