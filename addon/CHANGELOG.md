@@ -1,4 +1,17 @@
 # Changelog
+## 1.1.3
+
+- **Fixed: camera tiles no longer spam Home Assistant with "invalid
+  authentication" warnings.** Camera thumbnails refresh on a short interval by
+  appending a cache-buster to HA's signed `entity_picture` URL. On wall tablets
+  running Fully Kiosk, a backgrounded webview throttles timers and the
+  WebSocket, so on resume it could re-request a frame whose signed token had
+  already rotated — HA answered 401 and logged it via `http.ban`. The refresh
+  loop now pauses on a failed frame instead of re-firing the dead token, and
+  retries once when HA pushes a freshly rotated token. The full-screen camera
+  grid was aligned to prefer the always-valid `entity_picture` over the raw
+  rotating `access_token` and gained the same recovery behavior.
+
 ## 1.1.2
 
 - **Fixed: artwork source couldn't pick a same-device player.** The **Artwork

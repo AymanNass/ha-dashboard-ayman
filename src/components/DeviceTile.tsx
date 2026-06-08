@@ -125,16 +125,34 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
   );
   const effectiveActive = optimistic ?? active;
 
-  // Live camera refresh: bust the proxy URL cache on an interval.
+  // Live camera refresh: bust the proxy URL cache every 2s so the thumbnail
+  // stays live. `cameraUrl` carries HA's signed `entity_picture` token, which HA
+  // rotates every few minutes and pushes as a fresh value over the WebSocket.
+  //
+  // A backgrounded webview (Fully Kiosk on the wall tablets) throttles timers
+  // and the socket, so on resume it can re-fire a frame whose token has since
+  // rotated — HA answers 401 and logs "Login attempt or request with invalid
+  // authentication" via http.ban. Re-busting only changes the `_=` param, not
+  // the dead token, so it would repeat that warning every 2s. Instead, pause the
+  // loop on a failed frame and let the next token rotation (a new `cameraUrl`)
+  // drive a single fresh attempt.
   const [camBust, setCamBust] = useState(() => Date.now());
+  const [camFailed, setCamFailed] = useState(false);
   useEffect(() => {
-    if (!cameraUrl) return;
+    if (!cameraUrl || camFailed) return;
     const t = setInterval(() => setCamBust(Date.now()), 2000);
     return () => clearInterval(t);
+  }, [cameraUrl, camFailed]);
+  // A rotated signed token (new cameraUrl) clears the failure and retries once.
+  useEffect(() => {
+    setCamFailed(false);
+    setCamBust(Date.now());
   }, [cameraUrl]);
   const liveCamUrl = cameraUrl
     ? `${cameraUrl}${cameraUrl.includes('?') ? '&' : '?'}_=${camBust}`
     : undefined;
+  const onCamError = () => setCamFailed(true);
+  const onCamLoad = () => setCamFailed(false);
 
   // Now-playing artwork background for media tiles (on by default; opt out via
   // `mediaArtwork: false`). Resolves the configured entity's own picture, an
@@ -376,7 +394,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
         </div>
         {liveCamUrl && (
           <div className="tile-cam-inline">
-            <img src={liveCamUrl} alt="" />
+            <img src={liveCamUrl} alt="" onError={onCamError} onLoad={onCamLoad} />
           </div>
         )}
         <div className="tile-info">
@@ -460,7 +478,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
       )}
       {liveCamUrl && (
         <div className="tile-cam">
-          <img src={liveCamUrl} alt="" />
+          <img src={liveCamUrl} alt="" onError={onCamError} onLoad={onCamLoad} />
         </div>
       )}
       <div className="tile-top">

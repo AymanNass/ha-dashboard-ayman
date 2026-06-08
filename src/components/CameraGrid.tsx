@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { cameras } from '../config';
 import { HA_URL } from '../config';
-import type { HassEntities } from 'home-assistant-js-websocket';
+import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 
 interface Props {
   entities: HassEntities;
@@ -18,21 +18,39 @@ function columnsFor(count: number): number {
   return 4;
 }
 
-function proxyUrl(entityId: string, token?: string, bust?: number): string {
-  if (!token) return '';
-  const base = `${HA_URL}/api/camera_proxy/${entityId}?token=${token}`;
-  return bust ? `${base}&_t=${bust}` : base;
+/** Build a camera image URL, preferring HA's signed `entity_picture` (the
+ *  always-valid path) over the raw `access_token`, which HA rotates every few
+ *  minutes — a stale one yields a 401 that HA logs as "invalid authentication".
+ *  An optional cache-buster keeps the open popup feeling live. */
+function camSrc(entity: HassEntity, entityId: string, bust?: number): string {
+  const pic = entity.attributes.entity_picture as string | undefined;
+  let base = pic ? (pic.startsWith('http') ? pic : `${HA_URL}${pic}`) : '';
+  if (!base) {
+    const token = entity.attributes.access_token as string | undefined;
+    base = token ? `${HA_URL}/api/camera_proxy/${entityId}?token=${token}` : '';
+  }
+  if (!base) return '';
+  return bust ? `${base}${base.includes('?') ? '&' : '?'}_t=${bust}` : base;
 }
 
 export function CameraGrid({ entities }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [bust, setBust] = useState(() => Date.now());
+  const [modalFailed, setModalFailed] = useState(false);
 
-  // Refresh the open popup image periodically so it feels live.
+  // Refresh the open popup image periodically so it feels live. Pause while a
+  // frame is failing (a resumed/throttled webview can request a since-rotated
+  // signed token → HA 401s and logs it); the next render with a fresh token
+  // retries and onLoad resumes the loop.
   useEffect(() => {
-    if (!selected) return;
+    if (!selected || modalFailed) return;
     const id = setInterval(() => setBust(Date.now()), 1000);
     return () => clearInterval(id);
+  }, [selected, modalFailed]);
+
+  // A different camera starts fresh.
+  useEffect(() => {
+    setModalFailed(false);
   }, [selected]);
 
   // Close popup on Escape.
@@ -59,9 +77,7 @@ export function CameraGrid({ entities }: Props) {
         {cameras.map((cam) => {
           const entity = entities[cam.entity_id];
           const isAvailable = entity && entity.state !== 'unavailable';
-          const imgUrl = isAvailable
-            ? proxyUrl(cam.entity_id, entity.attributes.access_token as string)
-            : '';
+          const imgUrl = isAvailable ? camSrc(entity, cam.entity_id) : '';
 
           return (
             <div
@@ -103,12 +119,10 @@ export function CameraGrid({ entities }: Props) {
             <div className="camera-modal-body">
               {selectedAvailable && selectedEntity ? (
                 <img
-                  src={proxyUrl(
-                    selectedCam.entity_id,
-                    selectedEntity.attributes.access_token as string,
-                    bust,
-                  )}
+                  src={camSrc(selectedEntity, selectedCam.entity_id, bust)}
                   alt={selectedCam.name}
+                  onError={() => setModalFailed(true)}
+                  onLoad={() => setModalFailed(false)}
                 />
               ) : (
                 <div className="camera-offline">
