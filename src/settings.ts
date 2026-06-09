@@ -15,6 +15,7 @@ export interface AppSettings {
   dateFormat: import('./lib/format').DateFormatId; // how timestamps render (browser timezone)
   durationStyle: import('./lib/format').DurationStyle; // how durations/uptime render
   screensaverMinutes: number; // idle minutes before the screensaver shows; 0 = off
+  nowPlayingTakeover: boolean; // tap on a playing media tile opens the full-bleed lock screen (off = the detail flyout, as before)
 }
 
 const STORAGE_KEY = 'ha-dashboard-settings';
@@ -54,6 +55,7 @@ const DEFAULTS: AppSettings = {
   dateFormat: 'mdy12',
   durationStyle: 'compact',
   screensaverMinutes: 0,
+  nowPlayingTakeover: true,
 };
 
 let cache: AppSettings | null = null;
@@ -99,6 +101,7 @@ export type ExportableSettings = Pick<
   | 'dateFormat'
   | 'durationStyle'
   | 'screensaverMinutes'
+  | 'nowPlayingTakeover'
 >;
 
 const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
@@ -110,6 +113,7 @@ const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
   'dateFormat',
   'durationStyle',
   'screensaverMinutes',
+  'nowPlayingTakeover',
 ];
 
 /** Snapshot the appearance preferences for inclusion in a backup file. */
@@ -124,6 +128,7 @@ export function getExportableSettings(): ExportableSettings {
     dateFormat: s.dateFormat,
     durationStyle: s.durationStyle,
     screensaverMinutes: s.screensaverMinutes,
+    nowPlayingTakeover: s.nowPlayingTakeover,
   };
 }
 

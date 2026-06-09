@@ -52,6 +52,20 @@ export default function App() {
     forceSkeleton ||
     (!!HA_TOKEN && !connected && !error && Object.keys(entities).length === 0);
 
+  // ── Now-playing takeover toggle (issue #18) ──
+  // When off (Settings → Appearance), media tiles fall back to the old
+  // tap-opens-flyout behavior; an already-open takeover closes immediately.
+  const [takeoverEnabled, setTakeoverEnabled] = useState(() => getSettings().nowPlayingTakeover);
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const enabled = (e as CustomEvent<boolean>).detail;
+      setTakeoverEnabled(enabled);
+      if (!enabled) setTakeoverEntity(null);
+    };
+    window.addEventListener('ha:np-takeover', onChange);
+    return () => window.removeEventListener('ha:np-takeover', onChange);
+  }, []);
+
   // ── Idle screensaver (issue #20) ──
   // After the configured idle minutes (Settings → Appearance; 0 = off) the
   // dashboard drifts to a clock + ambient art. Any input wakes it. Suppressed
@@ -292,7 +306,7 @@ export default function App() {
             entities={entities}
             onToggle={toggleEntity}
             onOpenDetail={setDetailEntity}
-            onOpenTakeover={setTakeoverEntity}
+            onOpenTakeover={takeoverEnabled ? setTakeoverEntity : undefined}
             callHA={callHA}
             getHistory={getHistory}
             editing={editing}

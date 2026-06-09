@@ -44,6 +44,7 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const [dateFormat, setDateFormat] = useState<DateFormatId>(initial.dateFormat);
   const [durationStyle, setDurationStyle] = useState<DurationStyle>(initial.durationStyle);
   const [screensaverMinutes, setScreensaverMinutes] = useState(initial.screensaverMinutes);
+  const [nowPlayingTakeover, setNowPlayingTakeover] = useState(initial.nowPlayingTakeover);
   const [test, setTest] = useState<TestState>('idle');
   const [testMsg, setTestMsg] = useState('');
 
@@ -78,6 +79,13 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
     window.dispatchEvent(new CustomEvent('ha:screensaver-minutes', { detail: minutes }));
   };
 
+  const toggleTakeover = () => {
+    const next = !nowPlayingTakeover;
+    setNowPlayingTakeover(next);
+    // Live-apply the tap behavior without persisting yet.
+    window.dispatchEvent(new CustomEvent('ha:np-takeover', { detail: next }));
+  };
+
   // Behind Ingress, Home Assistant is the page's own origin — connect there so
   // the scheme matches (wss:// over HTTPS) and traffic is proxied by HA.
   const servedByHa = isServedByHomeAssistant();
@@ -103,7 +111,7 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const save = (reload: boolean) => {
     const url = haUrl.trim();
     const token = haToken.trim();
-    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes });
+    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover });
     // Sync the opt-in shared connection on the server. Store the *effective* URL
     // (falls back to the default host) so other devices never adopt an empty URL.
     if (rememberOnServer && token) {
@@ -129,6 +137,9 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
     );
     window.dispatchEvent(
       new CustomEvent('ha:screensaver-minutes', { detail: getSettings().screensaverMinutes }),
+    );
+    window.dispatchEvent(
+      new CustomEvent('ha:np-takeover', { detail: getSettings().nowPlayingTakeover }),
     );
     onClose();
   };
@@ -368,6 +379,25 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
                 How timestamps (e.g. a NOC node&apos;s “last boot”) display. Always shown
                 in <strong>this device&apos;s timezone</strong>.
               </small>
+            </label>
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Now-playing lock screen</span>
+                <small>
+                  Tapping a media tile while it shows album art opens a full-screen
+                  now-playing view with controls. Off returns to the old behavior —
+                  tap opens the detail flyout. The tile&apos;s ⋯ button always opens
+                  the flyout either way.
+                </small>
+              </div>
+              <button
+                className={`ts-switch ${nowPlayingTakeover ? 'on' : ''}`}
+                role="switch"
+                aria-checked={nowPlayingTakeover}
+                onClick={toggleTakeover}
+              >
+                <span className="ts-switch-knob" />
+              </button>
             </label>
             <label className="ts-field">
               <span>Idle screensaver</span>

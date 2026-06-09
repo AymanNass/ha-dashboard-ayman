@@ -1,4 +1,13 @@
 # Changelog
+## 1.1.11
+
+- **New: toggle for the now-playing lock screen.** Settings → Appearance →
+  "Now-playing lock screen" (on by default). Turn it off to restore the old
+  behavior where tapping a playing media tile opens the detail flyout instead
+  of the full-screen takeover. Like the screensaver setting, it's included in
+  layout exports. (The idle screensaver already has its own setting and stays
+  off unless you enable it.)
+
 ## 1.1.10
 
 - **New: now-playing lock screen (#18).** Tap a playing media tile (one showing
