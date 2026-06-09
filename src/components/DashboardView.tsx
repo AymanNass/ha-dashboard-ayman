@@ -27,7 +27,7 @@ import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
 import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups, mediaConfigFor as computeMediaConfig, artworkPickerExclusions } from '../lib/mediaDevices';
-import { HA_URL } from '../config';
+import { cameraProxyUrl } from '../hooks/useCameraFeed';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
 
@@ -50,14 +50,7 @@ type CallHA = (domain: string, service: string, data?: Record<string, unknown>, 
 /** Build a camera proxy URL for a tile's optional embedded thumbnail. */
 function tileCameraUrl(entities: HassEntities, cameraId?: string): string | undefined {
   if (!cameraId) return undefined;
-  const cam = entities[cameraId];
-  if (!cam || cam.state === 'unavailable') return undefined;
-  // Prefer entity_picture (HA-signed path that's always valid); fall back to access_token.
-  const pic = cam.attributes.entity_picture as string | undefined;
-  if (pic) return pic.startsWith('http') ? pic : `${HA_URL}${pic}`;
-  const token = cam.attributes.access_token as string | undefined;
-  if (!token) return undefined;
-  return `${HA_URL}/api/camera_proxy/${cameraId}?token=${token}`;
+  return cameraProxyUrl(entities[cameraId], cameraId);
 }
 
 export interface LayoutActions {

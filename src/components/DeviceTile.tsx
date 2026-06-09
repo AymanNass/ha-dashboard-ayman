@@ -4,6 +4,7 @@ import { entityIcon, entitySummary, isActiveState, resolveArtwork } from '../lib
 import { useArtworkColor } from '../hooks/useArtworkColor';
 import { runViewTransition, viewTransitionsAvailable } from '../lib/viewTransition';
 import { useTilt } from '../hooks/useTilt';
+import { useCameraFeed } from '../hooks/useCameraFeed';
 import { Sparkline } from './Sparkline';
 import { HA_URL } from '../config';
 
@@ -133,34 +134,12 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, span,
   );
   const effectiveActive = optimistic ?? active;
 
-  // Live camera refresh: bust the proxy URL cache every 2s so the thumbnail
-  // stays live. `cameraUrl` carries HA's signed `entity_picture` token, which HA
-  // rotates every few minutes and pushes as a fresh value over the WebSocket.
-  //
-  // A backgrounded webview (Fully Kiosk on the wall tablets) throttles timers
-  // and the socket, so on resume it can re-fire a frame whose token has since
-  // rotated — HA answers 401 and logs "Login attempt or request with invalid
-  // authentication" via http.ban. Re-busting only changes the `_=` param, not
-  // the dead token, so it would repeat that warning every 2s. Instead, pause the
-  // loop on a failed frame and let the next token rotation (a new `cameraUrl`)
-  // drive a single fresh attempt.
-  const [camBust, setCamBust] = useState(() => Date.now());
-  const [camFailed, setCamFailed] = useState(false);
-  useEffect(() => {
-    if (!cameraUrl || camFailed) return;
-    const t = setInterval(() => setCamBust(Date.now()), 2000);
-    return () => clearInterval(t);
-  }, [cameraUrl, camFailed]);
-  // A rotated signed token (new cameraUrl) clears the failure and retries once.
-  useEffect(() => {
-    setCamFailed(false);
-    setCamBust(Date.now());
-  }, [cameraUrl]);
-  const liveCamUrl = cameraUrl
-    ? `${cameraUrl}${cameraUrl.includes('?') ? '&' : '?'}_=${camBust}`
-    : undefined;
-  const onCamError = () => setCamFailed(true);
-  const onCamLoad = () => setCamFailed(false);
+  // Live camera thumbnail. `cameraUrl` carries HA's signed `entity_picture`
+  // token, which HA rotates every few minutes and pushes over the WebSocket —
+  // useCameraFeed owns the refresh loop, pausing on failed frames, hidden tabs,
+  // sleep/wake gaps, and socket drops so we never spam HA with a rotated-out
+  // token (each such request is logged as "invalid authentication" by http.ban).
+  const { src: liveCamUrl, onLoad: onCamLoad, onError: onCamError } = useCameraFeed(cameraUrl, 2000);
 
   // Now-playing artwork background for media tiles (on by default; opt out via
   // `mediaArtwork: false`). Resolves the configured entity's own picture, an

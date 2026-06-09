@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
-import { HA_URL } from '../config';
+import { cameraProxyUrl, useCameraFeed } from '../hooks/useCameraFeed';
 import { resolveArtwork } from '../lib/entityInfo';
 import { useArtworkColor } from '../hooks/useArtworkColor';
 import type { TileAction, FlyoutConfig } from '../types';
@@ -243,26 +243,20 @@ export function DetailPanel({
 
 function DetailCamera({ cameraEntityId, entities }: { cameraEntityId: string; entities: HassEntities }) {
   const cam = entities[cameraEntityId];
-  const [bust, setBust] = useState(() => Date.now());
-  useEffect(() => {
-    const t = setInterval(() => setBust(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  if (!cam || cam.state === 'unavailable') return null;
-  const pic = cam.attributes.entity_picture as string | undefined;
-  const token = cam.attributes.access_token as string | undefined;
-  const base = pic
-    ? (pic.startsWith('http') ? pic : `${HA_URL}${pic}`)
-    : token
-      ? `${HA_URL}/api/camera_proxy/${cameraEntityId}?token=${token}`
-      : undefined;
-  if (!base) return null;
-  const src = `${base}${base.includes('?') ? '&' : '?'}_=${bust}`;
+  // useCameraFeed owns the refresh loop: it pauses on failed frames, hidden
+  // tabs, and socket drops so a stale signed token never gets hammered against
+  // HA (each attempt is logged as "invalid authentication" by http.ban).
+  const { src, onLoad, onError } = useCameraFeed(cameraProxyUrl(cam, cameraEntityId), 1000);
+  if (!src) return null;
 
   return (
     <div className="detail-camera glass-card">
-      <img src={src} alt={(cam.attributes.friendly_name as string) || 'Camera'} />
+      <img
+        src={src}
+        alt={(cam?.attributes.friendly_name as string) || 'Camera'}
+        onLoad={onLoad}
+        onError={onError}
+      />
     </div>
   );
 }
@@ -656,13 +650,7 @@ function VacuumMap({ cam, cameraId }: { cam: HassEntities[string]; cameraId: str
   const ts = cam?.state;
   useEffect(() => { setBust(Date.now()); }, [ts]);
 
-  const pic = cam?.attributes.entity_picture as string | undefined;
-  const token = cam?.attributes.access_token as string | undefined;
-  const baseUrl = pic
-    ? (pic.startsWith('http') ? pic : `${HA_URL}${pic}`)
-    : token
-      ? `${HA_URL}/api/camera_proxy/${cameraId}?token=${token}`
-      : undefined;
+  const baseUrl = cameraProxyUrl(cam, cameraId);
   if (!baseUrl) return null;
   const src = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}_=${bust}`;
   return (

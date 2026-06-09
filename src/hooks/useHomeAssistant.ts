@@ -9,6 +9,20 @@ import {
 } from 'home-assistant-js-websocket';
 import { HA_URL, HA_TOKEN } from '../config';
 
+// Module-level mirror of the WebSocket connection state, so leaf hooks (e.g.
+// useCameraFeed) can gate work on connectivity without prop-drilling. Changes
+// are broadcast as `ha:connection` CustomEvent<boolean> on window, matching
+// the app's existing cross-cutting event idiom.
+let haConnected = false;
+export function isHaConnected(): boolean {
+  return haConnected;
+}
+function broadcastConnected(value: boolean) {
+  if (haConnected === value) return;
+  haConnected = value;
+  window.dispatchEvent(new CustomEvent('ha:connection', { detail: value }));
+}
+
 export function useHomeAssistant() {
   const [entities, setEntities] = useState<HassEntities>({});
   const [connected, setConnected] = useState(false);
@@ -35,10 +49,17 @@ export function useHomeAssistant() {
 
         connRef.current = conn;
         setConnected(true);
+        broadcastConnected(true);
         setError(null);
 
-        conn.addEventListener('disconnected', () => setConnected(false));
-        conn.addEventListener('ready', () => setConnected(true));
+        conn.addEventListener('disconnected', () => {
+          setConnected(false);
+          broadcastConnected(false);
+        });
+        conn.addEventListener('ready', () => {
+          setConnected(true);
+          broadcastConnected(true);
+        });
 
         subscribeEntities(conn, (ents) => {
           if (!cancelled) setEntities(ents);
@@ -47,6 +68,7 @@ export function useHomeAssistant() {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Connection failed');
           setConnected(false);
+          broadcastConnected(false);
         }
       }
     }

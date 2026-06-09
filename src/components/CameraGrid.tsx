@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { cameras } from '../config';
-import { HA_URL } from '../config';
-import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
+import { cameraProxyUrl, useCameraFeed } from '../hooks/useCameraFeed';
+import type { HassEntities } from 'home-assistant-js-websocket';
 
 interface Props {
   entities: HassEntities;
@@ -18,40 +18,8 @@ function columnsFor(count: number): number {
   return 4;
 }
 
-/** Build a camera image URL, preferring HA's signed `entity_picture` (the
- *  always-valid path) over the raw `access_token`, which HA rotates every few
- *  minutes — a stale one yields a 401 that HA logs as "invalid authentication".
- *  An optional cache-buster keeps the open popup feeling live. */
-function camSrc(entity: HassEntity, entityId: string, bust?: number): string {
-  const pic = entity.attributes.entity_picture as string | undefined;
-  let base = pic ? (pic.startsWith('http') ? pic : `${HA_URL}${pic}`) : '';
-  if (!base) {
-    const token = entity.attributes.access_token as string | undefined;
-    base = token ? `${HA_URL}/api/camera_proxy/${entityId}?token=${token}` : '';
-  }
-  if (!base) return '';
-  return bust ? `${base}${base.includes('?') ? '&' : '?'}_t=${bust}` : base;
-}
-
 export function CameraGrid({ entities }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [bust, setBust] = useState(() => Date.now());
-  const [modalFailed, setModalFailed] = useState(false);
-
-  // Refresh the open popup image periodically so it feels live. Pause while a
-  // frame is failing (a resumed/throttled webview can request a since-rotated
-  // signed token → HA 401s and logs it); the next render with a fresh token
-  // retries and onLoad resumes the loop.
-  useEffect(() => {
-    if (!selected || modalFailed) return;
-    const id = setInterval(() => setBust(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [selected, modalFailed]);
-
-  // A different camera starts fresh.
-  useEffect(() => {
-    setModalFailed(false);
-  }, [selected]);
 
   // Close popup on Escape.
   useEffect(() => {
@@ -68,6 +36,15 @@ export function CameraGrid({ entities }: Props) {
   const selectedEntity = selectedCam ? entities[selectedCam.entity_id] : null;
   const selectedAvailable = !!selectedEntity && selectedEntity.state !== 'unavailable';
 
+  // Live popup feed. useCameraFeed owns the refresh loop: it pauses on failed
+  // frames, hidden tabs, and socket drops so a since-rotated signed token never
+  // gets hammered against HA (each attempt is logged as "invalid
+  // authentication" by http.ban).
+  const modalBase = selectedCam && selectedEntity && selectedAvailable
+    ? cameraProxyUrl(selectedEntity, selectedCam.entity_id)
+    : undefined;
+  const modalFeed = useCameraFeed(modalBase, 1000);
+
   return (
     <>
       <div
@@ -77,7 +54,9 @@ export function CameraGrid({ entities }: Props) {
         {cameras.map((cam) => {
           const entity = entities[cam.entity_id];
           const isAvailable = entity && entity.state !== 'unavailable';
-          const imgUrl = isAvailable ? camSrc(entity, cam.entity_id) : '';
+          // Grid thumbnails use the un-busted signed URL: they refresh whenever
+          // HA rotates the token (a new entity_picture), always fresh by design.
+          const imgUrl = isAvailable ? cameraProxyUrl(entity, cam.entity_id) : undefined;
 
           return (
             <div
@@ -117,12 +96,12 @@ export function CameraGrid({ entities }: Props) {
               </button>
             </div>
             <div className="camera-modal-body">
-              {selectedAvailable && selectedEntity ? (
+              {modalFeed.src ? (
                 <img
-                  src={camSrc(selectedEntity, selectedCam.entity_id, bust)}
+                  src={modalFeed.src}
                   alt={selectedCam.name}
-                  onError={() => setModalFailed(true)}
-                  onLoad={() => setModalFailed(false)}
+                  onError={modalFeed.onError}
+                  onLoad={modalFeed.onLoad}
                 />
               ) : (
                 <div className="camera-offline">
