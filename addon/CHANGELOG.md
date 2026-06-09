@@ -1,4 +1,15 @@
 # Changelog
+## 1.1.9
+
+- **Fixed: "Login attempt or request with invalid authentication" spam in the HA
+  log (#24).** Live camera thumbnails and flyout feeds refresh with a signed
+  token Home Assistant rotates every few minutes; after a laptop sleep/wake, a
+  throttled tab, or a dropped connection the dashboard could keep requesting
+  frames with the old token, which HA logs as a failed login (and counts toward
+  `ip_ban_enabled`). Camera polling now pauses while the tab is hidden or the
+  connection is down, waits for a fresh token after waking, and never has more
+  than one frame request in flight.
+
 ## 1.1.8
 
 - **New: thermostat presets in the climate flyout.** When a thermostat exposes
