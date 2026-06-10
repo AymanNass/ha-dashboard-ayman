@@ -32,6 +32,27 @@
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 40px rgba(var(--accent-rgb), 0.15);
 
+  /* ── Card elevation (issue #13) ──
+     Physically-layered depth, themed so light mode isn't muddy black.
+     --inner-stroke  : the inner highlight ring — a bright hairline catching
+                       light on the top edge + a faint dark hairline on the
+                       bottom, so a card reads as a real raised slab.
+     --glass-wash    : the curved-glass darkening toward a tile's bottom.
+     --elevation-rest / --elevation-raised : 3-layer drop shadow (tight contact
+                       shadow → mid → wide ambient) for a smooth, soft falloff. */
+  --inner-stroke:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+  --glass-wash: inset 0 -18px 30px rgba(0, 0, 0, 0.14);
+  --elevation-rest:
+    0 1px 2px rgba(0, 0, 0, 0.22),
+    0 5px 12px rgba(0, 0, 0, 0.20),
+    0 16px 36px rgba(0, 0, 0, 0.26);
+  --elevation-raised:
+    0 2px 4px rgba(0, 0, 0, 0.26),
+    0 10px 22px rgba(0, 0, 0, 0.30),
+    0 24px 52px rgba(0, 0, 0, 0.42);
+
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1445,7 +1466,7 @@ body::after {
   padding: 16px 18px;
   transition: var(--transition);
   cursor: default;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  box-shadow: var(--inner-stroke), var(--elevation-rest);
 }
 
 .glass-card:hover {
@@ -1454,7 +1475,7 @@ body::after {
     var(--bg-card-hover);
   border-color: var(--border-glass-light);
   transform: translateY(-2px);
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  box-shadow: var(--inner-stroke), var(--elevation-raised);
 }
 
 .glass-card.clickable {
@@ -1689,10 +1710,9 @@ body::after {
   -webkit-backdrop-filter: blur(28px) saturate(1.4);
   border: 1px solid var(--border-glass);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -18px 30px rgba(0, 0, 0, 0.16),
-    0 1px 2px rgba(0, 0, 0, 0.22),
-    0 12px 30px rgba(0, 0, 0, 0.28);
+    var(--inner-stroke),
+    var(--glass-wash),
+    var(--elevation-rest);
   cursor: pointer;
   transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.28s ease, border-color 0.2s ease;
   overflow: hidden;
@@ -1782,8 +1802,9 @@ body::after {
   border-color: var(--border-glass-light);
   transform: translateY(-3px) scale(1.012);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 16px 38px rgba(0, 0, 0, 0.4);
+    var(--inner-stroke),
+    var(--glass-wash),
+    var(--elevation-raised);
 }
 
 /* Tilt tiles lift via the composed transform's vars so the rotation is kept. */
@@ -1792,8 +1813,9 @@ body::after {
   --tilt-scale: 1.012;
   border-color: var(--border-glass-light);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 16px 38px rgba(0, 0, 0, 0.4);
+    var(--inner-stroke),
+    var(--glass-wash),
+    var(--elevation-raised);
 }
 
 .tile:active:not(.tile-tilt) {
@@ -1848,8 +1870,9 @@ body::after {
     rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 170, 110, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 10px 26px rgba(0, 0, 0, 0.28);
+    var(--inner-stroke),
+    var(--glass-wash),
+    var(--elevation-rest);
 }
 
 /* Live light color: glow matches the bulb's actual RGB / color temperature. */
@@ -1860,8 +1883,9 @@ body::after {
     rgba(255, 255, 255, 0.05);
   border-color: rgba(var(--light-rgb), 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 10px 26px rgba(0, 0, 0, 0.26);
+    var(--inner-stroke),
+    var(--glass-wash),
+    var(--elevation-rest);
   transition: background 0.5s ease, box-shadow 0.5s ease, border-color 0.5s ease;
 }
 
@@ -4439,6 +4463,22 @@ html.vt-nav-prev::view-transition-new(root) {
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;
+
+  /* Light mode: a crisp bright top edge (cards catch overhead light), a faint
+     slate hairline beneath, and soft cool-tinted shadows instead of muddy
+     black (issue #13). */
+  --inner-stroke:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(15, 23, 42, 0.05);
+  --glass-wash: inset 0 -18px 28px rgba(15, 23, 42, 0.03);
+  --elevation-rest:
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    0 4px 10px rgba(15, 23, 42, 0.06),
+    0 12px 28px rgba(15, 23, 42, 0.08);
+  --elevation-raised:
+    0 2px 4px rgba(15, 23, 42, 0.10),
+    0 10px 20px rgba(15, 23, 42, 0.10),
+    0 20px 44px rgba(15, 23, 42, 0.14);
 }
 
 :root[data-theme='light'] body::before {

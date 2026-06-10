@@ -10,6 +10,14 @@
   pulse by design. On by default; toggle in Settings → Appearance → "Status
   change dots" (synced across devices, honors reduced-motion).
 
+- **Improved: card depth and elevation (#13).** Tiles and cards now use a
+  layered, physically-plausible shadow (a tight contact shadow grounding the
+  card plus softer ambient layers for float) with an inner highlight stroke — a
+  bright hairline on the top edge and a faint one beneath — so each card reads
+  as a real raised slab. The new elevation is theme-aware: the light theme gets
+  soft, cool-tinted shadows and a crisp top edge instead of the muddy black
+  shadows and invisible highlights it had before.
+
 ## 1.2.2
 
 - **Fixed: the screensaver showed other people's Plex streams (#31).** The
