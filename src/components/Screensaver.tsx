@@ -49,6 +49,37 @@ const DRIFT_SPOTS: [number, number][] = [
  * parent unmounts this via useIdle).
  */
 export function Screensaver({ entities, calendarEvents, shortcut, onShortcut }: Props) {
+  // The waking tap must only dismiss (#30). useIdle unmounts this overlay on
+  // pointerdown, but on touch screens the gesture is still in flight — the
+  // browser synthesizes the `click` after the finger lifts, and by then the
+  // overlay is gone, so the click lands on whatever tile is underneath. Track
+  // whether a pointerdown happened while we were showing; on unmount, swallow
+  // the one trailing click (capture phase) before it reaches the dashboard.
+  // Wakes without a tap (mouse move, keyboard) suppress nothing.
+  useEffect(() => {
+    let tapped = false;
+    const markTap = () => {
+      tapped = true;
+    };
+    window.addEventListener('pointerdown', markTap, true);
+    return () => {
+      window.removeEventListener('pointerdown', markTap, true);
+      if (!tapped) return;
+      let timer = 0;
+      const stop = () => {
+        window.removeEventListener('click', suppress, true);
+        window.clearTimeout(timer);
+      };
+      const suppress = (e: Event) => {
+        e.stopPropagation();
+        e.preventDefault();
+        stop();
+      };
+      window.addEventListener('click', suppress, true);
+      timer = window.setTimeout(stop, 400);
+    };
+  }, []);
+
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 5_000);

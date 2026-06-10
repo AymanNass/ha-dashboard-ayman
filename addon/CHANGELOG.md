@@ -1,4 +1,14 @@
 # Changelog
+## 1.2.1
+
+- **Fixed: dismissing the screensaver no longer presses what's underneath
+  (#30).** On touch screens, the tap that woke the dashboard finished its
+  gesture after the screensaver disappeared, so its click landed on whatever
+  tile sat under your finger — toggling lights or opening flyouts by accident.
+  The first touch now only dismisses; the very next deliberate tap works
+  normally. The screensaver's own shortcut button is unaffected (it still
+  wakes straight onto its page in one tap).
+
 ## 1.2.0
 
 - **New: page-shortcut glance buttons (#29).** At-a-glance buttons can now be
