@@ -19,7 +19,7 @@ Options if we want the rest of the settings to follow across devices:
     the host. Fine on a private LAN, but a conscious decision.
   - Possible compromise: sync only theme/accent/URL via `settings.json`, keep
     the **token in `localStorage`** so it never hits disk.
-- [ ] **Store settings in Home Assistant itself** ([#8](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/8)) — survives + syncs, more work.
+- [x] ~~**Store settings in Home Assistant itself**~~ ([#8](https://github.com/jvenuto80/Dynamic-HA-Dashboard/issues/8)) **Done (1.2.0):** shared (non-credential) preferences sync via the add-on's `/settings` endpoint → `/data/settings.json` (inside HA, included in HA backups). Devices adopt the server copy on boot; Settings saves push it. The token and the per-device idle-screensaver timer are deliberately never synced; opt out via Settings → "Sync preferences across devices".
 - [ ] SQLite — **not worth it** for ~4 fields of flat prefs (decided against).
 
 Decision: leaving as `localStorage` for now since it works on a single device.

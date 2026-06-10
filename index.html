@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Glance — HA Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <!-- Installable web app (issue #27): "Add to Home Screen" gets a real
+         standalone app — full screen, no URL bar. Install from the direct-port
+         URL (Ingress URLs are session-scoped). No service worker on purpose:
+         offline caching behind Ingress risks pinning a stale bundle. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0b0e14" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Glance" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet" />
   </head>

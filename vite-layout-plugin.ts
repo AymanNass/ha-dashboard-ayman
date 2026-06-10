@@ -12,8 +12,14 @@ const LAYOUT_FILE = process.env.LAYOUT_FILE
 const CONNECTION_FILE = process.env.CONNECTION_FILE
   ? resolve(process.env.CONNECTION_FILE)
   : resolve(process.cwd(), 'connection.json');
+// Shared (non-credential) app settings synced across devices (issue #8).
+// Override with SETTINGS_FILE (add-on → /data).
+const SETTINGS_FILE = process.env.SETTINGS_FILE
+  ? resolve(process.env.SETTINGS_FILE)
+  : resolve(process.cwd(), 'settings.json');
 const ROUTE = '/layout';
 const CONNECTION_ROUTE = '/connection';
+const SETTINGS_ROUTE = '/settings';
 const PROXY_ROUTE = '/fetch-json';
 const MAX_BYTES = 512 * 1024;
 const PROXY_MAX_BYTES = 256 * 1024;
@@ -29,6 +35,11 @@ const PROXY_MAX_BYTES = 256 * 1024;
  *   GET  /connection  -> 200 { haUrl, haToken } | 204 (not stored)
  *   POST /connection  -> 200 { ok: true }
  *   DELETE /connection -> 200 { ok: true }
+ *
+ * And the shared (non-credential) app settings, synced across devices (#8):
+ *   GET  /settings  -> 200 { ...settings } | 204 (none stored)
+ *   POST /settings  -> 200 { ok: true }
+ *   DELETE /settings -> 200 { ok: true }
  */
 export function layoutApi(): Plugin {
   const handler = (server: ViteDevServer) => {
@@ -125,7 +136,14 @@ export function layoutApi(): Plugin {
 
     server.middlewares.use(async (req, res, next) => {
       const url = (req.url || '').split('?')[0];
-      const file = url === ROUTE ? LAYOUT_FILE : url === CONNECTION_ROUTE ? CONNECTION_FILE : null;
+      const file =
+        url === ROUTE
+          ? LAYOUT_FILE
+          : url === CONNECTION_ROUTE
+            ? CONNECTION_FILE
+            : url === SETTINGS_ROUTE
+              ? SETTINGS_FILE
+              : null;
       if (!file) return next();
 
       if (req.method === 'GET') {

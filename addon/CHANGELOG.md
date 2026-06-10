@@ -1,4 +1,30 @@
 # Changelog
+## 1.2.0
+
+- **New: page-shortcut glance buttons (#29).** At-a-glance buttons can now be
+  navigation shortcuts: in edit mode, set a button's type to **Page shortcut**
+  and pick a page — the chip shows that page's icon and name and jumps straight
+  there (e.g. a "Cameras" button on every page). Metric buttons are unchanged.
+
+- **New: screensaver shortcut button (#28).** Pick a page under Settings →
+  Appearance → "Screensaver shortcut button" and the screensaver shows a soft
+  pill button (bottom-left) that wakes the dashboard directly onto that page —
+  one tap from the idle clock to your security cameras.
+
+- **New: install as a real app (#27).** The dashboard is now an installable
+  web app: open your dashboard URL (the direct port, e.g. `:3000`) in Chrome /
+  Silk on a tablet and choose **Add to Home Screen / Install** — it launches
+  full screen with no URL bar, with a proper icon and dark splash. No service
+  worker is registered on purpose, so updates always load fresh.
+
+- **New: preferences sync across devices (#8).** Look-and-feel settings (theme,
+  accent, formats, weather entity, calendar choices, takeover toggle,
+  screensaver shortcut, …) are now stored on the add-on (`/data/settings.json`,
+  inside Home Assistant and part of HA backups). Every device adopts them on
+  load and saving Settings updates them — set the accent once, every tablet
+  follows. Your access token and the idle-screensaver timer deliberately stay
+  per-device. Opt out via Settings → "Sync preferences across devices".
+
 ## 1.1.13
 
 - **Fixed: the tablet keyboard popping open repeatedly in Music Assistant

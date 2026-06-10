@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
-import { applyTheme, getSettings, hydrateConnectionFromServer } from './settings';
+import { applyTheme, getSettings, hydrateConnectionFromServer, hydrateSettingsFromServer } from './settings';
 import { refreshConnection } from './config';
 import { installHaptics } from './lib/haptics';
 import './styles/theme.css';
@@ -19,14 +19,16 @@ function render() {
   );
 }
 
-// If this device has no local token, try adopting a server-shared connection
-// (opt-in) before the first render so it auto-connects. Never blocks for long.
-if (getSettings().haToken) {
-  render();
-} else {
-  hydrateConnectionFromServer()
-    .then((applied) => {
+// Before the first render: adopt the server's shared preferences (issue #8 —
+// theme/accent/etc.; hydrate re-applies the theme via saveSettings) and, when
+// this device has no local token, the opt-in shared connection so it
+// auto-connects. Both are same-origin fetches that fail fast; never blocks long.
+const boot: Promise<unknown>[] = [hydrateSettingsFromServer()];
+if (!getSettings().haToken) {
+  boot.push(
+    hydrateConnectionFromServer().then((applied) => {
       if (applied) refreshConnection();
-    })
-    .finally(render);
+    }),
+  );
 }
+Promise.allSettled(boot).finally(render);

@@ -247,6 +247,8 @@ export default function App() {
             onGlanceExcludeChange={layout.setGlanceExclude}
             onOpenDetail={setDetailEntity}
             calendar={calendarChip ? { events: calendarEvents, onOpen: () => setCalendarOpen(true) } : undefined}
+            views={views}
+            onNavigate={goToView}
             callHA={callHA}
           />
         )}
@@ -390,6 +392,7 @@ export default function App() {
         <SettingsModal
           onClose={() => setShowSettings(false)}
           entities={entities}
+          views={views}
           onResetLayout={layout.resetLayout}
           onStartBlank={layout.startBlank}
           onExportLayout={layout.exportLayout}
@@ -455,7 +458,18 @@ export default function App() {
         />
       )}
 
-      {showScreensaver && <Screensaver entities={entities} calendarEvents={calendarEvents} />}
+      {showScreensaver && (() => {
+        // Configurable wake-onto-page shortcut (issue #28).
+        const shortcutView = views.find((v) => v.id === getSettings().screensaverShortcut);
+        return (
+          <Screensaver
+            entities={entities}
+            calendarEvents={calendarEvents}
+            shortcut={shortcutView ? { name: shortcutView.name, icon: shortcutView.icon } : undefined}
+            onShortcut={shortcutView ? () => goToView(shortcutView.id) : undefined}
+          />
+        );
+      })()}
 
       {needsOnboarding && <Onboarding onDismiss={() => setOnboardingDismissed(true)} />}
 

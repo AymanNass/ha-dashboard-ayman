@@ -39,6 +39,10 @@ interface Props {
   /** Next-event calendar chip (issue #25): appended after the metric buttons
    *  when enabled; tapping opens the 7-day agenda flyout. */
   calendar?: { events: CalendarEvent[]; onOpen: () => void };
+  /** Pages available as navigation-button targets (issue #29). */
+  views?: { id: string; name: string; icon?: string }[];
+  /** Jump to a page (navigation buttons). */
+  onNavigate?: (viewId: string) => void;
   callHA: CallHA;
 }
 
@@ -73,6 +77,8 @@ export function GlanceStrip({
   onGlanceExcludeChange,
   onOpenDetail,
   calendar,
+  views,
+  onNavigate,
   callHA,
 }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -119,6 +125,8 @@ export function GlanceStrip({
 
   const visible = computed.filter(({ cfg, result }) => {
     if (editing) return true;
+    // Navigation shortcuts are always shown (they have no count to gate on).
+    if (cfg.kind === 'nav') return true;
     if (ALWAYS_SHOW.includes(cfg.metric)) return true;
     if (cfg.metric === 'climate') return result.active;
     return result.count > 0;
@@ -133,6 +141,51 @@ export function GlanceStrip({
     <>
       <div className={`glance-strip ${editing ? 'is-editing' : ''}`}>
         {visible.map(({ cfg, result }) => {
+          // Page-shortcut button (issue #29): the target page's icon + name,
+          // tap to navigate. Shares the editing controls below.
+          if (cfg.kind === 'nav') {
+            const target = views?.find((v) => v.id === cfg.view);
+            const navLabel = cfg.label || target?.name || 'Page';
+            const navIcon = target?.icon || 'mdi-view-dashboard';
+            return (
+              <div key={cfg.id} className="glance-stat-wrap">
+                <button
+                  type="button"
+                  className="glance-stat clickable glance-nav"
+                  onClick={!editing && target ? () => onNavigate?.(target.id) : undefined}
+                  title={target ? `Go to ${target.name}` : 'Pick a page in edit mode'}
+                >
+                  <span className={`mdi ${navIcon} glance-icon`} />
+                  <div className="glance-text">
+                    <span className="glance-value glance-nav-name">{navLabel}</span>
+                    <span className="glance-label">
+                      <span className="mdi mdi-arrow-right-thin" /> open
+                    </span>
+                  </div>
+                </button>
+                {editing && (
+                  <div className="glance-edit-controls">
+                    <button
+                      type="button"
+                      className="glance-edit-btn"
+                      title="Configure"
+                      onClick={() => setEditKey(cfg.id)}
+                    >
+                      <span className="mdi mdi-cog" />
+                    </button>
+                    <button
+                      type="button"
+                      className="glance-edit-btn danger"
+                      title="Remove"
+                      onClick={() => removeButton(cfg.id)}
+                    >
+                      <span className="mdi mdi-close" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          }
           const label = cfg.label || result.label;
           const def = METRICS[cfg.metric];
           const flyoutEnabled = cfg.flyout !== false;
@@ -234,6 +287,7 @@ export function GlanceStrip({
         <GlanceButtonEditor
           cfg={editCfg}
           entities={entities}
+          views={views ?? []}
           exclude={glanceExcludes?.[editCfg.metric] ?? editCfg.exclude ?? []}
           onChange={(patch) => updateButton(editCfg.id, patch)}
           onExcludeChange={(ids) => onGlanceExcludeChange?.(editCfg.metric, ids)}
@@ -321,6 +375,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 function GlanceButtonEditor({
   cfg,
   entities,
+  views,
   exclude,
   onChange,
   onExcludeChange,
@@ -328,6 +383,8 @@ function GlanceButtonEditor({
 }: {
   cfg: GlanceButtonConfig;
   entities: HassEntities;
+  /** Pages available as navigation targets (issue #29). */
+  views: { id: string; name: string; icon?: string }[];
   /** Global exclusions for this button's metric (shared across all pages). */
   exclude: string[];
   onChange: (patch: Partial<GlanceButtonConfig>) => void;
@@ -337,6 +394,7 @@ function GlanceButtonEditor({
   const [picking, setPicking] = useState(false);
   const nameOf = (id: string) =>
     (entities[id]?.attributes.friendly_name as string) || id;
+  const isNav = cfg.kind === 'nav';
 
   return (
     <div className="picker-overlay" onClick={onClose}>
@@ -351,29 +409,65 @@ function GlanceButtonEditor({
 
         <div className="glance-editor-body">
           <label className="glance-field">
-            <span>Shows</span>
+            <span>Type</span>
             <select
-              value={cfg.metric}
-              onChange={(e) => onChange({ metric: e.target.value as GlanceMetric, exclude: undefined })}
+              value={isNav ? 'nav' : 'metric'}
+              onChange={(e) =>
+                onChange(
+                  e.target.value === 'nav'
+                    ? { kind: 'nav', view: cfg.view ?? views[0]?.id }
+                    : { kind: undefined },
+                )
+              }
             >
-              {METRIC_OPTIONS.map((o) => (
-                <option key={o.metric} value={o.metric}>
-                  {o.name}
-                </option>
-              ))}
+              <option value="metric">Metric count (lights on, who&apos;s home, …)</option>
+              <option value="nav">Page shortcut (jump to a page)</option>
             </select>
           </label>
+
+          {isNav ? (
+            <label className="glance-field">
+              <span>Opens page</span>
+              <select value={cfg.view ?? ''} onChange={(e) => onChange({ view: e.target.value })}>
+                {!cfg.view && <option value="">Pick a page…</option>}
+                {views.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <label className="glance-field">
+              <span>Shows</span>
+              <select
+                value={cfg.metric}
+                onChange={(e) => onChange({ metric: e.target.value as GlanceMetric, exclude: undefined })}
+              >
+                {METRIC_OPTIONS.map((o) => (
+                  <option key={o.metric} value={o.metric}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className="glance-field">
             <span>Label</span>
             <input
               type="text"
-              placeholder={METRICS[cfg.metric].label}
+              placeholder={
+                isNav
+                  ? views.find((v) => v.id === cfg.view)?.name ?? 'Page name'
+                  : METRICS[cfg.metric].label
+              }
               value={cfg.label ?? ''}
               onChange={(e) => onChange({ label: e.target.value || undefined })}
             />
           </label>
 
+          {!isNav && (
           <label className="glance-field glance-field-row">
             <span>Open a flyout when tapped</span>
             <button
@@ -386,7 +480,9 @@ function GlanceButtonEditor({
               <span className="ts-switch-knob" />
             </button>
           </label>
+          )}
 
+          {!isNav && (
           <div className="glance-field">
             <span>Exclude entities</span>
             <p className="glance-field-hint">
@@ -413,6 +509,7 @@ function GlanceButtonEditor({
               <span className="mdi mdi-plus" /> Exclude an entity
             </button>
           </div>
+          )}
         </div>
       </div>
 

@@ -413,8 +413,14 @@ export type GlanceMetric =
 /** A single user-configured "at a glance" summary button. */
 export interface GlanceButtonConfig {
   id: string;
+  /** What the button is: a metric count (default) or a page-navigation
+   *  shortcut (issue #29). */
+  kind?: 'metric' | 'nav';
   metric: GlanceMetric;
-  /** Optional label override (defaults to the metric's built-in label). */
+  /** For `kind: 'nav'`, the page (view id) the button jumps to. */
+  view?: string;
+  /** Optional label override (defaults to the metric's built-in label, or the
+   *  target page's name for navigation buttons). */
   label?: string;
   /** Whether tapping the button opens a flyout listing the underlying entities. */
   flyout?: boolean;

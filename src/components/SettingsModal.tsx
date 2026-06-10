@@ -10,6 +10,7 @@ import {
   saveServerConnection,
   clearServerConnection,
   isServedByHomeAssistant,
+  pushSettingsToServer,
   THEMES,
   ACCENT_SWATCHES,
   type ThemeId,
@@ -23,6 +24,8 @@ import { DATE_FORMATS, DURATION_STYLES, type DateFormatId, type DurationStyle } 
 interface Props {
   onClose: () => void;
   entities: HassEntities;
+  /** Pages, for the screensaver-shortcut picker (issue #28). */
+  views?: Pick<DashView, 'id' | 'name'>[];
   onResetLayout: () => void;
   onStartBlank: () => void;
   onExportLayout: () => string;
@@ -31,7 +34,7 @@ interface Props {
 
 type TestState = 'idle' | 'testing' | 'ok' | 'fail';
 
-export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, onExportLayout, onImportLayout }: Props) {
+export function SettingsModal({ onClose, entities, views, onResetLayout, onStartBlank, onExportLayout, onImportLayout }: Props) {
   const initial = getSettings();
   const [haUrl, setHaUrl] = useState(initial.haUrl);
   const [haToken, setHaToken] = useState(initial.haToken);
@@ -48,6 +51,8 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const [nowPlayingTakeover, setNowPlayingTakeover] = useState(initial.nowPlayingTakeover);
   const [calendarChip, setCalendarChip] = useState(initial.calendarChip);
   const [calendarEntities, setCalendarEntities] = useState<string[]>(initial.calendarEntities);
+  const [screensaverShortcut, setScreensaverShortcut] = useState(initial.screensaverShortcut);
+  const [syncSettings, setSyncSettings] = useState(initial.syncSettings);
   const [test, setTest] = useState<TestState>('idle');
   const [testMsg, setTestMsg] = useState('');
 
@@ -115,7 +120,9 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const save = (reload: boolean) => {
     const url = haUrl.trim();
     const token = haToken.trim();
-    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover, calendarChip, calendarEntities });
+    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover, calendarChip, calendarEntities, screensaverShortcut, syncSettings });
+    // Share the non-credential preferences with other devices (issue #8).
+    void pushSettingsToServer();
     // Sync the opt-in shared connection on the server. Store the *effective* URL
     // (falls back to the default host) so other devices never adopt an empty URL.
     if (rememberOnServer && token) {
@@ -421,6 +428,45 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
                 dimmed clock with the date, outside temperature, and ambient album
                 art when music is playing. Tap anywhere to wake it.
               </small>
+            </label>
+            {views && views.length > 0 && (
+              <label className="ts-field">
+                <span>Screensaver shortcut button</span>
+                <select
+                  value={screensaverShortcut}
+                  onChange={(e) => setScreensaverShortcut(e.target.value)}
+                >
+                  <option value="">None</option>
+                  {views.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+                <small className="settings-hint">
+                  Show a button on the screensaver that wakes the dashboard
+                  straight onto this page — e.g. your security cameras.
+                </small>
+              </label>
+            )}
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Sync preferences across devices</span>
+                <small>
+                  Store the look-and-feel settings (theme, accent, formats, weather,
+                  calendar choices, …) on the add-on so every device picks them up on
+                  load. The connection token and the idle-screensaver timer stay
+                  per-device and are never synced.
+                </small>
+              </div>
+              <button
+                className={`ts-switch ${syncSettings ? 'on' : ''}`}
+                role="switch"
+                aria-checked={syncSettings}
+                onClick={() => setSyncSettings((s) => !s)}
+              >
+                <span className="ts-switch-knob" />
+              </button>
             </label>
             <label className="ts-field">
               <span>Duration / uptime style</span>

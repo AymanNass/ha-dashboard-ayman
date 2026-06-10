@@ -6711,3 +6711,50 @@ button.noc-port:hover { transform: translateY(-1px); }
   width: 15px;
   height: 15px;
 }
+
+/* ───────────────────── Glance navigation buttons (issue #29) ──────────────── */
+
+.glance-nav .glance-icon {
+  color: var(--accent-primary);
+}
+
+.glance-nav .glance-nav-name {
+  font-size: 14px;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.glance-nav .glance-label .mdi {
+  font-size: 13px;
+  vertical-align: -1px;
+}
+
+/* ───────────────────── Screensaver shortcut button (issue #28) ────────────── */
+
+.ss-shortcut {
+  position: absolute;
+  left: max(28px, env(safe-area-inset-left));
+  bottom: max(28px, env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+}
+
+.ss-shortcut .mdi {
+  font-size: 17px;
+  color: var(--accent-primary);
+}

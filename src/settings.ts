@@ -18,6 +18,8 @@ export interface AppSettings {
   nowPlayingTakeover: boolean; // tap on a playing media tile opens the full-bleed lock screen (off = the detail flyout, as before)
   calendarChip: boolean; // at-a-glance calendar chip showing the next event (when any calendar.* exists)
   calendarEntities: string[]; // which calendar.* entities feed the agenda; [] = all discovered
+  screensaverShortcut: string; // page (view id) the screensaver's shortcut button opens; '' = no button
+  syncSettings: boolean; // sync shared preferences across devices via the add-on server (issue #8)
 }
 
 const STORAGE_KEY = 'ha-dashboard-settings';
@@ -60,6 +62,8 @@ const DEFAULTS: AppSettings = {
   nowPlayingTakeover: true,
   calendarChip: true,
   calendarEntities: [],
+  screensaverShortcut: '',
+  syncSettings: true,
 };
 
 let cache: AppSettings | null = null;
@@ -108,6 +112,7 @@ export type ExportableSettings = Pick<
   | 'nowPlayingTakeover'
   | 'calendarChip'
   | 'calendarEntities'
+  | 'screensaverShortcut'
 >;
 
 const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
@@ -122,6 +127,7 @@ const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
   'nowPlayingTakeover',
   'calendarChip',
   'calendarEntities',
+  'screensaverShortcut',
 ];
 
 /** Snapshot the appearance preferences for inclusion in a backup file. */
@@ -139,6 +145,7 @@ export function getExportableSettings(): ExportableSettings {
     nowPlayingTakeover: s.nowPlayingTakeover,
     calendarChip: s.calendarChip,
     calendarEntities: s.calendarEntities,
+    screensaverShortcut: s.screensaverShortcut,
   };
 }
 
@@ -271,6 +278,79 @@ export async function hydrateConnectionFromServer(): Promise<boolean> {
   const local = getSettings();
   cache = { ...local, haUrl: server.haUrl, haToken: server.haToken, rememberOnServer: true };
   return true;
+}
+
+// ── Shared settings sync (issue #8) ──
+// The preferences below sync across devices through the add-on server
+// (`/settings` → /data/settings.json, which lives inside Home Assistant and is
+// included in HA backups). Deliberately excluded:
+//   • credentials (haUrl/haToken) — never leave this device's localStorage;
+//   • screensaverMinutes — per-device by design (a wall tablet wants the
+//     screensaver, a desktop browser doesn't);
+//   • syncSettings itself — each device opts in/out on its own.
+const SYNCED_KEYS: (keyof ExportableSettings)[] = [
+  'theme',
+  'accent',
+  'ambientEffects',
+  'compactSections',
+  'weatherEntity',
+  'dateFormat',
+  'durationStyle',
+  'screensaverShortcut',
+];
+
+const SETTINGS_ENDPOINT = `${import.meta.env.BASE_URL}settings`.replace(/\/\/+/g, '/');
+
+const SYNCED_EXTRA: (keyof AppSettings)[] = ['nowPlayingTakeover', 'calendarChip', 'calendarEntities'];
+
+function syncedSubset(s: AppSettings): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of [...SYNCED_KEYS, ...SYNCED_EXTRA]) out[k] = s[k];
+  return out;
+}
+
+/** Push the shared preferences to the server (no-op when sync is off or the
+ *  endpoint isn't there, e.g. a static deploy). */
+export async function pushSettingsToServer(): Promise<void> {
+  const s = getSettings();
+  if (!s.syncSettings) return;
+  try {
+    await fetch(SETTINGS_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(syncedSubset(s)),
+    });
+  } catch {
+    /* sync is best-effort */
+  }
+}
+
+/**
+ * On startup, adopt the server's shared preferences (when sync is on). The
+ * server copy wins for synced keys — it's the cross-device source of truth —
+ * and the merged result is persisted locally so the device renders right even
+ * if the server is unreachable next boot. Returns true when anything applied.
+ */
+export async function hydrateSettingsFromServer(): Promise<boolean> {
+  if (!getSettings().syncSettings) return false;
+  try {
+    const res = await fetch(SETTINGS_ENDPOINT);
+    if (!res.ok || res.status === 204) return false;
+    const data = (await res.json()) as Record<string, unknown>;
+    if (!data || typeof data !== 'object') return false;
+    const patch: Partial<AppSettings> = {};
+    let any = false;
+    for (const k of [...SYNCED_KEYS, ...SYNCED_EXTRA]) {
+      if (k in data && data[k] !== undefined) {
+        (patch as Record<string, unknown>)[k] = data[k];
+        any = true;
+      }
+    }
+    if (any) saveSettings(patch);
+    return any;
+  } catch {
+    return false;
+  }
 }
 
 /** Apply theme + accent to the document root via data attribute and CSS vars. */

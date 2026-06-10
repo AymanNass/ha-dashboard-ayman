@@ -9,6 +9,10 @@ interface Props {
   entities: HassEntities;
   /** Upcoming events for the under-clock agenda (issue #25). */
   calendarEvents?: CalendarEvent[];
+  /** Configurable shortcut button (issue #28): wakes the dashboard directly
+   *  onto the chosen page (e.g. Security). */
+  shortcut?: { name: string; icon?: string };
+  onShortcut?: () => void;
 }
 
 /** The playing media player to feature, if any — feeds the ambient art
@@ -44,7 +48,7 @@ const DRIFT_SPOTS: [number, number][] = [
  * art with a now-playing line. Any touch/movement wakes the dashboard (the
  * parent unmounts this via useIdle).
  */
-export function Screensaver({ entities, calendarEvents }: Props) {
+export function Screensaver({ entities, calendarEvents, shortcut, onShortcut }: Props) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 5_000);
@@ -152,6 +156,20 @@ export function Screensaver({ entities, calendarEvents }: Props) {
           </div>
         )}
       </div>
+
+      {shortcut && (
+        <button
+          type="button"
+          className="ss-shortcut"
+          // The same pointerdown that wakes the dashboard (unmounting this
+          // overlay before a click could ever fire) also triggers the
+          // navigation — so the tap lands on the chosen page in one go.
+          onPointerDown={onShortcut}
+        >
+          <span className={`mdi ${shortcut.icon || 'mdi-shield-home'}`} />
+          {shortcut.name}
+        </button>
+      )}
 
       {playing && title && (
         <div className="ss-nowplaying">
