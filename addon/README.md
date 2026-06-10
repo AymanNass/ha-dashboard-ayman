@@ -152,3 +152,31 @@ What changes when you set a direct port:
 **Recommendation:** use the direct port only on trusted LAN kiosk devices, and
 keep Ingress for normal and remote access.
 
+## Install as an app (full screen, no URL bar)
+
+Glance ships a web-app manifest, so browsers can install it like a native app —
+it launches full screen with its own icon, no URL bar.
+
+**The one requirement: HTTPS.** Chromium browsers (Chrome, Edge, Silk) only
+offer the real *Install app* on a secure origin. On a plain `http://ip:3000`
+URL, "Add to Home Screen" silently creates a legacy bookmark that still shows
+the URL bar. The fix is to put the dashboard behind a TLS reverse proxy you
+already trust:
+
+1. In your reverse proxy (Nginx Proxy Manager, Caddy, Traefik, …), add a host
+   like `glance.example.com` → `http://<ha-ip>:3000` with your usual
+   certificate. WebSocket support must be enabled (it's one toggle in NPM;
+   Caddy/Traefik do it automatically) so the dashboard can reach HA.
+2. Browse to `https://glance.example.com`, open **Settings** and check the
+   connection still points at your HA URL (it's stored per-browser).
+3. Chrome (Android/desktop): menu → **Install app** (or **Add to Home Screen**,
+   which now installs the real thing). iPhone/iPad Safari: Share → **Add to
+   Home Screen** — iOS honors the standalone mode here even without the proxy.
+4. Keep the proxy host LAN-only (or behind your VPN) unless you intend to
+   expose it — the direct port has no HA login.
+
+> **Fire tablets:** Amazon's Silk browser has unreliable web-app install
+> support even over HTTPS (Fire OS lacks the WebAPK machinery). For a Fire HD
+> wall tablet, **Fully Kiosk Browser** pointed at the direct port remains the
+> most reliable full-screen setup; the app install shines on phones and iPads.
+
