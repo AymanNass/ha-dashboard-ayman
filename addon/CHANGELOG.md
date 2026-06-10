@@ -1,4 +1,16 @@
 # Changelog
+## 1.1.13
+
+- **Fixed: the tablet keyboard popping open repeatedly in Music Assistant
+  search (#26).** The flyout used to refocus the search box on every dashboard
+  re-render — i.e. every entity update — so the on-screen keyboard kept
+  reopening while you worked the player/type dropdowns. It now focuses only at
+  the moment the flyout opens, and on touch devices it doesn't autofocus at
+  all: the keyboard appears only when you tap the search box, and it dismisses
+  automatically when the search runs so results aren't buried. The "Results"
+  count is now a dropdown instead of a number field (one less keyboard trap),
+  and tablet keyboards show a proper "search" enter key.
+
 ## 1.1.12
 
 - **New: calendar agenda (#25).** The dashboard now reads your Home Assistant

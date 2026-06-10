@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 import {
   MA_MEDIA_TYPES,
@@ -31,6 +31,11 @@ interface Props {
 
 const PLAYER_KEY = 'ma-last-player';
 
+/** Touch-first device (tablet/phone): focusing a text input pops the on-screen
+ *  keyboard, so autofocus is hostile there (#26). */
+const isTouchDevice = () =>
+  typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
 /**
  * "Search in Music Assistant" — a launcher tile that opens a right-side flyout
  * (consistent with the entity detail panel). Searches via the
@@ -39,6 +44,11 @@ const PLAYER_KEY = 'ma-last-player';
  */
 export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPlayers, name, icon }: Props) {
   const [open, setOpen] = useState(false);
+  // Stable identity: an inline `() => setOpen(false)` changes every render
+  // (i.e. every entity stream tick), and the panel's focus effect used to
+  // re-run on it — re-stealing focus into the search box and popping the
+  // tablet keyboard over and over (#26).
+  const close = useCallback(() => setOpen(false), []);
   return (
     <>
       <button type="button" className="tile ma-tile" onClick={() => setOpen(true)}>
@@ -52,7 +62,7 @@ export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPl
         <span className="mdi mdi-magnify ma-tile-search" aria-hidden="true" />
       </button>
 
-      <div className={`detail-overlay ${open ? 'open' : ''}`} onClick={() => setOpen(false)} />
+      <div className={`detail-overlay ${open ? 'open' : ''}`} onClick={close} />
       <div className={`detail-panel ma-flyout ${open ? 'open' : ''}`} aria-hidden={!open}>
         <MusicAssistantPanel
           entities={entities}
@@ -60,7 +70,7 @@ export function MusicAssistantSearch({ entities, searchMusic, playMusic, getMaPl
           playMusic={playMusic}
           getMaPlayers={getMaPlayers}
           open={open}
-          onClose={() => setOpen(false)}
+          onClose={close}
         />
       </div>
     </>
@@ -146,9 +156,17 @@ function MusicAssistantPanel({
   const toastTimer = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // Focus the search box only on the open *transition*, and never on touch
+  // devices — there, focusing means popping the on-screen keyboard before the
+  // user asked for it (#26). Guarding the transition (rather than focusing on
+  // every effect run) also means a re-render can never steal focus back while
+  // the user is working the dropdowns.
+  const wasOpen = useRef(false);
   useEffect(() => {
+    const justOpened = open && !wasOpen.current;
+    wasOpen.current = open;
     if (!open) return;
-    inputRef.current?.focus();
+    if (justOpened && !isTouchDevice()) inputRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -176,6 +194,8 @@ function MusicAssistantPanel({
   const runSearch = async () => {
     const q = term.trim();
     if (!q) return;
+    // Drop the on-screen keyboard so it doesn't bury the results (#26).
+    if (isTouchDevice()) inputRef.current?.blur();
     setLoading(true);
     setError(null);
     setSearched(true);
@@ -242,6 +262,7 @@ function MusicAssistantPanel({
             className="ma-search-input"
             placeholder="Type your search term here…"
             value={term}
+            enterKeyHint="search"
             onChange={(e) => setTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') runSearch();
@@ -271,16 +292,14 @@ function MusicAssistantPanel({
                 onChange={setMediaType}
               />
             </div>
-            <label className="ma-field ma-field-narrow">
+            <div className="ma-field ma-field-narrow">
               <span>Results</span>
-              <input
-                type="number"
-                min={1}
-                max={50}
-                value={limit}
-                onChange={(e) => setLimit(Math.max(1, Math.min(50, Number(e.target.value) || 5)))}
+              <MaSelect
+                value={String(limit)}
+                options={[5, 10, 15, 20, 30, 50].map((n) => ({ value: String(n), label: String(n) }))}
+                onChange={(v) => setLimit(Number(v))}
               />
-            </label>
+            </div>
           </div>
         </div>
 
