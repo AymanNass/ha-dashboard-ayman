@@ -157,8 +157,8 @@ keep Ingress for normal and remote access.
 Glance ships a web-app manifest, so browsers can install it like a native app —
 it launches full screen with its own icon, no URL bar.
 
-**The one requirement: HTTPS.** Chromium browsers (Chrome, Edge, Silk) only
-offer the real *Install app* on a secure origin. On a plain `http://ip:3000`
+**The one requirement: HTTPS.** Chromium browsers (Chrome, Brave, Edge, Silk)
+only offer the real *Install app* on a secure origin. On a plain `http://ip:3000`
 URL, "Add to Home Screen" silently creates a legacy bookmark that still shows
 the URL bar. The fix is to put the dashboard behind a TLS reverse proxy you
 already trust:
@@ -170,10 +170,17 @@ already trust:
 2. Browse to `https://glance.example.com`, open **Settings** and check the
    connection still points at your HA URL (it's stored per-browser).
 3. Chrome (Android/desktop): menu → **Install app** (or **Add to Home Screen**,
-   which now installs the real thing). iPhone/iPad Safari: Share → **Add to
-   Home Screen** — iOS honors the standalone mode here even without the proxy.
+   which now installs the real thing). **Brave** (Android): menu → **Add to
+   Home screen** → choose **Install** in the dialog (not "Create shortcut" —
+   that's the bookmark). iPhone/iPad Safari: Share → **Add to Home Screen** —
+   iOS honors the standalone mode here even without the proxy.
 4. Keep the proxy host LAN-only (or behind your VPN) unless you intend to
-   expose it — the direct port has no HA login.
+   expose it — the direct port has no HA login. Note an installed app on a
+   phone only works where it can reach that host (home Wi-Fi / VPN), so plan
+   the proxy's reachability around how the phones roam.
+5. Brave's Shields don't affect the install itself, but if icons/fonts look
+   missing inside the installed app, allow the Google Fonts / jsDelivr CDNs
+   for the dashboard host (or drop Shields for that site).
 
 > **Fire tablets:** Amazon's Silk browser has unreliable web-app install
 > support even over HTTPS (Fire OS lacks the WebAPK machinery). For a Fire HD
