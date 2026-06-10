@@ -1,4 +1,15 @@
 # Changelog
+## Unreleased
+
+- **New: quiet status dots (#15).** Each device tile carries a tiny,
+  near-invisible dot that pulses once — in your accent color — the moment that
+  device meaningfully changes: a light flips, a door unlocks, motion is
+  detected, a thermostat target moves. Then it settles back to quiet, so the
+  dashboard gives you ambient "what just changed" awareness without constant
+  motion. Continuous sensors (temperatures, power draw) and cameras never
+  pulse by design. On by default; toggle in Settings → Appearance → "Status
+  change dots" (synced across devices, honors reduced-motion).
+
 ## 1.2.2
 
 - **Fixed: the screensaver showed other people's Plex streams (#31).** The

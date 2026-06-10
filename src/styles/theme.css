@@ -6758,3 +6758,42 @@ button.noc-port:hover { transform: translateY(-1px); }
   font-size: 17px;
   color: var(--accent-primary);
 }
+
+/* ───────────────────── Quiet status dots (issue #15) ───────────────────────
+   A near-invisible dot per tile that pulses once when the entity meaningfully
+   changes (handled in DeviceTile), then settles back to quiet. */
+
+.tile-status-dot {
+  position: absolute;
+  top: 17px;
+  right: 46px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(148, 163, 184, 0.22);
+  pointer-events: none;
+  transition: background 0.5s ease;
+  z-index: 1;
+}
+
+.tile-status-dot.pulse {
+  background: var(--accent-primary);
+  animation: status-dot-pulse 1.8s ease-out;
+}
+
+@keyframes status-dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55);
+    transform: scale(1.6);
+  }
+  100% {
+    box-shadow: 0 0 0 10px rgba(var(--accent-rgb), 0);
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-status-dot.pulse {
+    animation: none;
+  }
+}

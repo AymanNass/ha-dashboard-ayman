@@ -7,6 +7,7 @@ import { useTilt } from '../hooks/useTilt';
 import { useCameraFeed } from '../hooks/useCameraFeed';
 import { Sparkline } from './Sparkline';
 import { HA_URL } from '../config';
+import { getSettings } from '../settings';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -43,6 +44,77 @@ interface Props {
 }
 
 const TOGGLEABLE = ['light', 'switch', 'input_boolean', 'fan', 'lock'];
+
+// ── Quiet status dots (issue #15) ──
+// A near-invisible dot on each participating tile that pulses once when the
+// entity meaningfully changes, then goes quiet again — ambient "what just
+// changed" awareness without a constantly animating dashboard.
+
+/** The value whose *transition* deserves a pulse, or null for tiles that stay
+ *  quiet. Deliberately restrained: discrete changes only (on/off, open/closed,
+ *  locked/unlocked, motion, play state, hvac mode / target temp). Numeric
+ *  sensors and cameras tick continuously and would turn the dashboard into a
+ *  slot machine, so they don't participate at all. */
+function statusSignature(entity: HassEntity): string | null {
+  const domain = entity.entity_id.split('.')[0];
+  switch (domain) {
+    case 'light':
+    case 'switch':
+    case 'input_boolean':
+    case 'fan':
+    case 'lock':
+    case 'cover':
+    case 'binary_sensor':
+    case 'vacuum':
+    case 'media_player':
+    case 'person':
+    case 'script':
+    case 'button':
+    case 'scene':
+      return entity.state;
+    case 'climate':
+      // Mode changes and target-temperature changes are both deliberate acts.
+      return `${entity.state}|${entity.attributes.temperature ?? ''}`;
+    default:
+      return null;
+  }
+}
+
+/** Live-updating "status dots enabled" preference (Settings → Appearance). */
+function useStatusDots(): boolean {
+  const [on, setOn] = useState(() => getSettings().statusDots);
+  useEffect(() => {
+    const onChange = (e: Event) => setOn((e as CustomEvent<boolean>).detail);
+    window.addEventListener('ha:status-dots', onChange);
+    return () => window.removeEventListener('ha:status-dots', onChange);
+  }, []);
+  return on;
+}
+
+/** Pulse once whenever the signature changes (never on mount/remount). */
+function useStatusPulse(signature: string | null, enabled: boolean): boolean {
+  const [pulsing, setPulsing] = useState(false);
+  const prev = useRef(signature);
+  const timer = useRef<number | null>(null);
+  useEffect(() => {
+    const changed = signature != null && prev.current != null && prev.current !== signature;
+    prev.current = signature;
+    if (!changed || !enabled) return;
+    setPulsing(false);
+    // Restart the CSS animation on back-to-back changes: drop the class for a
+    // frame, then re-add it.
+    requestAnimationFrame(() => setPulsing(true));
+    if (timer.current != null) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setPulsing(false), 2000);
+  }, [signature, enabled]);
+  useEffect(
+    () => () => {
+      if (timer.current != null) window.clearTimeout(timer.current);
+    },
+    [],
+  );
+  return pulsing;
+}
 
 /** Approximate an RGB triplet for a color temperature in Kelvin (1000–12000). */
 function kelvinToRgb(kelvin: number): [number, number, number] {
@@ -104,6 +176,15 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   const tileIcon = icon || entityIcon(id, entity.state);
   // Pointer-tracking parallax tilt (mouse only; no-op on touch / reduced-motion).
   const tiltRef = useTilt();
+
+  // Quiet status dot (issue #15): pulses once on a meaningful change.
+  const dotsEnabled = useStatusDots();
+  const statusSig = statusSignature(entity);
+  const pulsing = useStatusPulse(statusSig, dotsEnabled);
+  const statusDot =
+    dotsEnabled && statusSig != null ? (
+      <span className={`tile-status-dot ${pulsing ? 'pulse' : ''}`} aria-hidden="true" />
+    ) : null;
 
   const brightness = entity.attributes.brightness as number | undefined;
   const dimmable = domain === 'light' && active && brightness != null;
@@ -407,6 +488,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
         style={{ '--fill': `${sliderDisplay}%` } as React.CSSProperties}
       >
         {!liveCamUrl && <div className="cover-fill" />}
+        {statusDot}
         <div className="tile-top">
           <span className={`mdi ${tileIcon} tile-icon`} />
           <button
@@ -503,6 +585,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
       onPointerLeave={onSlidePointerCancel}
     >
       <span className="tile-glare" aria-hidden="true" />
+      {statusDot}
       {spark.length > 1 && (
         <div className="tile-spark" aria-hidden="true">
           <Sparkline data={spark} width={120} height={40} />
