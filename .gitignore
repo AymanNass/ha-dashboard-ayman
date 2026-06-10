@@ -31,3 +31,6 @@ my-dashboard-layout.backup.json
 
 # Local dev-server launch config for Claude preview
 .claude/
+
+# Local shared-settings state (synced app preferences; dev-server copy)
+settings.json
