@@ -1,5 +1,5 @@
 # Changelog
-## Unreleased
+## 1.3.0
 
 - **New: quiet status dots (#15).** Each device tile carries a tiny,
   near-invisible dot that pulses once — in your accent color — the moment that
