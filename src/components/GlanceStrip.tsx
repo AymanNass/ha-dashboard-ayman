@@ -11,6 +11,7 @@ import {
   type GlanceItem,
   type MetricResult,
 } from '../lib/glance';
+import { eventTimeLabel, nextEventSummary, type CalendarEvent } from '../lib/calendar';
 
 type CallHA = (
   domain: string,
@@ -35,6 +36,9 @@ interface Props {
   onGlanceExcludeChange?: (metric: GlanceMetric, exclude: string[]) => void;
   /** Open an entity's detail flyout (used by non-toggle list rows). */
   onOpenDetail?: (entityId: string) => void;
+  /** Next-event calendar chip (issue #25): appended after the metric buttons
+   *  when enabled; tapping opens the 7-day agenda flyout. */
+  calendar?: { events: CalendarEvent[]; onOpen: () => void };
   callHA: CallHA;
 }
 
@@ -68,6 +72,7 @@ export function GlanceStrip({
   onGlanceChange,
   onGlanceExcludeChange,
   onOpenDetail,
+  calendar,
   callHA,
 }: Props) {
   const [openKey, setOpenKey] = useState<string | null>(null);
@@ -176,6 +181,28 @@ export function GlanceStrip({
             </div>
           );
         })}
+        {!editing && calendar && (() => {
+          const headline = nextEventSummary(calendar.events);
+          if (!headline) return null;
+          const { next, moreToday } = headline;
+          return (
+            <button
+              type="button"
+              className="glance-stat clickable glance-cal"
+              onClick={calendar.onOpen}
+              aria-haspopup="dialog"
+            >
+              <span className="mdi mdi-calendar glance-icon" />
+              <div className="glance-text">
+                <span className="glance-value glance-cal-summary">{next.summary}</span>
+                <span className="glance-label">
+                  {eventTimeLabel(next)}
+                  {moreToday > 0 && ` · +${moreToday} today`}
+                </span>
+              </div>
+            </button>
+          );
+        })()}
         {editing && (
           <button type="button" className="glance-stat glance-add" onClick={addButton}>
             <span className="mdi mdi-plus glance-icon" />

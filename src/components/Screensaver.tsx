@@ -3,9 +3,12 @@ import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 import { resolveWeatherId, getWeatherIcon, getWeatherColor } from '../lib/weather';
 import { resolveArtwork } from '../lib/entityInfo';
 import { clockTime } from '../lib/format';
+import { eventTimeLabel, groupByDay, type CalendarEvent } from '../lib/calendar';
 
 interface Props {
   entities: HassEntities;
+  /** Upcoming events for the under-clock agenda (issue #25). */
+  calendarEvents?: CalendarEvent[];
 }
 
 /** The playing media player to feature, if any — feeds the ambient art
@@ -41,7 +44,7 @@ const DRIFT_SPOTS: [number, number][] = [
  * art with a now-playing line. Any touch/movement wakes the dashboard (the
  * parent unmounts this via useIdle).
  */
-export function Screensaver({ entities }: Props) {
+export function Screensaver({ entities, calendarEvents }: Props) {
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 5_000);
@@ -83,6 +86,29 @@ export function Screensaver({ entities }: Props) {
     day: 'numeric',
   });
 
+  // Next-48h agenda under the clock (issue #25): at most 4 events across
+  // today + tomorrow, today's accented, tomorrow's dimmed. Drifts with the
+  // clock block, so it stays OLED-safe.
+  const agenda = useMemo(() => {
+    if (!calendarEvents?.length) return [];
+    const days = groupByDay(calendarEvents, 2, now);
+    const rows: { key: string; label?: string; event: CalendarEvent; today: boolean }[] = [];
+    for (const day of days) {
+      for (const e of day.events) {
+        if (rows.length >= 4) return rows;
+        rows.push({
+          key: `${e.calendarId}-${e.start.getTime()}-${e.summary}`,
+          label: rows.find((r) => r.label === day.label) ? undefined : day.label,
+          event: e,
+          today: day.label.startsWith('TODAY'),
+        });
+      }
+    }
+    return rows;
+    // `now` ticks every 5s; recompute only when the minute (or data) changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [calendarEvents, now.getHours(), now.getMinutes()]);
+
   return (
     <div className="screensaver" role="presentation">
       {artwork && (
@@ -108,6 +134,21 @@ export function Screensaver({ entities }: Props) {
               style={{ color: getWeatherColor(weather.state) }}
             />
             {Math.round(temp)}°
+          </div>
+        )}
+        {agenda.length > 0 && (
+          <div className="ss-agenda">
+            {agenda.map((row) => (
+              <div key={row.key} className="ss-agenda-row">
+                {row.label != null && (
+                  <div className="ss-agenda-day">{row.label.split(' ·')[0]}</div>
+                )}
+                <div className={`ss-agenda-event ${row.today ? 'is-today' : ''}`}>
+                  <span className="ss-agenda-time">{eventTimeLabel(row.event)}</span>
+                  <span className="ss-agenda-title">{row.event.summary}</span>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

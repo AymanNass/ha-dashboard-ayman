@@ -14,6 +14,8 @@ import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
 import { NowPlayingTakeover } from './components/NowPlayingTakeover';
 import { Screensaver } from './components/Screensaver';
+import { CalendarFlyout } from './components/CalendarFlyout';
+import { activeCalendarIds, parseEventsResponse, type CalendarEvent, type CalendarServiceResponse } from './lib/calendar';
 import { PagesManager } from './components/PagesManager';
 import { PageDots } from './components/PageDots';
 import { Onboarding } from './components/Onboarding';
@@ -25,7 +27,7 @@ import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity, DashView } from './types';
 
 export default function App() {
-  const { entities, connected, error, callHA, getForecast, getHistory, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
+  const { entities, connected, error, callHA, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
   const layout = useLayout();
   const { views } = layout;
   const [activeView, setActiveView] = useState<string>('main');
@@ -78,6 +80,39 @@ export default function App() {
   }, []);
   const idle = useIdle(saverMinutes > 0 ? saverMinutes * 60_000 : 0);
   const showScreensaver = idle && !editing && !showSettings && !needsOnboarding && !booting;
+
+  // ── Calendar agenda (issue #25) ──
+  // One merged 7-day fetch feeds every surface: the at-a-glance chip, the
+  // optional "Up next" tile, the screensaver agenda and the flyout. Refreshes
+  // on a slow timer and when the tab becomes visible again — calendar data
+  // doesn't change fast enough to justify hammering HA.
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const calendarIdsKey = activeCalendarIds(entities).join(',');
+  useEffect(() => {
+    const ids = calendarIdsKey ? calendarIdsKey.split(',') : [];
+    if (!connected || !ids.length) {
+      setCalendarEvents([]);
+      return;
+    }
+    let cancelled = false;
+    const load = async () => {
+      const resp = (await getCalendarEvents(ids, 7)) as CalendarServiceResponse;
+      if (!cancelled) setCalendarEvents(parseEventsResponse(resp));
+    };
+    load();
+    const timer = setInterval(load, 15 * 60_000);
+    const onVis = () => {
+      if (!document.hidden) load();
+    };
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [connected, calendarIdsKey, getCalendarEvents]);
+  const calendarChip = getSettings().calendarChip && calendarEvents.length > 0;
 
   /** Add a new page and jump to it so it can be filled in straight away. */
   const handleAddView = useCallback(() => {
@@ -211,6 +246,7 @@ export default function App() {
             onGlanceChange={(g) => layout.setGlance(view.id, g)}
             onGlanceExcludeChange={layout.setGlanceExclude}
             onOpenDetail={setDetailEntity}
+            calendar={calendarChip ? { events: calendarEvents, onOpen: () => setCalendarOpen(true) } : undefined}
             callHA={callHA}
           />
         )}
@@ -307,6 +343,8 @@ export default function App() {
             onToggle={toggleEntity}
             onOpenDetail={setDetailEntity}
             onOpenTakeover={takeoverEnabled ? setTakeoverEntity : undefined}
+            calendarEvents={calendarEvents}
+            onOpenCalendar={() => setCalendarOpen(true)}
             callHA={callHA}
             getHistory={getHistory}
             editing={editing}
@@ -409,7 +447,15 @@ export default function App() {
         />
       )}
 
-      {showScreensaver && <Screensaver entities={entities} />}
+      {calendarOpen && (
+        <CalendarFlyout
+          events={calendarEvents}
+          entities={entities}
+          onClose={() => setCalendarOpen(false)}
+        />
+      )}
+
+      {showScreensaver && <Screensaver entities={entities} calendarEvents={calendarEvents} />}
 
       {needsOnboarding && <Onboarding onDismiss={() => setOnboardingDismissed(true)} />}
 

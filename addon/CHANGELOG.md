@@ -1,4 +1,23 @@
 # Changelog
+## 1.1.12
+
+- **New: calendar agenda (#25).** The dashboard now reads your Home Assistant
+  calendars (Google Calendar, CalDAV, Local Calendar, …) and shows them in
+  three places sized for wall tablets:
+  - **At-a-glance button** — the next event and how many more are coming today,
+    right in the glance strip (on by default when a calendar exists; toggle in
+    Settings → Calendar). Tap it for the agenda.
+  - **7-day agenda flyout** — a rolling week grouped by day, with a colored dot
+    per source calendar, all-day events pinned first, locations shown, and a
+    calendar legend.
+  - **Screensaver agenda** — the next two days (up to 4 events) under the
+    screensaver clock; today's events highlighted, tomorrow's dimmed.
+  - **"Up Next" tile** — an optional wide tile available in the tile picker for
+    pages with room to spare.
+  Settings → Calendar picks which calendars feed the agenda (all by default —
+  worth unticking noisy ones like a Workday sensor). Events refresh every 15
+  minutes and when the dashboard wakes.
+
 ## 1.1.11
 
 - **New: toggle for the now-playing lock screen.** Settings → Appearance →

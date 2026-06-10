@@ -17,6 +17,7 @@ import {
 import type { DashView } from '../types';
 import type { HassEntities } from 'home-assistant-js-websocket';
 import { weatherEntities } from '../lib/weather';
+import { discoverCalendars } from '../lib/calendar';
 import { DATE_FORMATS, DURATION_STYLES, type DateFormatId, type DurationStyle } from '../lib/format';
 
 interface Props {
@@ -45,10 +46,13 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const [durationStyle, setDurationStyle] = useState<DurationStyle>(initial.durationStyle);
   const [screensaverMinutes, setScreensaverMinutes] = useState(initial.screensaverMinutes);
   const [nowPlayingTakeover, setNowPlayingTakeover] = useState(initial.nowPlayingTakeover);
+  const [calendarChip, setCalendarChip] = useState(initial.calendarChip);
+  const [calendarEntities, setCalendarEntities] = useState<string[]>(initial.calendarEntities);
   const [test, setTest] = useState<TestState>('idle');
   const [testMsg, setTestMsg] = useState('');
 
   const weatherOptions = weatherEntities(entities);
+  const calendarOptions = discoverCalendars(entities);
 
   // Appearance changes preview instantly.
   const pickTheme = (t: ThemeId) => {
@@ -111,7 +115,7 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
   const save = (reload: boolean) => {
     const url = haUrl.trim();
     const token = haToken.trim();
-    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover });
+    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover, calendarChip, calendarEntities });
     // Sync the opt-in shared connection on the server. Store the *effective* URL
     // (falls back to the default host) so other devices never adopt an empty URL.
     if (rememberOnServer && token) {
@@ -432,6 +436,74 @@ export function SettingsModal({ onClose, entities, onResetLayout, onStartBlank, 
                 shown as elapsed time automatically.
               </small>
             </label>
+          </section>
+
+          {/* Calendar */}
+          <section className="settings-section">
+            <h4 className="settings-section-title">
+              <span className="mdi mdi-calendar" /> Calendar
+            </h4>
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>At-a-glance calendar button</span>
+                <small>
+                  Show the next event (and how many more are coming today) in the
+                  at-a-glance strip. Tap it for the 7-day agenda. The agenda also
+                  appears on the idle screensaver, and an &ldquo;Up Next&rdquo;
+                  tile is available in the tile picker.
+                </small>
+              </div>
+              <button
+                className={`ts-switch ${calendarChip ? 'on' : ''}`}
+                role="switch"
+                aria-checked={calendarChip}
+                onClick={() => setCalendarChip((s) => !s)}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
+            {calendarOptions.length > 0 ? (
+              <div className="ts-field">
+                <span>Calendars</span>
+                <div className="settings-cal-list">
+                  {calendarOptions.map((c) => {
+                    const included =
+                      calendarEntities.length === 0 || calendarEntities.includes(c.entity_id);
+                    return (
+                      <label key={c.entity_id} className="settings-cal-row">
+                        <input
+                          type="checkbox"
+                          checked={included}
+                          onChange={() => {
+                            // [] means "all": materialize it before excluding one.
+                            const base = calendarEntities.length
+                              ? calendarEntities
+                              : calendarOptions.map((o) => o.entity_id);
+                            const next = included
+                              ? base.filter((id) => id !== c.entity_id)
+                              : [...base, c.entity_id];
+                            // Selecting every calendar collapses back to "all".
+                            setCalendarEntities(
+                              next.length === calendarOptions.length ? [] : next,
+                            );
+                          }}
+                        />
+                        {(c.attributes.friendly_name as string) || c.entity_id}
+                      </label>
+                    );
+                  })}
+                </div>
+                <small className="settings-hint">
+                  Which calendars feed the agenda. All are included by default.
+                </small>
+              </div>
+            ) : (
+              <small className="settings-hint">
+                No calendar entities found. Add a calendar integration in Home
+                Assistant (Google Calendar, CalDAV, Local Calendar, …) and it will
+                show up here.
+              </small>
+            )}
           </section>
 
           {/* Data */}

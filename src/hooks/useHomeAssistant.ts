@@ -145,6 +145,33 @@ export function useHomeAssistant() {
     [],
   );
 
+  /** Fetch events for the given calendars over the next `days` days via the
+   *  response-returning `calendar.get_events` service (same pattern as
+   *  `weather.get_forecasts`). The window starts at local midnight so ongoing
+   *  and all-day events are included. Returns the raw per-calendar response. */
+  const getCalendarEvents = useCallback(
+    async (entityIds: string[], days = 7): Promise<Record<string, { events?: unknown[] }>> => {
+      if (!connRef.current || !entityIds.length) return {};
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start.getTime() + days * 86_400_000);
+      try {
+        const res = (await callService(
+          connRef.current,
+          'calendar',
+          'get_events',
+          { start_date_time: start.toISOString(), end_date_time: end.toISOString() },
+          { entity_id: entityIds },
+          true,
+        )) as { response?: Record<string, { events?: unknown[] }> };
+        return res?.response ?? {};
+      } catch {
+        return {};
+      }
+    },
+    [],
+  );
+
   // ── Music Assistant ──
   // The `music_assistant.search` service needs the integration's config entry id.
   // Resolve it lazily and cache it (undefined = not yet looked up, null = none).
@@ -222,5 +249,5 @@ export function useHomeAssistant() {
     return maPlayerIds.current;
   }, []);
 
-  return { entities, connected, error, callHA, getState, getForecast, getHistory, searchMusic, playMusic, getMaPlayers };
+  return { entities, connected, error, callHA, getState, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers };
 }

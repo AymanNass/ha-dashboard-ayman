@@ -26,6 +26,7 @@ import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlaye
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
+import { CalendarTile } from './CalendarTile';
 import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGroups, mediaConfigFor as computeMediaConfig, artworkPickerExclusions } from '../lib/mediaDevices';
 import { cameraProxyUrl } from '../hooks/useCameraFeed';
 import { getSettings } from '../settings';
@@ -95,6 +96,10 @@ interface Props {
   onOpenDetail: (entityId: string) => void;
   /** Open the full-bleed now-playing takeover for a playing media tile (issue #18). */
   onOpenTakeover?: (entityId: string) => void;
+  /** Merged upcoming events for the "Up next" calendar tile (issue #25). */
+  calendarEvents?: import('../lib/calendar').CalendarEvent[];
+  /** Open the 7-day agenda flyout (issue #25). */
+  onOpenCalendar?: () => void;
   callHA: CallHA;
   getHistory?: (entityId: string, hours?: number) => Promise<number[]>;
   editing: boolean;
@@ -224,6 +229,8 @@ function Tile({
   searchMusic,
   playMusic,
   getMaPlayers,
+  calendarEvents,
+  onOpenCalendar,
 }: { re: RoomEntity; enterIndex?: number } & Props) {
   // Special (non-entity) tiles render their own card.
   if (isSpecialTile(re.entity_id)) {
@@ -237,6 +244,16 @@ function Tile({
           getMaPlayers={getMaPlayers}
           name={re.name || def.name}
           icon={re.icon || def.icon}
+        />
+      );
+    }
+    if (re.entity_id === 'glance.calendar') {
+      return (
+        <CalendarTile
+          events={calendarEvents ?? []}
+          name={re.name || def.name}
+          icon={re.icon || def.icon}
+          onOpen={onOpenCalendar}
         />
       );
     }

@@ -16,6 +16,8 @@ export interface AppSettings {
   durationStyle: import('./lib/format').DurationStyle; // how durations/uptime render
   screensaverMinutes: number; // idle minutes before the screensaver shows; 0 = off
   nowPlayingTakeover: boolean; // tap on a playing media tile opens the full-bleed lock screen (off = the detail flyout, as before)
+  calendarChip: boolean; // at-a-glance calendar chip showing the next event (when any calendar.* exists)
+  calendarEntities: string[]; // which calendar.* entities feed the agenda; [] = all discovered
 }
 
 const STORAGE_KEY = 'ha-dashboard-settings';
@@ -56,6 +58,8 @@ const DEFAULTS: AppSettings = {
   durationStyle: 'compact',
   screensaverMinutes: 0,
   nowPlayingTakeover: true,
+  calendarChip: true,
+  calendarEntities: [],
 };
 
 let cache: AppSettings | null = null;
@@ -102,6 +106,8 @@ export type ExportableSettings = Pick<
   | 'durationStyle'
   | 'screensaverMinutes'
   | 'nowPlayingTakeover'
+  | 'calendarChip'
+  | 'calendarEntities'
 >;
 
 const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
@@ -114,6 +120,8 @@ const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
   'durationStyle',
   'screensaverMinutes',
   'nowPlayingTakeover',
+  'calendarChip',
+  'calendarEntities',
 ];
 
 /** Snapshot the appearance preferences for inclusion in a backup file. */
@@ -129,6 +137,8 @@ export function getExportableSettings(): ExportableSettings {
     durationStyle: s.durationStyle,
     screensaverMinutes: s.screensaverMinutes,
     nowPlayingTakeover: s.nowPlayingTakeover,
+    calendarChip: s.calendarChip,
+    calendarEntities: s.calendarEntities,
   };
 }
 

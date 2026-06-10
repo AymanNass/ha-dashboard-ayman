@@ -102,6 +102,7 @@ export interface SpecialTileDef {
 
 export const SPECIAL_TILES: Record<string, SpecialTileDef> = {
   'music_assistant.search': { name: 'Music Search', icon: 'mdi-music-circle' },
+  'glance.calendar': { name: 'Up Next (Calendar)', icon: 'mdi-calendar' },
 };
 
 export const isSpecialTile = (entityId: string): boolean => entityId in SPECIAL_TILES;
