@@ -1,4 +1,18 @@
 # Changelog
+## Unreleased
+
+- **New: loop-around page swipe on phones (#32).** Swiping left on the last
+  page now wraps to the first page (and swiping right on the first page jumps to
+  the last), so you can keep flicking through pages in one direction instead of
+  hitting a dead end. Single-page dashboards are unaffected.
+
+- **New: per-section "never collapse" opt-out for smart grouping (#33).** Smart
+  grouping folds idle sections into a summary bar — but some sections should
+  always stay visible even when quiet (a section with a camera, for example).
+  In edit mode each section heading now has a pin toggle; pinned sections ignore
+  smart grouping and always render expanded. The setting is saved with the
+  layout and synced across devices.
+
 ## 1.4.0
 
 - **New: smart grouping (#16).** A dashboard section can now fold into a single

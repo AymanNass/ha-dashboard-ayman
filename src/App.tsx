@@ -149,12 +149,15 @@ export default function App() {
     [activeView, views],
   );
 
-  /** Advance to the adjacent page (used by swipe). Clamps at the ends. */
+  /** Advance to the adjacent page (used by swipe). Wraps around the ends so a
+   *  left swipe off the last page loops to the first, and a right swipe off the
+   *  first loops to the last. No-op with a single page. */
   const goAdjacent = useCallback(
     (dir: 'next' | 'prev') => {
+      const n = views.length;
+      if (n <= 1) return;
       const i = views.findIndex((v) => v.id === activeView);
-      const j = dir === 'next' ? i + 1 : i - 1;
-      if (j < 0 || j >= views.length) return;
+      const j = dir === 'next' ? (i + 1) % n : (i - 1 + n) % n;
       runNavTransition(dir, () => setActiveView(views[j].id));
     },
     [activeView, views],

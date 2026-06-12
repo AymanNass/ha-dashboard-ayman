@@ -160,6 +160,16 @@ export function useLayout() {
     [mutateView],
   );
 
+  const setColumnNoCollapse = useCallback(
+    (viewId: string, rowIdx: number, colIdx: number, noCollapse: boolean) => {
+      mutateView(viewId, (v) => {
+        const col = v.rows![rowIdx]?.columns[colIdx];
+        if (col) col.noCollapse = noCollapse;
+      });
+    },
+    [mutateView],
+  );
+
   // ── Tiles ──
   const cycleTileSize = useCallback(
     (viewId: string, rowIdx: number, colIdx: number, entIdx: number) => {
@@ -680,6 +690,7 @@ export function useLayout() {
     addColumn,
     removeColumn,
     renameColumn,
+    setColumnNoCollapse,
     cycleTileSize,
     removeTile,
     addTile,

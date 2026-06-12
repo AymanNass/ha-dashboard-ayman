@@ -98,6 +98,10 @@ export interface PersonConfig {
 export interface DashSection {
   title?: string;
   entities: RoomEntity[];
+  /** When true, this section opts out of smart grouping (#16) and always renders
+   *  expanded, even while global smart grouping is on. Useful for sections that
+   *  look "quiet" but should stay visible, e.g. a camera. */
+  noCollapse?: boolean;
 }
 
 /** A horizontal band that divides into one or more named columns sitting side-by-side. */

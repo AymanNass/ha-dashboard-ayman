@@ -1153,6 +1153,12 @@ body::after {
   cursor: default;
 }
 
+.edit-icon-btn.active {
+  color: var(--accent-primary, #ff6b35);
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.5);
+}
+
 .edit-icon-btn.size-btn {
   width: auto;
   padding: 0 8px;

@@ -77,19 +77,21 @@ function CollapsibleColumn({
   colEntities,
   entities,
   enabled,
+  noCollapse,
   children,
 }: {
   title: string;
   colEntities: RoomEntity[];
   entities: HassEntities;
   enabled: boolean;
+  noCollapse?: boolean;
   children: React.ReactNode;
 }) {
   // Only real, present entities count toward activity and the device tally;
   // special cards (calendar / MA search) have no HA state.
   const present = colEntities.filter((e) => entities[e.entity_id]);
   const active = present.some((e) => isActiveState(entities[e.entity_id].state));
-  const collapsible = enabled && !!title && present.length >= COLLAPSE_MIN_TILES;
+  const collapsible = enabled && !noCollapse && !!title && present.length >= COLLAPSE_MIN_TILES;
 
   // null = follow activity (auto); true/false = a tap override that holds until
   // the next activity change clears it.
@@ -165,6 +167,7 @@ export interface LayoutActions {
   addColumn: (viewId: string, rowIdx: number) => void;
   removeColumn: (viewId: string, rowIdx: number, colIdx: number) => void;
   renameColumn: (viewId: string, rowIdx: number, colIdx: number, title: string) => void;
+  setColumnNoCollapse: (viewId: string, rowIdx: number, colIdx: number, noCollapse: boolean) => void;
   cycleTileSize: (viewId: string, rowIdx: number, colIdx: number, entIdx: number) => void;
   removeTile: (viewId: string, rowIdx: number, colIdx: number, entIdx: number) => void;
   addTile: (viewId: string, rowIdx: number, colIdx: number, entity: RoomEntity) => void;
@@ -309,6 +312,7 @@ export function DashboardView(props: Props) {
                   colEntities={col.entities}
                   entities={entities}
                   enabled={smartGrouping}
+                  noCollapse={col.noCollapse}
                 >
                   <div className="tile-grid">
                     {col.entities
@@ -891,6 +895,7 @@ interface Item {
 }
 interface ColState {
   title?: string;
+  noCollapse?: boolean;
   items: Item[];
 }
 interface RowState {
@@ -903,6 +908,7 @@ function buildRows(rows: DashRow[]): RowState[] {
     title: row.title,
     columns: row.columns.map((col, ci) => ({
       title: col.title,
+      noCollapse: col.noCollapse,
       items: col.entities.map((re, ei) => ({ id: `r${ri}-c${ci}-i${ei}-${re.entity_id}`, re })),
     })),
   }));
@@ -948,7 +954,7 @@ function EditableView(props: Props) {
   const commit = (next: RowState[]) => {
     const dashRows: DashRow[] = next.map((r) => ({
       title: r.title,
-      columns: r.columns.map((c) => ({ title: c.title, entities: c.items.map((it) => it.re) })),
+      columns: r.columns.map((c) => ({ title: c.title, noCollapse: c.noCollapse, entities: c.items.map((it) => it.re) })),
     }));
     layout.setRows(view.id, dashRows);
   };
@@ -1081,6 +1087,14 @@ function EditableView(props: Props) {
                       placeholder="Column name"
                       onChange={(ev) => layout.renameColumn(view.id, ri, ci, ev.target.value)}
                     />
+                    <button
+                      className={`edit-icon-btn ${col.noCollapse ? 'active' : ''}`}
+                      title={col.noCollapse ? 'Smart grouping disabled — this section never collapses' : 'Never collapse this section (ignore smart grouping)'}
+                      aria-pressed={!!col.noCollapse}
+                      onClick={() => layout.setColumnNoCollapse(view.id, ri, ci, !col.noCollapse)}
+                    >
+                      <span className={`mdi ${col.noCollapse ? 'mdi-pin' : 'mdi-pin-outline'}`} />
+                    </button>
                     <button
                       className="edit-icon-btn danger"
                       title="Delete column"
