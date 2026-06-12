@@ -1,5 +1,5 @@
 # Changelog
-## Unreleased
+## 1.5.0
 
 - **New: loop-around page swipe on phones (#32).** Swiping left on the last
   page now wraps to the first page (and swiping right on the first page jumps to
