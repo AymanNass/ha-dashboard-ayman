@@ -44,6 +44,10 @@ interface Props {
 }
 
 const TOGGLEABLE = ['light', 'switch', 'input_boolean', 'fan', 'lock'];
+// Momentary one-shot tiles: a tap runs the action (script.turn_on /
+// scene.turn_on / button.press, handled by toggleEntity) but they have no
+// persistent on/off state, so they skip the optimistic toggle flip.
+const ACTIVATABLE = ['script', 'scene', 'button'];
 
 // ── Quiet status dots (issue #15) ──
 // A near-invisible dot on each participating tile that pulses once when the
@@ -410,6 +414,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   useEffect(() => () => clearHold(), []);
 
   const tappable = TOGGLEABLE.includes(domain);
+  const activatable = ACTIVATABLE.includes(domain);
   // Active (but calm) glass for on lights/switches/fans/media — matches the reference.
   const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
   const warmIcon = effectiveActive && (domain === 'light' || domain === 'switch');
@@ -566,6 +571,9 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
           setOptimistic(!effectiveActive);
           if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
           optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+          onToggle(id);
+        } else if (activatable) {
+          // Momentary: fire the action, no optimistic on/off flip.
           onToggle(id);
         } else if (slideCover) {
           onToggle(id);

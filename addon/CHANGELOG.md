@@ -1,4 +1,11 @@
 # Changelog
+## 1.5.1
+
+- **Fixed: script/scene/button tiles did nothing on tap (#34).** Tapping a tile
+  for a one-shot entity — like a "Find Remote" script — opened the detail flyout
+  instead of running it. Those tiles now execute on tap (the ⋯ button still opens
+  the flyout).
+
 ## 1.5.0
 
 - **New: loop-around page swipe on phones (#32).** Swiping left on the last
