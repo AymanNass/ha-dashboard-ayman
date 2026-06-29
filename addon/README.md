@@ -187,3 +187,12 @@ already trust:
 > wall tablet, **Fully Kiosk Browser** pointed at the direct port remains the
 > most reliable full-screen setup; the app install shines on phones and iPads.
 
+## Credits
+
+Glance is built and maintained by [@jvenuto80](https://github.com/jvenuto80).
+
+With thanks to community contributors:
+
+- **Russian translation & multi-language (i18n) support** —
+  [@efimofline](https://github.com/efimofline) ([#35](https://github.com/jvenuto80/Dynamic-HA-Dashboard/pull/35))
+

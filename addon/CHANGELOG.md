@@ -1,4 +1,15 @@
 # Changelog
+## 1.6.0
+
+- **New: multi-language support — English & Russian (#35).** Glance can now run
+  in English or Russian. Switch languages from **Settings → Appearance →
+  Interface language**; the choice is remembered per device and applies
+  instantly. This release also fixes the temperature unit shown in the climate
+  detail and header so it follows each entity's own unit (°C / °F) instead of
+  assuming one. Huge thanks to **[@efimofline](https://github.com/efimofline)**
+  for contributing the Russian translation, the i18n groundwork, and the
+  temperature-unit fix.
+
 ## 1.5.1
 
 - **Fixed: script/scene/button tiles did nothing on tap (#34).** Tapping a tile
