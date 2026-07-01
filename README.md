@@ -117,6 +117,19 @@ More detail → **[Architecture](https://github.com/jvenuto80/Dynamic-HA-Dashboa
 
 ---
 
+## Credits
+
+Built and maintained by [@jvenuto80](https://github.com/jvenuto80).
+
+With thanks to community contributors:
+
+- **Translations & multi-language (i18n) support** — English, Russian, German,
+  French, Polish & Dutch by [@efimofline](https://github.com/efimofline)
+  ([#35](https://github.com/jvenuto80/Dynamic-HA-Dashboard/pull/35),
+  [#36](https://github.com/jvenuto80/Dynamic-HA-Dashboard/pull/36)).
+
+---
+
 ## License
 
 Copyright (c) 2026 Jeff Venuto. All rights reserved. See [LICENSE](./LICENSE).
