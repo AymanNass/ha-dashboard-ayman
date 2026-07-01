@@ -195,4 +195,6 @@ With thanks to community contributors:
 
 - **Russian translation & multi-language (i18n) support** —
   [@efimofline](https://github.com/efimofline) ([#35](https://github.com/jvenuto80/Dynamic-HA-Dashboard/pull/35))
+- **German, French, Polish & Dutch translations** —
+  [@efimofline](https://github.com/efimofline) ([#36](https://github.com/jvenuto80/Dynamic-HA-Dashboard/pull/36))
 

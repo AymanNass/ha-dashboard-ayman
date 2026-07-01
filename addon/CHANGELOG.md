@@ -1,4 +1,15 @@
 # Changelog
+## 1.7.0
+
+- **New: four more languages — German, French, Polish & Dutch (#36).** Glance now
+  speaks six languages. Pick yours in **Settings → Appearance → Interface
+  language** (English, Russian, Deutsch, Français, Polski, Nederlands); the
+  choice is remembered per device and applies instantly. Every UI string is
+  translated with correct plural rules per language, and anything not covered
+  falls back to English. Thanks again to
+  **[@efimofline](https://github.com/efimofline)** for the translations and the
+  new automated language test suite.
+
 ## 1.6.0
 
 - **New: multi-language support — English & Russian (#35).** Glance can now run
