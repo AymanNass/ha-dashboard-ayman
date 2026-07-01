@@ -68,6 +68,7 @@ sidebar gives way to **swipe navigation**.
 - 🖥️ **NOC monitoring board** — servers, switches, UPSes, Docker, UniFi-style **switch port maps** with PoE power-cycle. → [NOC Dashboard](https://github.com/jvenuto80/Dynamic-HA-Dashboard/wiki/NOC-Servers-Dashboard)
 - 🌦️ **Ambient backdrop** — weather-reactive rain/snow, lightning in storms, time-of-day tint.
 - 🎨 **Theming** — 4 themes, full accent recolor, configurable date/time & duration formats.
+- 🌍 **Six languages** — English, Russian, German, French, Polish & Dutch; switch in **Settings → Appearance → Interface language**, remembered per device.
 - 👥 **Zero-config people & weather** — `person.*` and `weather.*` entities are auto-discovered.
 - 💾 **Backup & restore** — export your whole dashboard to a portable JSON file. → [Backup & Restore](https://github.com/jvenuto80/Dynamic-HA-Dashboard/wiki/Layout-Backup-and-Restore)
 - 📱 **Responsive + kiosk-ready** — wall display to phone, with swipe nav and Fully Kiosk support.

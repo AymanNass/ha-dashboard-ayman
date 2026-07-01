@@ -56,6 +56,9 @@ disk or baked into the image.
   sections side-by-side so they fill the screen width instead of leaving tall
   vertical gaps — less scrolling on smaller tablets. Section headings stay. Turn
   it off to stack every section full-width.
+- **Language** — Glance is available in English, Russian, German, French, Polish
+  and Dutch. Pick yours under **Settings → Appearance → Interface language**; the
+  choice applies instantly and is remembered per device.
 - Your customizations (views, tiles, and at-a-glance buttons) are saved to the
   add-on's persistent `/data/layouts.json` and survive restarts and updates.
 
