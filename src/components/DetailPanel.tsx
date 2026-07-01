@@ -182,7 +182,7 @@ export function DetailPanel({
 
             {(!cfg.hideControls || editing) && (
               <div className={`flyout-section ${cfg.hideControls ? 'flyout-dim' : ''}`} style={{ position: 'relative' }}>
-                {editing && (['light', 'climate', 'cover', 'vacuum', 'media_player'].includes(domain)) && (
+                {editing && (['light', 'climate', 'cover', 'vacuum', 'media_player', 'alarm_control_panel'].includes(domain)) && (
                   <EyeToggle hidden={!!cfg.hideControls} onClick={() => toggle('hideControls')} />
                 )}
                 {domain === 'light' && <LightDetail entity={entity} entityId={entityId!} callHA={callHA} />}
@@ -190,6 +190,7 @@ export function DetailPanel({
                 {domain === 'cover' && <CoverDetail entity={entity} entityId={entityId!} callHA={callHA} reverse={!!reverseSlider} />}
                 {domain === 'vacuum' && <VacuumDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} />}
                 {domain === 'media_player' && <MediaDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} artworkEntity={artworkEntity} />}
+                {domain === 'alarm_control_panel' && <AlarmDetail entity={entity} entityId={entityId!} callHA={callHA} />}
               </div>
             )}
 
@@ -271,6 +272,12 @@ function getStateColor(state: string, domain: string): string {
   if (state === 'heat') return 'var(--accent-orange)';
   if (state === 'locked') return 'var(--accent-green)';
   if (state === 'unlocked') return 'var(--accent-red)';
+  if (state === 'armed_home') return '#10b981';
+  if (state === 'armed_away') return '#f59e0b';
+  if (state === 'armed_night') return '#6366f1';
+  if (state === 'armed_vacation') return '#06b6d4';
+  if (state === 'triggered') return '#ef4444';
+  if (state === 'disarmed' && domain === 'alarm_control_panel') return '#64748b';
   return 'var(--text-muted)';
 }
 
@@ -284,6 +291,7 @@ function getDetailIcon(domain: string, state: string): string {
     vacuum: state === 'cleaning' ? 'mdi-robot-vacuum-variant' : 'mdi-robot-vacuum',
     media_player: state === 'playing' ? 'mdi-play-circle' : 'mdi-cast',
     camera: 'mdi-cctv',
+    alarm_control_panel: state === 'disarmed' ? 'mdi-shield-off-outline' : state === 'triggered' ? 'mdi-shield-alert' : 'mdi-shield-home',
   };
   return map[domain] || 'mdi-information';
 }
@@ -1078,6 +1086,145 @@ function DetailGraph({
         </div>
       </div>
       {body}
+    </div>
+  );
+}
+
+function AlarmDetail({ entity, entityId, callHA }: EntityProps) {
+  const state = entity.state;
+  const codeRequired = entity.attributes.code_arm_required as boolean;
+
+  const [code, setCode] = useState('');
+
+  const ALARM_MODES = [
+    { id: 'arm_home', label: 'Casa', icon: 'mdi-home', color: '#10b981' },
+    { id: 'arm_away', label: 'Fuori', icon: 'mdi-lock', color: '#f59e0b' },
+    { id: 'arm_night', label: 'Notte', icon: 'mdi-weather-night', color: '#6366f1' },
+    { id: 'arm_vacation', label: 'Vacanza', icon: 'mdi-airplane', color: '#06b6d4' },
+  ];
+
+  const activeMode = ALARM_MODES.find((m) => state === `armed_${m.id.replace('arm_', '')}`);
+
+  const armAlarm = (mode: string) => {
+    const data: Record<string, unknown> = {};
+    if (codeRequired && code) data.code = code;
+    callHA('alarm_control_panel', mode, data, { entity_id: entityId });
+    setCode('');
+  };
+
+  const disarm = () => {
+    const data: Record<string, unknown> = {};
+    if (code) data.code = code;
+    callHA('alarm_control_panel', 'alarm_disarm', data, { entity_id: entityId });
+    setCode('');
+  };
+
+  return (
+    <div className="glass-card" style={{ padding: 20 }}>
+      {/* Current state badge */}
+      <div style={{ textAlign: 'center', marginBottom: 20 }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 16px',
+          borderRadius: 20,
+          background: state === 'disarmed'
+            ? 'rgba(100,116,139,0.2)'
+            : state === 'triggered'
+              ? 'rgba(239,68,68,0.3)'
+              : activeMode
+                ? `${activeMode.color}33`
+                : 'rgba(16,185,129,0.2)',
+          color: state === 'disarmed'
+            ? '#94a3b8'
+            : state === 'triggered'
+              ? '#ef4444'
+              : activeMode?.color || '#10b981',
+          fontWeight: 600,
+          fontSize: 14,
+        }}>
+          <span className={`mdi ${
+            state === 'disarmed' ? 'mdi-shield-off-outline' :
+            state === 'triggered' ? 'mdi-shield-alert' :
+            activeMode?.icon || 'mdi-shield-check'
+          }`} style={{ fontSize: 20 }} />
+          {state === 'disarmed' ? 'Disinserito' :
+           state === 'triggered' ? 'ALLARME!' :
+           state === 'arming' ? 'Inserimento...' :
+           state === 'pending' ? 'In attesa...' :
+           activeMode ? `Inserito: ${activeMode.label}` : state}
+        </div>
+      </div>
+
+      {/* Mode buttons */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+        {ALARM_MODES.map((m) => {
+          const isActive = state === `armed_${m.id.replace('arm_', '')}`;
+          return (
+            <button
+              key={m.id}
+              className="mode-btn"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 4,
+                padding: '12px 8px',
+                background: isActive ? `${m.color}22` : undefined,
+                borderColor: isActive ? m.color : undefined,
+                color: isActive ? m.color : undefined,
+              }}
+              onClick={() => armAlarm(`alarm_${m.id}`)}
+            >
+              <span className={`mdi ${m.icon}`} style={{ fontSize: 22 }} />
+              <span style={{ fontSize: 12 }}>{m.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Disarm button */}
+      <button
+        className="mode-btn"
+        style={{
+          width: '100%',
+          padding: '12px',
+          background: state === 'disarmed' ? 'rgba(100,116,139,0.15)' : 'rgba(239,68,68,0.15)',
+          borderColor: state === 'disarmed' ? '#64748b' : '#ef4444',
+          color: state === 'disarmed' ? '#94a3b8' : '#ef4444',
+          fontWeight: 600,
+        }}
+        onClick={disarm}
+        disabled={state === 'disarmed'}
+      >
+        <span className="mdi mdi-shield-off-outline" style={{ marginRight: 8 }} />
+        Disinserisci
+      </button>
+
+      {/* Code input if required */}
+      {codeRequired && (
+        <div style={{ marginTop: 12 }}>
+          <input
+            type="password"
+            inputMode="numeric"
+            placeholder="Codice PIN"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 14px',
+              borderRadius: 8,
+              border: '1px solid var(--border-glass)',
+              background: 'rgba(255,255,255,0.05)',
+              color: 'var(--text-primary)',
+              fontSize: 16,
+              textAlign: 'center',
+              letterSpacing: 8,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

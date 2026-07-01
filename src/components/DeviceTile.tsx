@@ -44,7 +44,7 @@ interface Props {
   enterIndex?: number;
 }
 
-const TOGGLEABLE = ['light', 'switch', 'input_boolean', 'fan', 'lock'];
+const TOGGLEABLE = ['light', 'switch', 'input_boolean', 'fan', 'lock', 'media_player'];
 // Momentary one-shot tiles: a tap runs the action (script.turn_on /
 // scene.turn_on / button.press, handled by toggleEntity) but they have no
 // persistent on/off state, so they skip the optimistic toggle flip.
@@ -76,6 +76,7 @@ function statusSignature(entity: HassEntity): string | null {
     case 'script':
     case 'button':
     case 'scene':
+    case 'alarm_control_panel':
       return entity.state;
     case 'climate':
       // Mode changes and target-temperature changes are both deliberate acts.
@@ -418,8 +419,9 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   const tappable = TOGGLEABLE.includes(domain);
   const activatable = ACTIVATABLE.includes(domain);
   // Active (but calm) glass for on lights/switches/fans/media — matches the reference.
-  const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player');
+  const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player' || domain === 'climate' || domain === 'alarm_control_panel');
   const warmIcon = effectiveActive && (domain === 'light' || domain === 'switch');
+  const climateActive = domain === 'climate' && entity.state !== 'off' && entity.state !== 'unavailable';
 
   // Security tint: green = secure (locked/closed), red = open/unlocked.
   // Covers: only garage/door/gate types (not blinds, shades, curtains).
@@ -553,7 +555,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   return (
     <div
       ref={tiltRef as React.Ref<HTMLDivElement>}
-      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''}`}
+      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''}`}
       style={{
         ...(slideEnabled
           ? {
@@ -612,6 +614,16 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
       )}
       <div className="tile-top">
         <span className={`mdi ${tileIcon} tile-icon ${warmIcon ? 'warm' : ''}`} />
+        {climateActive && (
+          <button
+            className="tile-climate-off"
+            onClick={(e) => { e.stopPropagation(); callHA('climate', 'turn_off', undefined, { entity_id: id }); }}
+            aria-label="Turn off"
+            title="Spegni"
+          >
+            <span className="mdi mdi-power" />
+          </button>
+        )}
         <button
           className="tile-more"
           onClick={(e) => { e.stopPropagation(); openDetail(id); }}

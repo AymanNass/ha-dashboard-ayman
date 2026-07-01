@@ -1900,6 +1900,124 @@ body::after {
   text-shadow: 0 0 10px rgba(var(--light-rgb), 0.4);
 }
 
+/* ── Climate active tile animation ── */
+.tile.climate-active {
+  position: relative;
+  overflow: hidden;
+}
+
+.tile.climate-active::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  opacity: 0.6;
+  animation: climate-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tile.climate-cool::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.25), transparent 70%);
+  box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.15);
+}
+
+.tile.climate-cool {
+  border-color: rgba(6, 182, 212, 0.35);
+}
+
+.tile.climate-cool .tile-icon {
+  color: #06b6d4;
+  text-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+}
+
+.tile.climate-heat::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(249, 115, 22, 0.25), transparent 70%);
+  box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.15);
+}
+
+.tile.climate-heat {
+  border-color: rgba(249, 115, 22, 0.35);
+}
+
+.tile.climate-heat .tile-icon {
+  color: #f97316;
+  text-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+}
+
+.tile.climate-dry::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.2), transparent 70%);
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.12);
+}
+
+.tile.climate-dry {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.tile.climate-dry .tile-icon {
+  color: #3b82f6;
+  text-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+.tile.climate-fan_only::before {
+  background: radial-gradient(ellipse at 50% 0%, rgba(168, 85, 247, 0.2), transparent 70%);
+  box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.12);
+}
+
+.tile.climate-fan_only {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.tile.climate-fan_only .tile-icon {
+  color: #a855f7;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+  animation: climate-fan-spin 2s linear infinite;
+}
+
+@keyframes climate-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.01); }
+}
+
+@keyframes climate-fan-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Quick power-off button on climate tiles */
+.tile-climate-off {
+  position: relative;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.2s, transform 0.15s;
+  margin-left: auto;
+  margin-right: 4px;
+}
+
+.tile-climate-off:hover {
+  background: rgba(239, 68, 68, 0.25);
+  transform: scale(1.1);
+}
+
+.tile-climate-off:active {
+  transform: scale(0.92);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile.climate-active::before { animation: none; opacity: 0.5; }
+  .tile.climate-fan_only .tile-icon { animation: none; }
+}
+
 /* Security tint: green glass when secure (locked/closed) */
 .tile.sec-secure {
   background:

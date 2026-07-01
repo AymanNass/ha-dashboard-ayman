@@ -1,7 +1,7 @@
 import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 import { HA_URL } from '../config';
 
-const ACTIVE_STATES = ['on', 'open', 'unlocked', 'playing', 'cleaning', 'home', 'heat', 'cool'];
+const ACTIVE_STATES = ['on', 'open', 'unlocked', 'playing', 'cleaning', 'home', 'heat', 'cool', 'armed_home', 'armed_away', 'armed_night', 'armed_vacation'];
 
 export function isActiveState(state: string): boolean {
   return ACTIVE_STATES.includes(state);
@@ -23,6 +23,8 @@ export function entityIcon(entityId: string, state: string): string {
     fan: ['mdi-fan-off', 'mdi-fan'],
     scene: ['mdi-palette', 'mdi-palette'],
     script: ['mdi-script-text', 'mdi-script-text'],
+    alarm_control_panel: ['mdi-shield-off-outline', 'mdi-shield-home'],
+    input_boolean: ['mdi-toggle-switch-off-outline', 'mdi-toggle-switch'],
   };
   const [off, on] = icons[domain] || ['mdi-help-circle', 'mdi-help-circle'];
   return isActiveState(state) ? on : off;
@@ -76,6 +78,19 @@ export function entitySummary(entity: HassEntity): string {
     }
     case 'binary_sensor':
       return state === 'on' ? 'Detected' : 'Clear';
+    case 'alarm_control_panel': {
+      const modes: Record<string, string> = {
+        disarmed: 'Disarmed',
+        armed_home: 'Home',
+        armed_away: 'Away',
+        armed_night: 'Night',
+        armed_vacation: 'Vacation',
+        arming: 'Arming…',
+        pending: 'Pending…',
+        triggered: 'TRIGGERED',
+      };
+      return modes[state] || state;
+    }
     default:
       return state;
   }
