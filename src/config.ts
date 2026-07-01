@@ -32,8 +32,7 @@ export const rooms: Room[] = [
       { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella' },
       { entity_id: 'light.lampada_sala', name: 'Lampada sala' },
       { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
-      { entity_id: 'climate.condizionatore_soggiorno', name: 'Condizionatore' },
-      { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore 2' },
+      { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore' },
       { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
     ],
   },
@@ -94,8 +93,7 @@ export const locks = [
 ];
 
 export const climateEntities = [
-  { entity_id: 'climate.condizionatore_soggiorno', name: 'Soggiorno' },
-  { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Salotto' },
+  { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Soggiorno' },
   { entity_id: 'climate.condizionatore_camera_da_letto', name: 'Camera' },
 ];
 
@@ -127,6 +125,7 @@ export const views: DashView[] = [
     sections: [
       {
         title: 'Sicurezza',
+        icon: 'mdi-shield-home',
         entities: [
           { entity_id: 'alarm_control_panel.casa', name: 'Allarme' },
           { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
@@ -135,6 +134,7 @@ export const views: DashView[] = [
       },
       {
         title: 'Soggiorno',
+        icon: 'mdi-sofa',
         entities: [
           { entity_id: 'light.luce_soggiorno', name: 'Muro salotto' },
           { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella' },
@@ -144,6 +144,7 @@ export const views: DashView[] = [
       },
       {
         title: 'Cucina',
+        icon: 'mdi-countertop',
         entities: [
           { entity_id: 'light.luce_cucina', name: 'Cucina' },
           { entity_id: 'light.luce_lavandino', name: 'Lavandino' },
@@ -151,6 +152,7 @@ export const views: DashView[] = [
       },
       {
         title: 'Camera da letto',
+        icon: 'mdi-bed-king',
         entities: [
           { entity_id: 'light.luce_camera', name: 'Luce camera' },
           { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman' },
@@ -159,6 +161,7 @@ export const views: DashView[] = [
       },
       {
         title: 'Corridoio & Ingresso',
+        icon: 'mdi-foot-print',
         entities: [
           { entity_id: 'light.luce_corridoio', name: 'Corridoio' },
           { entity_id: 'light.luce_ingresso', name: 'Ingresso' },
@@ -167,14 +170,15 @@ export const views: DashView[] = [
       },
       {
         title: 'Clima',
+        icon: 'mdi-thermostat',
         entities: [
-          { entity_id: 'climate.condizionatore_soggiorno', name: 'Soggiorno' },
-          { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Salotto' },
+          { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Soggiorno' },
           { entity_id: 'climate.condizionatore_camera_da_letto', name: 'Camera' },
         ],
       },
       {
         title: 'Tapparelle',
+        icon: 'mdi-blinds',
         entities: [
           { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
           { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera' },
@@ -182,6 +186,7 @@ export const views: DashView[] = [
       },
       {
         title: 'Azioni rapide',
+        icon: 'mdi-lightning-bolt',
         entities: [
           { entity_id: 'input_boolean.vacation_mode', name: 'Vacation Mode' },
           { entity_id: 'scene.buonanotte', name: 'Buonanotte' },
@@ -237,8 +242,7 @@ export const views: DashView[] = [
         title: 'Media & Clima',
         entities: [
           { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
-          { entity_id: 'climate.condizionatore_soggiorno', name: 'Condizionatore' },
-          { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore 2' },
+          { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore' },
           { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
         ],
       },

@@ -75,6 +75,7 @@ const COLLAPSE_MIN_TILES = 2;
  */
 function CollapsibleColumn({
   title,
+  icon,
   colEntities,
   entities,
   enabled,
@@ -82,6 +83,7 @@ function CollapsibleColumn({
   children,
 }: {
   title: string;
+  icon?: string;
   colEntities: RoomEntity[];
   entities: HassEntities;
   enabled: boolean;
@@ -118,6 +120,7 @@ function CollapsibleColumn({
       <>
         {title && (
           <h3 className="column-title">
+            {icon && <span className={`mdi ${icon} column-title-icon`} />}
             <span>{title}</span>
             {collapsible && (
               <button
@@ -312,6 +315,7 @@ export function DashboardView(props: Props) {
               <div className="row-column" key={ci}>
                 <CollapsibleColumn
                   title={col.title ?? ''}
+                  icon={col.icon}
                   colEntities={col.entities}
                   entities={entities}
                   enabled={smartGrouping}

@@ -97,6 +97,7 @@ export interface PersonConfig {
  *  Used both as a legacy top-level section and as a column within a row. */
 export interface DashSection {
   title?: string;
+  icon?: string;
   entities: RoomEntity[];
   /** When true, this section opts out of smart grouping (#16) and always renders
    *  expanded, even while global smart grouping is on. Useful for sections that

@@ -973,6 +973,12 @@ body::after {
   color: var(--text-muted);
 }
 
+.column-title-icon {
+  font-size: 16px;
+  margin-right: 6px;
+  opacity: 0.8;
+}
+
 /* ── Edit mode: rows & columns ── */
 .edit-row {
   border: 1px dashed var(--border-glass-light);
