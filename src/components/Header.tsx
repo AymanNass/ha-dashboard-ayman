@@ -137,6 +137,26 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
               </div>
             </div>
           </div>
+          {forecast.length > 0 && (
+            <div className="weather-forecast">
+              {forecast.map((d, i) => (
+                <div className="forecast-day" key={d.datetime ?? i}>
+                  <div className="dow">
+                    {i === 0
+                      ? t('greeting_today')
+                      : new Date(d.datetime).toLocaleDateString(i18n.language, { weekday: 'short' }).toUpperCase()}
+                  </div>
+                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 18, color: getWeatherColor(d.condition) }} />
+                  <div className="temp">
+                    {Math.round(d.temperature)}°
+                    {d.templow !== undefined && (
+                      <span className="low"> {Math.round(d.templow)}°</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           </div>
         )}
         {!hidePeople && <PersonTracker entities={entities} variant="compact" />}
