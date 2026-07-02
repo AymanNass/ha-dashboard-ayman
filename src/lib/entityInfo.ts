@@ -53,7 +53,7 @@ export function entitySummary(entity: HassEntity): string {
       return state === 'open' ? 'Open' : 'Closed';
     }
     case 'lock':
-      return state === 'locked' ? 'Locked' : 'Unlocked';
+      return state === 'locked' ? 'Chiusa' : 'Aperta';
     case 'media_player': {
       if (state === 'playing') {
         const title = a.media_title as string | undefined;
@@ -80,14 +80,14 @@ export function entitySummary(entity: HassEntity): string {
       return state === 'on' ? 'Detected' : 'Clear';
     case 'alarm_control_panel': {
       const modes: Record<string, string> = {
-        disarmed: 'Disarmed',
-        armed_home: 'Home',
-        armed_away: 'Away',
-        armed_night: 'Night',
-        armed_vacation: 'Vacation',
-        arming: 'Arming…',
-        pending: 'Pending…',
-        triggered: 'TRIGGERED',
+        disarmed: 'Non inserito',
+        armed_home: 'Inserito Casa',
+        armed_away: 'Inserito Fuori',
+        armed_night: 'Inserito Notte',
+        armed_vacation: 'Inserito Vacanza',
+        arming: 'Inserimento...',
+        pending: 'In attesa...',
+        triggered: 'ALLARME!',
       };
       return modes[state] || state;
     }

@@ -2167,6 +2167,54 @@ body::after {
   text-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
+/* Alarm triggered: red pulsing danger */
+.tile.sec-triggered {
+  background:
+    linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(239, 68, 68, 0.12) 50%, rgba(255, 255, 255, 0.04) 100%),
+    rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow:
+    var(--inner-stroke),
+    0 4px 24px rgba(239, 68, 68, 0.35),
+    var(--elevation-rest);
+  animation: sec-triggered-pulse 1.5s ease-in-out infinite;
+}
+
+.tile.sec-triggered .tile-icon {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.3);
+  text-shadow: 0 0 14px rgba(239, 68, 68, 0.7);
+}
+
+.tile.sec-triggered .tile-name {
+  color: #fff;
+}
+
+.tile.sec-triggered .tile-sub {
+  color: #fca5a5;
+}
+
+@keyframes sec-triggered-pulse {
+  0%, 100% { box-shadow: var(--inner-stroke), 0 4px 24px rgba(239, 68, 68, 0.35), var(--elevation-rest); }
+  50% { box-shadow: var(--inner-stroke), 0 4px 32px rgba(239, 68, 68, 0.55), var(--elevation-rest); }
+}
+
+.tile.sec-secure .tile-name {
+  color: #fff;
+}
+
+.tile.sec-secure .tile-sub {
+  color: #6ee7b7;
+}
+
+.tile.sec-open .tile-name {
+  color: #fff;
+}
+
+.tile.sec-open .tile-sub {
+  color: #fca5a5;
+}
+
 /* Embedded live camera thumbnail filling the tile's empty space */
 .tile-cam {
   position: absolute;

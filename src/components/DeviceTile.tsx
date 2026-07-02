@@ -425,7 +425,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   const warmIcon = effectiveActive && (domain === 'light' || domain === 'switch');
   const climateActive = domain === 'climate' && entity.state !== 'off' && entity.state !== 'unavailable';
 
-  // Security tint: green = secure (locked/closed), red = open/unlocked.
+  // Security tint: green = secure (locked/armed), red = open/unlocked/triggered.
   // Covers: only garage/door/gate types (not blinds, shades, curtains).
   let secClass = '';
   if (domain === 'lock') {
@@ -435,6 +435,13 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
     if (deviceClass === 'garage' || deviceClass === 'door' || deviceClass === 'gate') {
       secClass = entity.state === 'closed' ? 'sec-secure' : entity.state === 'open' ? 'sec-open' : '';
     }
+  } else if (domain === 'alarm_control_panel') {
+    if (entity.state.startsWith('armed')) {
+      secClass = 'sec-secure';
+    } else if (entity.state === 'triggered') {
+      secClass = 'sec-triggered';
+    }
+    // disarmed = no class (neutral/off appearance)
   }
 
   // ── Vacuum feature tile (live map, status, quick actions) ──
