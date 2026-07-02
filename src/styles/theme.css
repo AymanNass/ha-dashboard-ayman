@@ -327,29 +327,26 @@ body::after {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding: 8px 0;
 }
 
 .header-right {
   display: flex;
-  align-items: stretch;
-  gap: 12px;
+  align-items: center;
+  gap: 24px;
 }
 
-/* Compact people avatars that live in the header top-right next to the weather. */
+/* Compact people avatars — no box, just the avatars */
 .persons-compact {
   display: flex;
   align-items: center;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
-    var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
-  padding: 12px 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .persons-compact .person-list {
@@ -357,9 +354,11 @@ body::after {
 }
 
 .persons-compact .person-avatar {
-  width: 40px;
-  height: 40px;
-  font-size: 15px;
+  width: 42px;
+  height: 42px;
+  font-size: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .greeting h1 {
@@ -381,29 +380,27 @@ body::after {
   letter-spacing: 0.01em;
 }
 
+/* Weather — clean inline, no card box */
 .weather-widget {
   display: flex;
   align-items: center;
   gap: 20px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
-    var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-glass);
-  border-radius: var(--radius-lg);
-  padding: 14px 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .weather-now {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .weather-temp {
-  font-size: 34px;
+  font-size: 36px;
   font-weight: 200;
   line-height: 1;
   letter-spacing: -0.02em;
@@ -412,7 +409,7 @@ body::after {
 .weather-temp sup {
   font-size: 14px;
   vertical-align: super;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .weather-details {
@@ -424,9 +421,9 @@ body::after {
 
 .weather-forecast {
   display: flex;
-  gap: 16px;
-  padding-left: 20px;
-  border-left: 1px solid var(--border-glass);
+  gap: 14px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .forecast-day {
@@ -770,18 +767,31 @@ body::after {
 
 /* Scenes card pinned to the bottom of the page. */
 .scenes-bottom {
-  margin-top: 18px;
+  margin-top: 24px;
 }
 
 .scenes-card {
-  padding: 16px 20px;
-}.block-title {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.4px;
+  padding: 20px 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.scenes-card .scene-pills {
+  justify-content: center;
+  gap: 24px;
+}
+
+.block-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  text-align: center;
 }
 
 /* ── Room navigation bar ── */
@@ -1517,8 +1527,9 @@ body::after {
 /* ── Scene Pills ── */
 .scenes-row {
   display: flex;
-  gap: 12px;
+  gap: 28px;
   flex-wrap: wrap;
+  justify-content: center;
   margin-bottom: 24px;
 }
 
@@ -1526,13 +1537,14 @@ body::after {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+  min-width: 70px;
 }
 
 .scene-pill:hover {
-  transform: translateY(-3px) scale(1.05);
+  transform: scale(1.05);
 }
 
 .scene-pill:active {
@@ -1540,13 +1552,13 @@ body::after {
 }
 
 .scene-icon {
-  width: 52px;
-  height: 52px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 24px;
   color: white;
   transition: box-shadow 0.3s, transform 0.2s;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
