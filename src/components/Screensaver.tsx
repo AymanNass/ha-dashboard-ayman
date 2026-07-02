@@ -130,7 +130,7 @@ export function Screensaver({ entities, calendarEvents, shortcut, onShortcut, me
   const artist = playing?.attributes.media_artist as string | undefined;
 
   const clock = clockTime(now);
-  const dateLine = now.toLocaleDateString('en-US', {
+  const dateLine = now.toLocaleDateString('it-IT', {
     weekday: 'long',
     month: 'long',
     day: 'numeric',

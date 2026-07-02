@@ -332,7 +332,7 @@ body::after {
 
 .header-right {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 16px;
 }
 

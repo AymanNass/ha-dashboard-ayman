@@ -21,7 +21,7 @@ function prettyId(id: string): string {
  */
 export function resolvePersons(entities: HassEntities): PersonConfig[] {
   const overrides = new Map(configPersons.map((p) => [p.entity_id, p.name]));
-  const discovered = Object.keys(entities).filter((id) => id.startsWith('person.'));
+  const discovered = Object.keys(entities).filter((id) => id.startsWith('person.') && id !== 'person.mqtt');
 
   // Config-listed people first (in their declared order, if they exist), then
   // any remaining auto-discovered people alphabetically.

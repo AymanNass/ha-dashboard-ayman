@@ -440,18 +440,18 @@ const ru = {
 };
 
 const en: typeof ru = {
-  greeting_night: 'Good night',
-  greeting_morning: 'Good morning',
-  greeting_afternoon: 'Good afternoon',
-  greeting_evening: 'Good evening',
-  greeting_media_playing_one: '{{count}} media playing',
-  greeting_media_playing_few: '{{count}} media playing',
-  greeting_media_playing_many: '{{count}} media playing',
-  greeting_media_playing_other: '{{count}} media playing',
-  greeting_everything_quiet: 'Everything quiet',
-  greeting_today: 'TODAY',
-  weather_humidity: 'humidity',
-  weather_feels_like: 'feels like',
+  greeting_night: 'Buonanotte',
+  greeting_morning: 'Buongiorno',
+  greeting_afternoon: 'Buon pomeriggio',
+  greeting_evening: 'Buonasera',
+  greeting_media_playing_one: '{{count}} in riproduzione',
+  greeting_media_playing_few: '{{count}} in riproduzione',
+  greeting_media_playing_many: '{{count}} in riproduzione',
+  greeting_media_playing_other: '{{count}} in riproduzione',
+  greeting_everything_quiet: 'Tutto tranquillo',
+  greeting_today: 'OGGI',
+  weather_humidity: 'umidità',
+  weather_feels_like: 'percepita',
 
   connecting: 'Connecting to Home Assistant...',
 
@@ -2510,12 +2510,13 @@ i18n.use(initReactI18next).init({
   resources: {
     ru: { translation: ru },
     en: { translation: en },
+    it: { translation: en },
     de: { translation: de },
     fr: { translation: fr },
     pl: { translation: pl },
     nl: { translation: nl },
   },
-  lng: localStorage.getItem('ha-dashboard-lang') ?? 'en',
+  lng: localStorage.getItem('ha-dashboard-lang') ?? 'it',
   fallbackLng: 'en',
   interpolation: {
     // Safe: all t() output goes through React text nodes, never dangerouslySetInnerHTML.
