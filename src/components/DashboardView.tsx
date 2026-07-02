@@ -116,12 +116,32 @@ function CollapsibleColumn({
   const expanded = !collapsible || (override ?? active);
 
   if (expanded) {
+    // Extract sensor values to show inline with the title
+    const sensorValues = colEntities
+      .filter((e) => e.entity_id.startsWith('sensor.') && entities[e.entity_id])
+      .map((e) => {
+        const entity = entities[e.entity_id];
+        const val = parseFloat(entity.state);
+        const unit = (entity.attributes.unit_of_measurement as string) || '';
+        return { name: e.name, value: isNaN(val) ? entity.state : `${val.toFixed(1)}${unit}`, icon: e.icon };
+      });
+
     return (
       <>
         {title && (
           <h3 className="column-title">
             {icon && <span className={`mdi ${icon} column-title-icon`} />}
             <span>{title}</span>
+            {sensorValues.length > 0 && (
+              <span className="column-sensors">
+                {sensorValues.map((s, i) => (
+                  <span key={i} className="column-sensor-val">
+                    {s.icon && <span className={`mdi ${s.icon}`} />}
+                    {s.value}
+                  </span>
+                ))}
+              </span>
+            )}
             {collapsible && (
               <button
                 type="button"
@@ -323,7 +343,7 @@ export function DashboardView(props: Props) {
                 >
                   <div className="tile-grid">
                     {col.entities
-                      .filter((e) => entities[e.entity_id] || isSpecialTile(e.entity_id))
+                      .filter((e) => (entities[e.entity_id] || isSpecialTile(e.entity_id)) && !e.entity_id.startsWith('sensor.'))
                       .map((re) => (
                         <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}

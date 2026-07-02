@@ -254,7 +254,8 @@ export default function App() {
           hidePeople={view.hidePeople}
         />
 
-        {view.kind !== 'cameras' && view.kind !== 'sensors' && (
+        {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}
+        {false && view.kind !== 'cameras' && view.kind !== 'sensors' && (
           <GlanceStrip
             entities={entities}
             glance={view.glance}
