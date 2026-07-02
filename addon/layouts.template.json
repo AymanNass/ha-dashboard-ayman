@@ -1,49 +1,149 @@
 [
   {
     "id": "main",
-    "name": "Home",
+    "name": "Casa",
     "icon": "mdi-home",
-    "glance": [
-      { "id": "g-lights", "metric": "lights", "flyout": true },
-      { "id": "g-climate", "metric": "climate", "flyout": true },
-      { "id": "g-people", "metric": "people", "flyout": true },
-      { "id": "g-media", "metric": "media", "flyout": true }
-    ],
     "scenes": [
-      "scene.movie_time",
-      "scene.good_morning",
-      "scene.good_night"
+      "scene.buongiorno",
+      "scene.buonanotte",
+      "scene.cinema",
+      "scene.riposo",
+      "input_boolean.vacation_mode"
     ],
     "sections": [
       {
-        "title": "Lighting",
+        "title": "Sicurezza",
+        "icon": "mdi-shield-home",
+        "color": "#10b981",
         "entities": [
-          { "entity_id": "light.living_room", "name": "Living Room" },
-          { "entity_id": "light.kitchen", "name": "Kitchen" },
-          { "entity_id": "light.bedroom", "name": "Bedroom" },
-          { "entity_id": "light.hallway", "name": "Hallway" }
+          { "entity_id": "alarm_control_panel.casa", "name": "Allarme" },
+          { "entity_id": "lock.pl_2_casa", "name": "Porta casa" },
+          { "entity_id": "camera.corridoio", "name": "Camera corridoio" }
         ]
       },
       {
-        "title": "Security & Access",
+        "title": "Soggiorno",
+        "icon": "mdi-sofa",
+        "color": "#f59e0b",
         "entities": [
-          { "entity_id": "lock.front_door", "name": "Front Door" },
-          { "entity_id": "cover.garage_door", "name": "Garage" },
-          { "entity_id": "cover.living_room_blinds", "name": "Blinds" }
+          { "entity_id": "light.luce_soggiorno", "name": "Muro salotto", "icon": "mdi-wall-sconce-flat" },
+          { "entity_id": "light.lampada_ciambella", "name": "Lampada ciambella", "icon": "mdi-circle-outline" },
+          { "entity_id": "light.lampada_sala", "name": "Lampada sala", "icon": "mdi-desk-lamp" },
+          { "entity_id": "media_player.lg_webos_tv_oled65g26la", "name": "TV" },
+          { "entity_id": "sensor.temperatura_salotto", "name": "Temp", "icon": "mdi-thermometer" },
+          { "entity_id": "sensor.umidita_salotto", "name": "Umidità", "icon": "mdi-water-percent" }
         ]
       },
       {
-        "title": "Climate",
+        "title": "Cucina",
+        "icon": "mdi-countertop",
+        "color": "#f59e0b",
         "entities": [
-          { "entity_id": "climate.thermostat", "name": "Thermostat" }
+          { "entity_id": "light.luce_cucina", "name": "Cucina", "icon": "mdi-spotlight-beam" },
+          { "entity_id": "light.luce_lavandino", "name": "Lavandino", "icon": "mdi-led-strip-variant" }
         ]
       },
       {
-        "title": "Media",
+        "title": "Camera da letto",
+        "icon": "mdi-bed-king",
+        "color": "#f59e0b",
         "entities": [
-          { "entity_id": "media_player.living_room", "name": "Living Room" }
+          { "entity_id": "light.luce_camera", "name": "Luce camera", "icon": "mdi-ceiling-light" },
+          { "entity_id": "light.luce_letto_ayman", "name": "Letto Ayman", "icon": "mdi-lamp" },
+          { "entity_id": "light.luce_letto_martina", "name": "Letto Martina", "icon": "mdi-lamp" },
+          { "entity_id": "sensor.temperatura_camera", "name": "Temp", "icon": "mdi-thermometer" },
+          { "entity_id": "sensor.umidita_camera", "name": "Umidità", "icon": "mdi-water-percent" }
+        ]
+      },
+      {
+        "title": "Corridoio & Ingresso",
+        "icon": "mdi-foot-print",
+        "color": "#f59e0b",
+        "entities": [
+          { "entity_id": "light.luce_corridoio", "name": "Corridoio", "icon": "mdi-spotlight-beam" },
+          { "entity_id": "light.luce_ingresso", "name": "Ingresso", "icon": "mdi-spotlight-beam" },
+          { "entity_id": "light.luce_bagno", "name": "Bagno", "icon": "mdi-spotlight-beam" }
+        ]
+      },
+      {
+        "title": "Clima",
+        "icon": "mdi-thermostat",
+        "color": "#06b6d4",
+        "entities": [
+          { "entity_id": "climate.condizionatore_soggiorno_2", "name": "Soggiorno" },
+          { "entity_id": "climate.condizionatore_camera_da_letto", "name": "Camera" }
+        ]
+      },
+      {
+        "title": "Tapparelle",
+        "icon": "mdi-blinds",
+        "color": "#166534",
+        "entities": [
+          { "entity_id": "cover.tapparella_tavolo", "name": "Tapparella Tavolo", "size": "1x2" },
+          { "entity_id": "cover.tapparella_camera", "name": "Tapparella Camera", "size": "1x2" }
         ]
       }
     ]
+  },
+  {
+    "id": "camera",
+    "name": "Camera",
+    "icon": "mdi-bed-king",
+    "scenes": ["scene.buonanotte", "scene.riposo"],
+    "sections": [
+      {
+        "title": "Luci Camera",
+        "entities": [
+          { "entity_id": "light.luce_camera", "name": "Luce camera", "icon": "mdi-ceiling-light" },
+          { "entity_id": "light.luce_letto_ayman", "name": "Letto Ayman", "icon": "mdi-lamp" },
+          { "entity_id": "light.luce_letto_martina", "name": "Letto Martina", "icon": "mdi-lamp" }
+        ]
+      },
+      {
+        "title": "Clima & Tapparelle",
+        "entities": [
+          { "entity_id": "climate.condizionatore_camera_da_letto", "name": "Condizionatore" },
+          { "entity_id": "cover.tapparella_camera", "name": "Tapparella" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "media",
+    "name": "Media",
+    "icon": "mdi-television",
+    "kind": "media",
+    "scenes": ["scene.cinema"],
+    "sections": [
+      {
+        "title": "Media Players",
+        "entities": [
+          { "entity_id": "media_player.lg_webos_tv_oled65g26la", "name": "TV LG" },
+          { "entity_id": "media_player.spotify_martina", "name": "Spotify Martina" },
+          { "entity_id": "media_player.2o_echo_dot_di_martina", "name": "Echo Dot Camera" },
+          { "entity_id": "media_player.3o_echo_dot_di_martina", "name": "Echo Dot Salotto" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "vacuum",
+    "name": "Roborock",
+    "icon": "mdi-robot-vacuum",
+    "sections": [
+      {
+        "title": "Robot",
+        "entities": [
+          { "entity_id": "vacuum.roborock_qv_35a", "name": "Roborock QV 35A" }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "cameras",
+    "name": "Camere",
+    "icon": "mdi-cctv",
+    "kind": "cameras",
+    "sections": []
   }
 ]
