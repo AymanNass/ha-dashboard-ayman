@@ -1955,6 +1955,11 @@ body::after {
   overflow: hidden;
 }
 
+/* Hide the status dot on climate tiles — the glow is enough */
+.tile.climate-active .tile-status-dot {
+  display: none;
+}
+
 .tile.climate-active::before {
   content: '';
   position: absolute;
@@ -1967,69 +1972,96 @@ body::after {
 }
 
 .tile.climate-cool::before {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), transparent 70%);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), transparent 70%);
   box-shadow: none;
 }
 
 .tile.climate-cool {
   background:
-    linear-gradient(135deg, rgba(6, 182, 212, 0.18) 0%, rgba(6, 182, 212, 0.06) 50%, rgba(255, 255, 255, 0.04) 100%),
-    rgba(255, 255, 255, 0.06);
-  border-color: rgba(6, 182, 212, 0.35);
+    linear-gradient(135deg, rgba(6, 182, 212, 0.3) 0%, rgba(6, 182, 212, 0.15) 40%, rgba(6, 182, 212, 0.05) 100%),
+    rgba(6, 182, 212, 0.08);
+  border-color: rgba(6, 182, 212, 0.5);
   box-shadow:
     var(--inner-stroke),
-    0 4px 20px rgba(6, 182, 212, 0.15),
+    0 4px 24px rgba(6, 182, 212, 0.3),
+    0 0 40px rgba(6, 182, 212, 0.1),
     var(--elevation-rest);
 }
 
 .tile.climate-cool .tile-icon {
-  color: #06b6d4;
-  background: rgba(6, 182, 212, 0.2);
-  text-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+  color: #22d3ee;
+  background: rgba(6, 182, 212, 0.3);
+  text-shadow: 0 0 16px rgba(6, 182, 212, 0.7);
+}
+
+.tile.climate-cool .tile-name {
+  color: #fff;
+}
+
+.tile.climate-cool .tile-sub {
+  color: #67e8f9;
 }
 
 .tile.climate-heat::before {
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), transparent 70%);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), transparent 70%);
   box-shadow: none;
 }
 
 .tile.climate-heat {
   background:
-    linear-gradient(135deg, rgba(249, 115, 22, 0.18) 0%, rgba(249, 115, 22, 0.06) 50%, rgba(255, 255, 255, 0.04) 100%),
-    rgba(255, 255, 255, 0.06);
-  border-color: rgba(249, 115, 22, 0.35);
+    linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.15) 40%, rgba(249, 115, 22, 0.05) 100%),
+    rgba(249, 115, 22, 0.08);
+  border-color: rgba(249, 115, 22, 0.5);
   box-shadow:
     var(--inner-stroke),
-    0 4px 20px rgba(249, 115, 22, 0.15),
+    0 4px 24px rgba(249, 115, 22, 0.3),
+    0 0 40px rgba(249, 115, 22, 0.1),
     var(--elevation-rest);
 }
 
 .tile.climate-heat .tile-icon {
-  color: #f97316;
-  background: rgba(249, 115, 22, 0.2);
-  text-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+  color: #fb923c;
+  background: rgba(249, 115, 22, 0.3);
+  text-shadow: 0 0 16px rgba(249, 115, 22, 0.7);
+}
+
+.tile.climate-heat .tile-name {
+  color: #fff;
+}
+
+.tile.climate-heat .tile-sub {
+  color: #fdba74;
 }
 
 .tile.climate-dry::before {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), transparent 70%);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), transparent 70%);
   box-shadow: none;
 }
 
 .tile.climate-dry {
   background:
-    linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(59, 130, 246, 0.05) 50%, rgba(255, 255, 255, 0.04) 100%),
-    rgba(255, 255, 255, 0.06);
-  border-color: rgba(59, 130, 246, 0.3);
+    linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(59, 130, 246, 0.15) 40%, rgba(59, 130, 246, 0.05) 100%),
+    rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.5);
   box-shadow:
     var(--inner-stroke),
-    0 4px 20px rgba(59, 130, 246, 0.12),
+    0 4px 24px rgba(59, 130, 246, 0.3),
+    0 0 40px rgba(59, 130, 246, 0.1),
     var(--elevation-rest);
 }
 
 .tile.climate-dry .tile-icon {
-  color: #3b82f6;
-  background: rgba(59, 130, 246, 0.2);
-  text-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.3);
+  text-shadow: 0 0 16px rgba(59, 130, 246, 0.7);
+}
+
+.tile.climate-dry .tile-name {
+  color: #fff;
+}
+
+.tile.climate-dry .tile-sub {
+  color: #93c5fd;
 }
 
 .tile.climate-fan_only::before {
