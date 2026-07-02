@@ -15,6 +15,7 @@ export const scenes: SceneConfig[] = [
   { entity_id: 'scene.buonanotte', name: 'Buonanotte', icon: 'mdi-bed', color: '#6366f1' },
   { entity_id: 'scene.cinema', name: 'Cinema', icon: 'mdi-movie-open', color: '#a855f7' },
   { entity_id: 'scene.riposo', name: 'Riposo', icon: 'mdi-power-sleep', color: '#64748b' },
+  { entity_id: 'input_boolean.vacation_mode', name: 'Vacanza', icon: 'mdi-airplane', color: '#ef4444' },
 ];
 
 export const persons: PersonConfig[] = [
@@ -121,6 +122,7 @@ export const views: DashView[] = [
       'scene.buonanotte',
       'scene.cinema',
       'scene.riposo',
+      'input_boolean.vacation_mode',
     ],
     sections: [
       {
@@ -189,16 +191,6 @@ export const views: DashView[] = [
         entities: [
           { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo', size: '1x2' },
           { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera', size: '1x2' },
-        ],
-      },
-      {
-        title: 'Azioni rapide',
-        icon: 'mdi-lightning-bolt',
-        color: '#ec4899',
-        entities: [
-          { entity_id: 'input_boolean.vacation_mode', name: 'Vacation Mode' },
-          { entity_id: 'scene.buonanotte', name: 'Buonanotte' },
-          { entity_id: 'scene.buongiorno', name: 'Buongiorno' },
         ],
       },
     ],

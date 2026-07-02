@@ -190,6 +190,15 @@ export default function App() {
     const entity = entities[entityId];
     if (!entity) return;
 
+    // Vacation mode requires confirmation
+    if (entityId === 'input_boolean.vacation_mode') {
+      const isOn = entity.state === 'on';
+      const msg = isOn
+        ? 'Vuoi disattivare la modalità vacanza?'
+        : 'Vuoi attivare la modalità vacanza? Le luci si accenderanno/spegneranno automaticamente per simulare la presenza.';
+      if (!window.confirm(msg)) return;
+    }
+
     if (domain === 'scene' || domain === 'script') {
       await callHA(domain, 'turn_on', undefined, { entity_id: entityId });
     } else if (domain === 'button') {
