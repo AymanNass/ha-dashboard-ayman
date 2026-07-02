@@ -138,9 +138,9 @@ export const views: DashView[] = [
         icon: 'mdi-sofa',
         color: '#f59e0b',
         entities: [
-          { entity_id: 'light.luce_soggiorno', name: 'Muro salotto' },
-          { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella' },
-          { entity_id: 'light.lampada_sala', name: 'Lampada sala' },
+          { entity_id: 'light.luce_soggiorno', name: 'Muro salotto', icon: 'mdi-wall-sconce-flat' },
+          { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella', icon: 'mdi-circle-outline' },
+          { entity_id: 'light.lampada_sala', name: 'Lampada sala', icon: 'mdi-desk-lamp' },
           { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV' },
         ],
       },
@@ -149,8 +149,8 @@ export const views: DashView[] = [
         icon: 'mdi-countertop',
         color: '#f59e0b',
         entities: [
-          { entity_id: 'light.luce_cucina', name: 'Cucina' },
-          { entity_id: 'light.luce_lavandino', name: 'Lavandino' },
+          { entity_id: 'light.luce_cucina', name: 'Cucina', icon: 'mdi-spotlight-beam' },
+          { entity_id: 'light.luce_lavandino', name: 'Lavandino', icon: 'mdi-led-strip-variant' },
         ],
       },
       {
@@ -158,9 +158,9 @@ export const views: DashView[] = [
         icon: 'mdi-bed-king',
         color: '#f59e0b',
         entities: [
-          { entity_id: 'light.luce_camera', name: 'Luce camera' },
-          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman' },
-          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina' },
+          { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
+          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
+          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
         ],
       },
       {
@@ -168,9 +168,9 @@ export const views: DashView[] = [
         icon: 'mdi-foot-print',
         color: '#f59e0b',
         entities: [
-          { entity_id: 'light.luce_corridoio', name: 'Corridoio' },
-          { entity_id: 'light.luce_ingresso', name: 'Ingresso' },
-          { entity_id: 'light.luce_bagno', name: 'Bagno' },
+          { entity_id: 'light.luce_corridoio', name: 'Corridoio', icon: 'mdi-spotlight-beam' },
+          { entity_id: 'light.luce_ingresso', name: 'Ingresso', icon: 'mdi-spotlight-beam' },
+          { entity_id: 'light.luce_bagno', name: 'Bagno', icon: 'mdi-spotlight-beam' },
         ],
       },
       {
@@ -215,9 +215,9 @@ export const views: DashView[] = [
       {
         title: 'Luci Camera',
         entities: [
-          { entity_id: 'light.luce_camera', name: 'Luce camera' },
-          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman' },
-          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina' },
+          { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
+          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
+          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
         ],
       },
       {
