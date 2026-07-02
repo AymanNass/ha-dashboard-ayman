@@ -111,6 +111,10 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
     <header className="header">
       {!hideGreeting ? (
         <div className="greeting">
+          <div className="header-clock">
+            <span className="clock-time">{time}</span>
+            <span className="clock-date">{date}</span>
+          </div>
           <h1>
             {greeting}
             {greetingName ? `, ${greetingName}!` : ''}
@@ -120,10 +124,6 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
         <div className="greeting" />
       )}
       <div className="header-right">
-        <div className="header-clock">
-          <span className="clock-time">{time}</span>
-          <span className="clock-date">{date}</span>
-        </div>
         {!hideWeather && weather && (
           <div className="weather-widget">
           <div className="weather-now">
