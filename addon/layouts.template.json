@@ -86,29 +86,6 @@
     ]
   },
   {
-    "id": "camera",
-    "name": "Camera",
-    "icon": "mdi-bed-king",
-    "scenes": ["scene.buonanotte", "scene.riposo"],
-    "sections": [
-      {
-        "title": "Luci Camera",
-        "entities": [
-          { "entity_id": "light.luce_camera", "name": "Luce camera", "icon": "mdi-ceiling-light" },
-          { "entity_id": "light.luce_letto_ayman", "name": "Letto Ayman", "icon": "mdi-lamp" },
-          { "entity_id": "light.luce_letto_martina", "name": "Letto Martina", "icon": "mdi-lamp" }
-        ]
-      },
-      {
-        "title": "Clima & Tapparelle",
-        "entities": [
-          { "entity_id": "climate.condizionatore_camera_da_letto", "name": "Condizionatore" },
-          { "entity_id": "cover.tapparella_camera", "name": "Tapparella" }
-        ]
-      }
-    ]
-  },
-  {
     "id": "media",
     "name": "Media",
     "icon": "mdi-television",

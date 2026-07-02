@@ -200,59 +200,6 @@ export const views: DashView[] = [
     ],
   },
   {
-    id: 'camera',
-    name: 'Camera',
-    icon: 'mdi-bed-king',
-    scenes: [
-      'scene.buonanotte',
-      'scene.riposo',
-    ],
-    sections: [
-      {
-        title: 'Luci Camera',
-        entities: [
-          { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
-          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
-          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
-        ],
-      },
-      {
-        title: 'Clima & Tapparelle',
-        entities: [
-          { entity_id: 'climate.condizionatore_camera_da_letto', name: 'Condizionatore' },
-          { entity_id: 'cover.tapparella_camera', name: 'Tapparella' },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'soggiorno',
-    name: 'Soggiorno',
-    icon: 'mdi-sofa',
-    scenes: [
-      'scene.cinema',
-      'scene.buongiorno',
-    ],
-    sections: [
-      {
-        title: 'Luci',
-        entities: [
-          { entity_id: 'light.luce_soggiorno', name: 'Muro salotto' },
-          { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella' },
-          { entity_id: 'light.lampada_sala', name: 'Lampada sala' },
-        ],
-      },
-      {
-        title: 'Media & Clima',
-        entities: [
-          { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
-          { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore' },
-          { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
-        ],
-      },
-    ],
-  },
-  {
     id: 'media',
     name: 'Media',
     icon: 'mdi-television',
