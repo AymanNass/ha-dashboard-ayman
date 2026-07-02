@@ -1,8 +1,8 @@
-name: Glance — HA Dashboard
-version: "1.7.1"
-slug: dynamic_ha_dashboard
-description: A premium, fully-configurable Home Assistant dashboard with at-a-glance buttons, live tiles, and ambient effects.
-url: https://github.com/jvenuto80/Dynamic-HA-Dashboard
+name: Dashboard Casa Ayman
+version: "1.0.0"
+slug: dashboard_casa_ayman
+description: Dashboard personalizzata per Casa di Ayman & Martina
+url: https://github.com/AymanNass/ha-dashboard-ayman
 arch:
   - aarch64
   - amd64
@@ -11,10 +11,10 @@ init: false
 ingress: true
 ingress_port: 3000
 panel_icon: mdi:view-dashboard-variant
-panel_title: Glance
+panel_title: Dashboard
 ports:
   3000/tcp: null
 ports_description:
-  3000/tcp: Web UI port — optional. Leave empty to use Ingress only; set a host port (e.g. 3000) for direct/kiosk access (Fully Kiosk Browser, tablets).
+  3000/tcp: Web UI port — optional. Leave empty to use Ingress only; set a host port (e.g. 3000) for direct/kiosk access.
 options: {}
 schema: {}
