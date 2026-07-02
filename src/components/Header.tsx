@@ -22,6 +22,7 @@ interface Props {
   hideGreeting?: boolean;
   hideWeather?: boolean;
   hidePeople?: boolean;
+  onOpenDetail?: (entityId: string) => void;
 }
 
 /** Join names naturally: "Jeff", "Jeff & Carissa", "Jeff, Carissa & Sam". */
@@ -38,7 +39,7 @@ function getHomeNames(entities: HassEntities): string[] {
     .map((p) => p.name);
 }
 
-export function Header({ entities, getForecast, hideGreeting, hideWeather, hidePeople }: Props) {
+export function Header({ entities, getForecast, hideGreeting, hideWeather, hidePeople, onOpenDetail }: Props) {
   const { t, i18n } = useTranslation();
   const haTempUnit = useHaTempUnit();
   const greeting = (() => {
@@ -110,25 +111,23 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
     <header className="header">
       {!hideGreeting ? (
         <div className="greeting">
-          <div className="greeting-top">
-            <h1>
-              {greeting}
-              {greetingName ? `, ${greetingName}!` : ''}
-            </h1>
-            <div className="header-clock">
-              <span className="clock-time">{time}</span>
-              <span className="clock-date">{date}</span>
-            </div>
-          </div>
+          <h1>
+            {greeting}
+            {greetingName ? `, ${greetingName}!` : ''}
+          </h1>
         </div>
       ) : (
         <div className="greeting" />
       )}
       <div className="header-right">
+        <div className="header-clock">
+          <span className="clock-time">{time}</span>
+          <span className="clock-date">{date}</span>
+        </div>
         {!hideWeather && weather && (
           <div className="weather-widget">
           <div className="weather-now">
-            <span className={`mdi ${getWeatherIcon(state)}`} style={{ fontSize: 36, color: getWeatherColor(state) }} />
+            <span className={`mdi ${getWeatherIcon(state)}`} style={{ fontSize: 32, color: getWeatherColor(state) }} />
             <div>
               <div className="weather-temp">
                 <AnimatedNumber value={Math.round(temp ?? 0)} /><sup>{tempUnit}</sup>
@@ -138,38 +137,18 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
               </div>
             </div>
           </div>
-          {forecast.length > 0 && (
-            <div className="weather-forecast">
-              {forecast.map((d, i) => (
-                <div className="forecast-day" key={d.datetime ?? i}>
-                  <div className="dow">
-                    {i === 0
-                      ? t('greeting_today')
-                      : new Date(d.datetime).toLocaleDateString(i18n.language, { weekday: 'short' }).toUpperCase()}
-                  </div>
-                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 20, color: getWeatherColor(d.condition) }} />
-                  <div className="temp">
-                    {Math.round(d.temperature)}°
-                    {d.templow !== undefined && (
-                      <span className="low"> {Math.round(d.templow)}°</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
           </div>
         )}
         {!hidePeople && <PersonTracker entities={entities} variant="compact" />}
       </div>
     </header>
     <div className="glance-bar">
-      <div className="glance-chip"><span className="mdi mdi-lightbulb-on" /> {lightsOn} luci</div>
-      <div className="glance-chip"><span className={`mdi ${lockState === 'locked' ? 'mdi-lock' : 'mdi-lock-open-variant'}`} /> {lockState === 'locked' ? 'Chiusa' : 'Aperta'}</div>
-      <div className="glance-chip"><span className="mdi mdi-shield-home" /> {alarmLabel}</div>
-      {tempSalotto && <div className="glance-chip"><span className="mdi mdi-thermometer" /> {parseFloat(tempSalotto).toFixed(1)}°</div>}
-      <div className="glance-chip"><span className="mdi mdi-blinds" /> {coversOpen} aperte</div>
-      <div className="glance-chip"><span className="mdi mdi-robot-vacuum" /> {vacuumLabel}</div>
+      <button className="glance-chip" onClick={() => onOpenDetail?.('light.lampada_ciambella')}><span className="mdi mdi-lightbulb-on" /> {lightsOn} luci</button>
+      <button className="glance-chip" onClick={() => onOpenDetail?.('lock.pl_2_casa')}><span className={`mdi ${lockState === 'locked' ? 'mdi-lock' : 'mdi-lock-open-variant'}`} /> {lockState === 'locked' ? 'Chiusa' : 'Aperta'}</button>
+      <button className="glance-chip" onClick={() => onOpenDetail?.('alarm_control_panel.casa')}><span className="mdi mdi-shield-home" /> {alarmLabel}</button>
+      {tempSalotto && <button className="glance-chip" onClick={() => onOpenDetail?.('sensor.temperatura_salotto')}><span className="mdi mdi-thermometer" /> {parseFloat(tempSalotto).toFixed(1)}°</button>}
+      <button className="glance-chip" onClick={() => onOpenDetail?.('cover.tapparella_tavolo')}><span className="mdi mdi-blinds" /> {coversOpen} aperte</button>
+      <button className="glance-chip" onClick={() => onOpenDetail?.('vacuum.roborock_qv_35a')}><span className="mdi mdi-robot-vacuum" /> {vacuumLabel}</button>
     </div>
     </>
   );

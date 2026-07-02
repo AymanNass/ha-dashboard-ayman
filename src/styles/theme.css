@@ -327,14 +327,34 @@ body::after {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
-  padding: 8px 0;
+  margin-bottom: 8px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
+}
+
+.header-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.clock-time {
+  font-size: 28px;
+  font-weight: 200;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.clock-date {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+  margin-top: 2px;
 }
 
 /* Compact people avatars — no box, just the avatars */
@@ -373,46 +393,15 @@ body::after {
 }
 
 .greeting .subtitle {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin-top: 6px;
-  font-weight: 400;
-  letter-spacing: 0.01em;
-}
-
-.greeting-top {
-  display: flex;
-  align-items: baseline;
-  gap: 20px;
-}
-
-.header-clock {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.clock-time {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.clock-date {
-  font-size: 13px;
-  color: var(--text-muted);
-  text-transform: capitalize;
+  display: none;
 }
 
 .greeting .header-time {
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 14px;
+  display: none;
 }
 
 .greeting .header-date {
-  text-transform: capitalize;
+  display: none;
 }
 
 /* ── Glance bar (casa in sintesi) ── */
@@ -420,11 +409,7 @@ body::after {
   display: flex;
   align-items: center;
   gap: 0;
-  margin-bottom: 20px;
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
@@ -438,9 +423,20 @@ body::after {
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 0 14px;
+  padding: 4px 12px;
   white-space: nowrap;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  transition: color 0.15s;
+}
+
+.glance-chip:hover {
+  color: var(--text-primary);
 }
 
 .glance-chip:last-child {
@@ -1130,6 +1126,20 @@ body::after {
   display: flex;
   align-items: center;
   gap: 3px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.column-sensor-val:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .column-sensor-val .mdi {

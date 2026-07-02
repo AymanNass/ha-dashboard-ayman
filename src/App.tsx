@@ -252,6 +252,7 @@ export default function App() {
           hideGreeting={view.hideGreeting}
           hideWeather={view.hideWeather}
           hidePeople={view.hidePeople}
+          onOpenDetail={setDetailEntity}
         />
 
         {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}

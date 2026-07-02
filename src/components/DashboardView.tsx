@@ -80,6 +80,7 @@ function CollapsibleColumn({
   entities,
   enabled,
   noCollapse,
+  onOpenDetail,
   children,
 }: {
   title: string;
@@ -88,6 +89,7 @@ function CollapsibleColumn({
   entities: HassEntities;
   enabled: boolean;
   noCollapse?: boolean;
+  onOpenDetail?: (entityId: string) => void;
   children: React.ReactNode;
 }) {
   const { t } = useTranslation();
@@ -123,7 +125,7 @@ function CollapsibleColumn({
         const entity = entities[e.entity_id];
         const val = parseFloat(entity.state);
         const unit = (entity.attributes.unit_of_measurement as string) || '';
-        return { name: e.name, value: isNaN(val) ? entity.state : `${val.toFixed(1)}${unit}`, icon: e.icon };
+        return { name: e.name, value: isNaN(val) ? entity.state : `${val.toFixed(1)}${unit}`, icon: e.icon, entityId: e.entity_id };
       });
 
     return (
@@ -135,10 +137,10 @@ function CollapsibleColumn({
             {sensorValues.length > 0 && (
               <span className="column-sensors">
                 {sensorValues.map((s, i) => (
-                  <span key={i} className="column-sensor-val">
+                  <button key={i} className="column-sensor-val" onClick={() => onOpenDetail?.(s.entityId)}>
                     {s.icon && <span className={`mdi ${s.icon}`} />}
                     {s.value}
-                  </span>
+                  </button>
                 ))}
               </span>
             )}
@@ -340,6 +342,7 @@ export function DashboardView(props: Props) {
                   entities={entities}
                   enabled={smartGrouping}
                   noCollapse={col.noCollapse}
+                  onOpenDetail={props.onOpenDetail}
                 >
                   <div className="tile-grid">
                     {col.entities
