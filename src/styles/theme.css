@@ -343,10 +343,10 @@ body::after {
 }
 
 .clock-time {
-  font-size: 28px;
+  font-size: 38px;
   font-weight: 200;
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1;
 }
 
@@ -7318,16 +7318,7 @@ button.noc-port:hover { transform: translateY(-1px); }
    changes (handled in DeviceTile), then settles back to quiet. */
 
 .tile-status-dot {
-  position: absolute;
-  top: 17px;
-  right: 46px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(148, 163, 184, 0.22);
-  pointer-events: none;
-  transition: background 0.5s ease;
-  z-index: 1;
+  display: none;
 }
 
 .tile-status-dot.pulse {
