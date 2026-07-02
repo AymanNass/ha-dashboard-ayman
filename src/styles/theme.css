@@ -2684,10 +2684,10 @@ body::after {
   background:
     repeating-linear-gradient(
       180deg,
-      rgba(168, 85, 247, 0.18) 0px,
-      rgba(168, 85, 247, 0.12) 6px,
-      rgba(168, 85, 247, 0.06) 7px,
-      rgba(168, 85, 247, 0.06) 8px
+      rgba(22, 101, 52, 0.22) 0px,
+      rgba(22, 101, 52, 0.15) 6px,
+      rgba(22, 101, 52, 0.08) 7px,
+      rgba(22, 101, 52, 0.08) 8px
     );
   z-index: -1;
   transition: height 0.3s ease;
@@ -2702,7 +2702,7 @@ body::after {
   width: 8px;
   height: 80%;
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(168, 85, 247, 0.4) 0%, rgba(255, 255, 255, 0.15) 100%);
+  background: linear-gradient(180deg, rgba(22, 101, 52, 0.5) 0%, rgba(255, 255, 255, 0.15) 100%);
   outline: none;
   cursor: pointer;
   position: absolute;
@@ -2717,8 +2717,8 @@ body::after {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #a855f7;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
+  background: #166534;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.5);
   cursor: pointer;
 }
 
@@ -2727,8 +2727,8 @@ body::after {
   height: 20px;
   border: none;
   border-radius: 50%;
-  background: #a855f7;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
+  background: #166534;
+  box-shadow: 0 2px 8px rgba(22, 101, 52, 0.5);
   cursor: pointer;
 }
 

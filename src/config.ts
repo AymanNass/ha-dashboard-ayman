@@ -185,7 +185,7 @@ export const views: DashView[] = [
       {
         title: 'Tapparelle',
         icon: 'mdi-blinds',
-        color: '#a855f7',
+        color: '#166534',
         entities: [
           { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo', size: '1x2' },
           { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera', size: '1x2' },
