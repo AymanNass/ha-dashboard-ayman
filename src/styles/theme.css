@@ -1907,6 +1907,29 @@ body::after {
   color: rgba(255, 255, 255, 0.85);
 }
 
+/* Section-colored tiles: use the section's accent color for active state */
+.tile.has-section-color.on {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--section-color) 22%, transparent) 0%, color-mix(in srgb, var(--section-color) 10%, transparent) 50%, rgba(255, 255, 255, 0.04) 100%),
+    rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--section-color) 40%, transparent);
+  box-shadow:
+    var(--inner-stroke),
+    0 4px 20px color-mix(in srgb, var(--section-color) 20%, transparent),
+    var(--elevation-rest);
+}
+
+.tile.has-section-color.on .tile-icon {
+  background: color-mix(in srgb, var(--section-color) 25%, transparent);
+  color: var(--section-color);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--section-color) 60%, transparent);
+}
+
+/* Subtle tint on off-state tiles with section color */
+.tile.has-section-color:not(.on) .tile-icon {
+  color: color-mix(in srgb, var(--section-color) 50%, var(--text-muted));
+}
+
 /* Live light color: glow matches the bulb's actual RGB / color temperature. */
 .tile.on.live-light {
   background:
@@ -2275,10 +2298,6 @@ body::after {
   padding-right: 26px;
 }
 
-.tile.on .tile-sub {
-  color: rgba(255, 255, 255, 0.85);
-}
-
 /* Inline capsule slider inside a tile (iOS-style, like the reference) */
 .tile-slider {
   -webkit-appearance: none;
@@ -2618,7 +2637,7 @@ body::after {
   font-size: 13px;
 }
 
-/* ── Cover tile (tall, vertical fill) ── */
+/* ── Cover tile (tall, vertical fill — like a real shutter) ── */
 .cover-tile {
   position: relative;
   isolation: isolate;
@@ -2628,44 +2647,56 @@ body::after {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
-  height: var(--fill, 0%);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+  top: 0;
+  height: calc(100% - var(--fill, 0%));
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(168, 85, 247, 0.18) 0px,
+      rgba(168, 85, 247, 0.12) 6px,
+      rgba(168, 85, 247, 0.06) 7px,
+      rgba(168, 85, 247, 0.06) 8px
+    );
   z-index: -1;
-  transition: height 0.15s ease;
+  transition: height 0.3s ease;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 
 .cover-range {
   -webkit-appearance: none;
   appearance: none;
-  width: 100%;
-  height: 8px;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 8px;
+  height: 80%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #fff 0 var(--fill, 0%), rgba(255, 255, 255, 0.2) var(--fill, 0%) 100%);
+  background: linear-gradient(180deg, rgba(168, 85, 247, 0.4) 0%, rgba(255, 255, 255, 0.15) 100%);
   outline: none;
   cursor: pointer;
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  right: 14px;
+  top: 10%;
+  z-index: 2;
 }
 
 .cover-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
   cursor: pointer;
 }
 
 .cover-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   border: none;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  background: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.5);
   cursor: pointer;
 }
 

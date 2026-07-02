@@ -42,6 +42,8 @@ interface Props {
   entities?: HassEntities;
   /** Position index used to stagger the tile's entrance animation. */
   enterIndex?: number;
+  /** Section accent color for the tile. */
+  sectionColor?: string;
 }
 
 const TOGGLEABLE = ['light', 'switch', 'input_boolean', 'fan', 'lock', 'media_player'];
@@ -173,7 +175,7 @@ function vacuumMapUrl(entities: HassEntities | undefined, base: string): string 
   return `${HA_URL}/api/camera_proxy/camera.${base}_map?token=${token}`;
 }
 
-export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpenTakeover, span, tall, graph, getHistory, cameraUrl, icon, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex }: Props) {
+export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpenTakeover, span, tall, graph, getHistory, cameraUrl, icon, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex, sectionColor }: Props) {
   const { t } = useTranslation();
   const id = entity.entity_id;
   const domain = id.split('.')[0];
@@ -555,7 +557,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   return (
     <div
       ref={tiltRef as React.Ref<HTMLDivElement>}
-      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''}`}
+      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''} ${sectionColor ? 'has-section-color' : ''}`}
       style={{
         ...(slideEnabled
           ? {
@@ -568,6 +570,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
         ...(artTint ? { '--art-tint': artTint } : {}),
         ...(liveLight ? { '--light-rgb': liveLight } : {}),
         ...(enterIndex != null ? { '--enter-i': enterIndex } : {}),
+        ...(sectionColor ? { '--section-color': sectionColor } : {}),
       } as React.CSSProperties}
       onClick={() => {
         if (suppressClick.current) { suppressClick.current = false; return; }

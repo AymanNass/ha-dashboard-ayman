@@ -325,7 +325,7 @@ export function DashboardView(props: Props) {
                     {col.entities
                       .filter((e) => entities[e.entity_id] || isSpecialTile(e.entity_id))
                       .map((re) => (
-                        <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} {...props} />
+                        <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}
                   </div>
                 </CollapsibleColumn>
@@ -349,12 +349,13 @@ function Tile({
   getHistory,
   view,
   enterIndex,
+  sectionColor,
   searchMusic,
   playMusic,
   getMaPlayers,
   calendarEvents,
   onOpenCalendar,
-}: { re: RoomEntity; enterIndex?: number } & Props) {
+}: { re: RoomEntity; enterIndex?: number; sectionColor?: string } & Props) {
   // Special (non-entity) tiles render their own card.
   if (isSpecialTile(re.entity_id)) {
     const def = SPECIAL_TILES[re.entity_id];
@@ -408,6 +409,7 @@ function Tile({
       artworkEntity={re.artworkEntity}
       entities={entities}
       enterIndex={enterIndex}
+      sectionColor={sectionColor}
     />
   );
 }
