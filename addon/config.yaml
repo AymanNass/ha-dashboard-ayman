@@ -13,7 +13,7 @@ ingress_port: 3000
 panel_icon: mdi:view-dashboard-variant
 panel_title: Dashboard
 ports:
-  3000/tcp: null
+  3000/tcp: 3000
 ports_description:
   3000/tcp: Web UI port — optional. Leave empty to use Ingress only; set a host port (e.g. 3000) for direct/kiosk access.
 options: {}
