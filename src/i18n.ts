@@ -567,7 +567,7 @@ const en: typeof ru = {
   pages_delete_confirm: 'Delete page "{{name}}"?',
   pages_add: 'Add Page',
 
-  app_scenes: 'Scenes',
+  app_scenes: 'Scene',
   app_add_scene: 'Add Scene',
   app_move_left: 'Move left',
   app_move_right: 'Move right',

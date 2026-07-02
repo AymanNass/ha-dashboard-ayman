@@ -380,6 +380,16 @@ body::after {
   letter-spacing: 0.01em;
 }
 
+.greeting .header-time {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.greeting .header-date {
+  text-transform: capitalize;
+}
+
 /* Weather — clean inline, no card box */
 .weather-widget {
   display: flex;
@@ -768,6 +778,35 @@ body::after {
 /* Scenes card pinned to the bottom of the page. */
 .scenes-bottom {
   margin-top: 24px;
+}
+
+.scenes-section {
+  margin-top: 20px;
+  padding-top: 8px;
+}
+
+.scenes-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.scenes-separator::before,
+.scenes-separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+.scenes-separator span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .scenes-card {

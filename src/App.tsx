@@ -376,8 +376,8 @@ export default function App() {
         )}
 
         {!editing && viewScenes.length > 0 && (
-          <div className="glass-card scenes-card scenes-bottom">
-            <h3 className="block-title">{t('app_scenes')}</h3>
+          <div className="scenes-section">
+            <div className="scenes-separator"><span>{t('app_scenes')}</span></div>
             <ScenePills entities={entities} onToggle={toggleEntity} scenes={viewScenes} />
           </div>
         )}

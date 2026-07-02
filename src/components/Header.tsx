@@ -84,6 +84,15 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
   const homeNames = getHomeNames(entities);
   const greetingName = joinNames(homeNames);
 
+  // Live clock that updates every minute
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  const date = now.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+
   if (hideGreeting && hideWeather && hidePeople) return null;
 
   return (
@@ -95,11 +104,12 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
             {greetingName ? `, ${greetingName}!` : ''}
           </h1>
           <p className="subtitle">
-            {mediaPlaying.length > 0
-              ? t('greeting_media_playing', { count: mediaPlaying.length })
-              : t('greeting_everything_quiet')}
+            <span className="header-time">{time}</span>
             {' · '}
-            {new Date().toLocaleDateString(i18n.language, { weekday: 'long', month: 'short', day: 'numeric' })}
+            <span className="header-date">{date}</span>
+            {mediaPlaying.length > 0 && (
+              <> · {t('greeting_media_playing', { count: mediaPlaying.length })}</>
+            )}
           </p>
         </div>
       ) : (
