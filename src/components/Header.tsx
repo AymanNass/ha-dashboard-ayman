@@ -95,22 +95,31 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
 
   if (hideGreeting && hideWeather && hidePeople) return null;
 
+  // Glance summary
+  const lightsOn = Object.values(entities).filter(e => e.entity_id.startsWith('light.') && e.state === 'on').length;
+  const lockState = entities['lock.pl_2_casa']?.state;
+  const alarmState = entities['alarm_control_panel.casa']?.state;
+  const alarmLabel = alarmState === 'disarmed' ? 'Non inserito' : alarmState?.startsWith('armed') ? 'Inserito' : alarmState;
+  const coversOpen = Object.values(entities).filter(e => e.entity_id.startsWith('cover.') && e.state === 'open').length;
+  const vacuumState = entities['vacuum.roborock_qv_35a']?.state;
+  const vacuumLabel = vacuumState === 'docked' ? 'In carica' : vacuumState === 'cleaning' ? 'Pulisce' : vacuumState;
+  const tempSalotto = entities['sensor.temperatura_salotto']?.state;
+
   return (
+    <>
     <header className="header">
       {!hideGreeting ? (
         <div className="greeting">
-          <h1>
-            {greeting}
-            {greetingName ? `, ${greetingName}!` : ''}
-          </h1>
-          <p className="subtitle">
-            <span className="header-time">{time}</span>
-            {' · '}
-            <span className="header-date">{date}</span>
-            {mediaPlaying.length > 0 && (
-              <> · {t('greeting_media_playing', { count: mediaPlaying.length })}</>
-            )}
-          </p>
+          <div className="greeting-top">
+            <h1>
+              {greeting}
+              {greetingName ? `, ${greetingName}!` : ''}
+            </h1>
+            <div className="header-clock">
+              <span className="clock-time">{time}</span>
+              <span className="clock-date">{date}</span>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="greeting" />
@@ -154,5 +163,14 @@ export function Header({ entities, getForecast, hideGreeting, hideWeather, hideP
         {!hidePeople && <PersonTracker entities={entities} variant="compact" />}
       </div>
     </header>
+    <div className="glance-bar">
+      <div className="glance-chip"><span className="mdi mdi-lightbulb-on" /> {lightsOn} luci</div>
+      <div className="glance-chip"><span className={`mdi ${lockState === 'locked' ? 'mdi-lock' : 'mdi-lock-open-variant'}`} /> {lockState === 'locked' ? 'Chiusa' : 'Aperta'}</div>
+      <div className="glance-chip"><span className="mdi mdi-shield-home" /> {alarmLabel}</div>
+      {tempSalotto && <div className="glance-chip"><span className="mdi mdi-thermometer" /> {parseFloat(tempSalotto).toFixed(1)}°</div>}
+      <div className="glance-chip"><span className="mdi mdi-blinds" /> {coversOpen} aperte</div>
+      <div className="glance-chip"><span className="mdi mdi-robot-vacuum" /> {vacuumLabel}</div>
+    </div>
+    </>
   );
 }

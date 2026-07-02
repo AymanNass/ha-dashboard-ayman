@@ -380,6 +380,31 @@ body::after {
   letter-spacing: 0.01em;
 }
 
+.greeting-top {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+}
+
+.header-clock {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.clock-time {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.clock-date {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
 .greeting .header-time {
   font-weight: 600;
   color: var(--text-secondary);
@@ -388,6 +413,33 @@ body::after {
 
 .greeting .header-date {
   text-transform: capitalize;
+}
+
+/* ── Glance bar (casa in sintesi) ── */
+.glance-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.glance-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.glance-chip .mdi {
+  font-size: 14px;
+  opacity: 0.7;
 }
 
 /* Weather — clean inline, no card box */
@@ -1996,6 +2048,16 @@ body::after {
   font-weight: 600;
 }
 
+/* Subtle light pulse animation on active light tiles */
+.tile.on .tile-icon {
+  animation: light-glow 3s ease-in-out infinite;
+}
+
+@keyframes light-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
 .tile.on .tile-sub {
   color: rgba(255, 255, 255, 0.85);
 }
@@ -2413,12 +2475,14 @@ body::after {
   border: none;
   background: transparent;
   color: inherit;
-  opacity: 0.4;
+  opacity: 0;
   cursor: pointer;
   font-size: 18px;
   padding: 0;
   line-height: 1;
   transition: var(--transition-fast);
+  pointer-events: none;
+  display: none;
 }
 
 .tile-more:hover {

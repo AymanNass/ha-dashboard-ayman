@@ -144,6 +144,8 @@ export const views: DashView[] = [
           { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella', icon: 'mdi-circle-outline' },
           { entity_id: 'light.lampada_sala', name: 'Lampada sala', icon: 'mdi-desk-lamp' },
           { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV' },
+          { entity_id: 'sensor.temperatura_salotto', name: 'Temp', icon: 'mdi-thermometer' },
+          { entity_id: 'sensor.umidita_salotto', name: 'Umidità', icon: 'mdi-water-percent' },
         ],
       },
       {
@@ -163,6 +165,8 @@ export const views: DashView[] = [
           { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
           { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
           { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
+          { entity_id: 'sensor.temperatura_camera', name: 'Temp', icon: 'mdi-thermometer' },
+          { entity_id: 'sensor.umidita_camera', name: 'Umidità', icon: 'mdi-water-percent' },
         ],
       },
       {
