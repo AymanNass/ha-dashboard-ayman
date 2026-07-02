@@ -200,6 +200,9 @@ export default function App() {
     } else if (domain === 'lock') {
       const service = entity.state === 'locked' ? 'unlock' : 'lock';
       await callHA('lock', service, undefined, { entity_id: entityId });
+    } else if (domain === 'media_player') {
+      const service = entity.state === 'off' ? 'turn_on' : 'turn_off';
+      await callHA('media_player', service, undefined, { entity_id: entityId });
     } else {
       await callHA('homeassistant', 'toggle', undefined, { entity_id: entityId });
     }
