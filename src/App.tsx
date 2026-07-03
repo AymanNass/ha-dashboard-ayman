@@ -43,8 +43,12 @@ export default function App() {
   const [scenePicker, setScenePicker] = useState(false);
   // First-run guided setup shows when no token is configured; can be dismissed
   // for this session to explore the shell without connecting.
+  // Also re-shown on auth errors (code 2 = invalid token) so the user can fix credentials.
+  // The "Configura" button in the error bar can force it open for any error type.
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
-  const needsOnboarding = !HA_TOKEN && !onboardingDismissed;
+  const [forceOnboarding, setForceOnboarding] = useState(false);
+  const isAuthError = !!error && (error.includes('Token non valido') || error.includes('ERR_INVALID_AUTH'));
+  const needsOnboarding = ((!HA_TOKEN || isAuthError || forceOnboarding) && !onboardingDismissed);
   // Actively connecting (token present, nothing streamed yet, no hard error):
   // show shimmer skeletons instead of an empty grid. In dev, `?skeleton` forces
   // this state so the loading look can be previewed without a real cold start.
@@ -500,6 +504,13 @@ export default function App() {
       {error && !needsOnboarding && (
         <div className="connection-bar error">
           <span className="mdi mdi-alert-circle" /> {error}
+          <button
+            className="connection-bar-btn"
+            onClick={() => { setForceOnboarding(true); setOnboardingDismissed(false); }}
+            title={t('onboarding_configure') ?? 'Configura connessione'}
+          >
+            <span className="mdi mdi-cog" /> {t('onboarding_configure') ?? 'Configura'}
+          </button>
         </div>
       )}
       {!connected && !error && !needsOnboarding && (

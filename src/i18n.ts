@@ -38,6 +38,7 @@ const ru = {
   onboarding_test: 'Проверить',
   onboarding_connect: 'Подключить',
   onboarding_skip: 'Настрою позже',
+  onboarding_configure: 'Настроить',
 
   // Settings
   settings_title: 'Настройки',
@@ -473,6 +474,7 @@ const en: typeof ru = {
   onboarding_test: 'Test',
   onboarding_connect: 'Connect',
   onboarding_skip: "I'll set this up later",
+  onboarding_configure: 'Configure',
 
   settings_title: 'Settings',
   settings_close: 'Close',
@@ -888,6 +890,7 @@ const de: typeof ru = {
   onboarding_test: 'Testen',
   onboarding_connect: 'Verbinden',
   onboarding_skip: 'Später einrichten',
+  onboarding_configure: 'Konfigurieren',
 
   settings_title: 'Einstellungen',
   settings_close: 'Schließen',
@@ -1301,6 +1304,7 @@ const fr: typeof ru = {
   onboarding_test: 'Tester',
   onboarding_connect: 'Connecter',
   onboarding_skip: 'Je configurerai plus tard',
+  onboarding_configure: 'Configurer',
 
   settings_title: 'Paramètres',
   settings_close: 'Fermer',
@@ -1714,6 +1718,7 @@ const pl: typeof ru = {
   onboarding_test: 'Testuj',
   onboarding_connect: 'Połącz',
   onboarding_skip: 'Skonfiguruję to później',
+  onboarding_configure: 'Konfiguruj',
 
   settings_title: 'Ustawienia',
   settings_close: 'Zamknij',
@@ -2127,6 +2132,7 @@ const nl: typeof ru = {
   onboarding_test: 'Testen',
   onboarding_connect: 'Verbinden',
   onboarding_skip: 'Ik stel dit later in',
+  onboarding_configure: 'Configureren',
 
   settings_title: 'Instellingen',
   settings_close: 'Sluiten',

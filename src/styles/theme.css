@@ -4541,6 +4541,26 @@ html.vt-active .detail-panel.open > * {
   border-color: rgba(245, 158, 11, 0.3);
 }
 
+.connection-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+  padding: 4px 10px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.connection-bar-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .main-content {
