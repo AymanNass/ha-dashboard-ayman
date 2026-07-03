@@ -4523,6 +4523,10 @@ html.vt-active .detail-panel.open > * {
   z-index: 300;
   backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
+  max-width: min(90vw, 600px);
+  text-align: center;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
 .connection-bar.error {

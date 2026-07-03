@@ -46,6 +46,39 @@ export function useHaTempUnit(): string {
   return unit || '°C';
 }
 
+/**
+ * Build a human-readable, debug-friendly error message for connection failures.
+ * Includes the attempted URL, the raw error, and a hint about what might be wrong.
+ */
+function buildConnectionError(err: unknown, url: string): string {
+  const raw = err instanceof Error ? err.message : String(err);
+
+  // Identify common failure modes and provide actionable hints
+  let hint = '';
+  const lower = raw.toLowerCase();
+
+  if (lower.includes('invalid access token') || lower.includes('401') || lower.includes('auth_invalid')) {
+    hint = 'Token non valido o scaduto. Ricrea un Long-Lived Access Token in HA.';
+  } else if (lower.includes('err_connection_refused') || lower.includes('econnrefused')) {
+    hint = `HA non è raggiungibile su ${url}. Verifica che sia acceso e che la porta sia corretta.`;
+  } else if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('net::')) {
+    hint = `Impossibile raggiungere ${url}. Sei sulla stessa rete? Se il deploy è in cloud, HA deve essere esposto a internet (Cloudflare Tunnel / Nabu Casa).`;
+  } else if (lower.includes('timeout') || lower.includes('timed out')) {
+    hint = `Timeout collegandosi a ${url}. Il server potrebbe essere sovraccarico o non raggiungibile.`;
+  } else if (lower.includes('cors') || lower.includes('cross-origin')) {
+    hint = `Errore CORS: il browser blocca la richiesta verso ${url}. Aggiungi l'origine della dashboard nelle impostazioni CORS di HA (http.cors_allowed_origins in configuration.yaml).`;
+  } else if (lower.includes('websocket') || lower.includes('ws')) {
+    hint = `WebSocket non riesce a connettersi a ${url}. Verifica che HA sia raggiungibile e che nessun proxy blocchi i WebSocket.`;
+  }
+
+  // Compose the final message: [URL tried] + raw error + hint
+  const parts: string[] = [];
+  parts.push(`[${url}]`);
+  parts.push(raw);
+  if (hint) parts.push(`💡 ${hint}`);
+  return parts.join(' — ');
+}
+
 export function useHomeAssistant() {
   const [entities, setEntities] = useState<HassEntities>({});
   const [connected, setConnected] = useState(false);
@@ -93,7 +126,8 @@ export function useHomeAssistant() {
         });
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Connection failed');
+          const detail = buildConnectionError(err, HA_URL);
+          setError(detail);
           setConnected(false);
           broadcastConnected(false);
         }
