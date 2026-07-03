@@ -50,10 +50,45 @@ export function useHaTempUnit(): string {
  * Build a human-readable, debug-friendly error message for connection failures.
  * Includes the attempted URL, the raw error, and a hint about what might be wrong.
  */
-function buildConnectionError(err: unknown, url: string): string {
-  const raw = err instanceof Error ? err.message : String(err);
+/**
+ * Error codes thrown by home-assistant-js-websocket (numeric, not Error objects).
+ * See: node_modules/home-assistant-js-websocket/dist/errors.d.ts
+ */
+const HA_WS_ERRORS: Record<number, string> = {
+  1: 'Impossibile connettersi a Home Assistant',
+  2: 'Token non valido o scaduto',
+  3: 'Connessione persa',
+  4: 'Host Home Assistant non configurato',
+  5: 'Non puoi usare HTTPS verso un HA in HTTP',
+  6: 'Callback di autenticazione non valido',
+};
 
-  // Identify common failure modes and provide actionable hints
+function buildConnectionError(err: unknown, url: string): string {
+  // The HA WS library throws raw numbers (not Error instances) for known failures
+  if (typeof err === 'number') {
+    const label = HA_WS_ERRORS[err] || `Errore sconosciuto (codice ${err})`;
+    let hint = '';
+    switch (err) {
+      case 1:
+        hint = `Verifica che HA sia acceso e raggiungibile su ${url}. Se sei in cloud, HA deve essere esposto a internet (Cloudflare Tunnel / Nabu Casa).`;
+        break;
+      case 2:
+        hint = 'Vai in HA → Profilo → Token di accesso a lunga durata, creane uno nuovo e incollalo nelle impostazioni della dashboard.';
+        break;
+      case 3:
+        hint = 'La connessione WebSocket si è interrotta. Controlla la rete o ricarica la pagina.';
+        break;
+      case 5:
+        hint = `La dashboard è servita in HTTPS ma ${url} è HTTP. Usa HTTPS anche per HA oppure configura un reverse proxy.`;
+        break;
+    }
+    const parts = [`[${url}]`, label];
+    if (hint) parts.push(`💡 ${hint}`);
+    return parts.join(' — ');
+  }
+
+  // Standard Error objects or unknown throws
+  const raw = err instanceof Error ? err.message : String(err);
   let hint = '';
   const lower = raw.toLowerCase();
 
@@ -71,10 +106,7 @@ function buildConnectionError(err: unknown, url: string): string {
     hint = `WebSocket non riesce a connettersi a ${url}. Verifica che HA sia raggiungibile e che nessun proxy blocchi i WebSocket.`;
   }
 
-  // Compose the final message: [URL tried] + raw error + hint
-  const parts: string[] = [];
-  parts.push(`[${url}]`);
-  parts.push(raw);
+  const parts: string[] = [`[${url}]`, raw];
   if (hint) parts.push(`💡 ${hint}`);
   return parts.join(' — ');
 }
