@@ -564,6 +564,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   return (
     <div
       ref={tiltRef as React.Ref<HTMLDivElement>}
+      data-domain={domain}
       className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''} ${sectionColor ? 'has-section-color' : ''}`}
       style={{
         ...(slideEnabled
