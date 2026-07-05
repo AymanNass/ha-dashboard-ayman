@@ -127,6 +127,7 @@ export const views: DashView[] = [
         title: 'Sicurezza',
         icon: 'mdi-shield-home',
         color: '#10b981',
+        kind: 'security',
         entities: [
           { entity_id: 'alarm_control_panel.casa', name: 'Allarme' },
           { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
@@ -140,9 +141,6 @@ export const views: DashView[] = [
           { entity_id: 'light.luce_soggiorno', name: 'Muro salotto', icon: 'mdi-wall-sconce-flat' },
           { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella', icon: 'mdi-circle-outline' },
           { entity_id: 'light.lampada_sala', name: 'Lampada sala', icon: 'mdi-desk-lamp' },
-          { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV' },
-          { entity_id: 'sensor.temperatura_salotto', name: 'Temp', icon: 'mdi-thermometer' },
-          { entity_id: 'sensor.umidita_salotto', name: 'Umidità', icon: 'mdi-water-percent' },
         ],
       },
       {
@@ -162,8 +160,6 @@ export const views: DashView[] = [
           { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
           { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
           { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
-          { entity_id: 'sensor.temperatura_camera', name: 'Temp', icon: 'mdi-thermometer' },
-          { entity_id: 'sensor.umidita_camera', name: 'Umidità', icon: 'mdi-water-percent' },
         ],
       },
       {
@@ -177,21 +173,21 @@ export const views: DashView[] = [
         ],
       },
       {
+        title: 'Tapparelle',
+        icon: 'mdi-blinds',
+        color: '#166534',
+        entities: [
+          { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
+          { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera' },
+        ],
+      },
+      {
         title: 'Clima',
         icon: 'mdi-thermostat',
         color: '#06b6d4',
         entities: [
           { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Soggiorno' },
           { entity_id: 'climate.condizionatore_camera_da_letto', name: 'Camera' },
-        ],
-      },
-      {
-        title: 'Tapparelle',
-        icon: 'mdi-blinds',
-        color: '#166534',
-        entities: [
-          { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo', size: '1x2' },
-          { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera', size: '1x2' },
         ],
       },
     ],

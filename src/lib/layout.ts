@@ -4,7 +4,7 @@ import type { DashRow, DashSection, DashView } from '../types';
  *  Falls back to one full-width column per legacy section. */
 export function viewRows(view: DashView): DashRow[] {
   if (view.rows && view.rows.length) return view.rows;
-  return (view.sections ?? []).map((s) => ({ columns: [{ title: s.title, entities: s.entities }] }));
+  return (view.sections ?? []).map((s) => ({ columns: [s] }));
 }
 
 /** Ensure every view in a list carries a populated `rows` array. */

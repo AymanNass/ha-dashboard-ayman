@@ -4545,6 +4545,62 @@ html.vt-active .detail-panel.open > * {
   background: linear-gradient(90deg, #ff9329 0%, #ffd9a8 40%, #ffffff 65%, #cfe0ff 100%);
 }
 
+/* ── Security Bar ── */
+.security-bar {
+  display: flex;
+  gap: 10px;
+  padding: 0 0 12px;
+  flex-wrap: wrap;
+}
+
+.security-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  color: var(--text-secondary);
+}
+.security-chip:active {
+  transform: scale(0.96);
+}
+.security-chip .mdi {
+  font-size: 18px;
+}
+
+.security-chip.secure {
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+.security-chip.alert {
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  animation: sec-pulse 2s ease-in-out infinite;
+}
+.security-chip.pending {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+.security-chip.neutral {
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--text-muted);
+}
+
+@keyframes sec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* ── Connection Status ── */
 .connection-bar {
   position: fixed;

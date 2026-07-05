@@ -32,6 +32,7 @@ import { groupMediaPlayers, pickRepresentative, deviceNameKey, collapseSpeakerGr
 import { cameraProxyUrl } from '../hooks/useCameraFeed';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
+import { SecurityBar } from './SecurityBar';
 import { useTranslation } from 'react-i18next';
 
 /** Subscribe to the "compact sections" preference (live-updated from Settings).
@@ -333,7 +334,20 @@ export function DashboardView(props: Props) {
         <section className="view-row" key={ri}>
           {row.title && <h2 className="row-title">{row.title}</h2>}
           <div className={`row-columns ${row.columns.length > 1 ? 'multi' : ''}`}>
-            {row.columns.map((col, ci) => (
+            {row.columns.map((col, ci) => {
+              // Security sections render as a compact chip bar, not normal tiles
+              if (col.kind === 'security') {
+                return (
+                  <div className="row-column" key={ci}>
+                    <SecurityBar
+                      entities={entities}
+                      entityIds={col.entities}
+                      callHA={props.callHA}
+                    />
+                  </div>
+                );
+              }
+              return (
               <div className="row-column" key={ci}>
                 <CollapsibleColumn
                   title={col.title ?? ''}
@@ -353,7 +367,8 @@ export function DashboardView(props: Props) {
                   </div>
                 </CollapsibleColumn>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       ))}
