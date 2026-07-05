@@ -4546,192 +4546,205 @@ html.vt-active .detail-panel.open > * {
 }
 
 /* ── Roborock Panel ── */
-.roborock-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto;
-  gap: 14px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(6, 78, 59, 0.08) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.15);
-  border-radius: 20px;
-  position: relative;
-  overflow: hidden;
-}
-.roborock-panel::before {
-  content: '';
-  position: absolute;
-  top: -60px;
-  right: -60px;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.robo-status {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(16, 185, 129, 0.1);
-  backdrop-filter: blur(10px);
-}
-.robo-status-icon {
-  font-size: 36px;
-  color: rgba(16, 185, 129, 0.6);
-  transition: color 0.3s;
-}
-.robo-status-icon.cleaning {
-  color: #10b981;
-  animation: robo-pulse 1.5s ease-in-out infinite;
-}
-@keyframes robo-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.1); opacity: 0.8; }
-}
-.robo-status-info {
+.robo-layout {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  flex: 1;
+  gap: 14px;
 }
-.robo-status-state {
+
+.robo-top {
+  display: grid;
+  grid-template-columns: 1.2fr 1.5fr 0.8fr;
+  gap: 14px;
+  min-height: 0;
+}
+
+.robo-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+.robo-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.robo-card h4 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.robo-card h4 .mdi {
+  color: #10b981;
+  font-size: 16px;
+}
+
+/* ── Status Card ── */
+.robo-status-card {
+  justify-content: space-between;
+}
+.robo-status-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.robo-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #64748b;
+  flex-shrink: 0;
+}
+.robo-dot.docked {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+}
+.robo-dot.active {
+  background: #10b981;
+  animation: robo-blink 1s ease-in-out infinite;
+}
+@keyframes robo-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.robo-status-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.3px;
 }
-.robo-status-room {
+.robo-status-sub {
   font-size: 11px;
-  color: rgba(16, 185, 129, 0.8);
-  font-weight: 500;
-}
-.robo-battery {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  padding: 5px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-}
-.robo-battery .mdi {
-  font-size: 18px;
-  color: #10b981;
+  color: var(--text-muted);
 }
 
-.robo-section {
+/* Battery ring */
+.robo-battery-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+.robo-ring-svg {
+  width: 100%;
+  height: 100%;
+}
+.robo-battery-text {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-.robo-section h4 {
-  margin: 0;
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(16, 185, 129, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  display: flex;
   align-items: center;
-  gap: 5px;
+  justify-content: center;
 }
-.robo-section h4 .mdi {
-  font-size: 14px;
+.robo-battery-pct {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -1px;
 }
-.robo-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.robo-select-all {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 8px;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  background: transparent;
-  color: rgba(16, 185, 129, 0.8);
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all 0.15s;
-}
-.robo-select-all:hover {
-  background: rgba(16, 185, 129, 0.1);
+.robo-battery-bolt {
+  font-size: 16px;
+  color: #10b981;
 }
 
-.robo-chips {
+/* Info pills */
+.robo-info-pills {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 6px;
 }
-.robo-chip {
+.robo-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 12px;
+}
+.robo-pill .mdi {
+  font-size: 16px;
+  color: var(--text-muted);
+  width: 20px;
+  text-align: center;
+}
+.robo-pill div {
+  display: flex;
+  flex-direction: column;
+}
+.robo-pill small {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.robo-pill span {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Status actions */
+.robo-status-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+.robo-action-btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  padding: 10px 16px;
+  padding: 11px 14px;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s;
   min-height: 44px;
 }
-.robo-chip:hover {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.2);
+.robo-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
 }
-.robo-chip.active {
-  border-color: #10b981;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.12);
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
-  transform: translateY(-1px);
+.robo-action-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
-.robo-chip .mdi {
-  font-size: 18px;
-}
-
-.robo-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding-top: 4px;
+.robo-action-btn.pause {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
 }
 .robo-start-btn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 28px;
-  border-radius: 14px;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-  letter-spacing: -0.2px;
-  min-height: 48px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  min-height: 44px;
 }
 .robo-start-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
-}
-.robo-start-btn:active:not(:disabled) {
-  transform: translateY(0);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  transform: translateY(-1px);
 }
 .robo-start-btn:disabled {
   opacity: 0.35;
@@ -4739,39 +4752,189 @@ html.vt-active .detail-panel.open > * {
   box-shadow: none;
 }
 .robo-start-btn .mdi {
-  font-size: 20px;
+  font-size: 18px;
 }
 
-.robo-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 18px;
+/* ── Map Card ── */
+.robo-map-card {
+  overflow: hidden;
+}
+.robo-map-container {
+  flex: 1;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(0, 0, 0, 0.25);
-  color: var(--text-secondary);
-  font-size: 14px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+.robo-map-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.robo-map-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.robo-map-placeholder .mdi {
+  font-size: 40px;
+  opacity: 0.3;
+}
+
+/* ── Rooms Card ── */
+.robo-rooms-card {
+  overflow-y: auto;
+}
+.robo-rooms-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.robo-select-all {
+  font-size: 11px;
   font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: transparent;
+  color: rgba(16, 185, 129, 0.8);
   cursor: pointer;
   transition: all 0.15s;
-  backdrop-filter: blur(8px);
-  min-height: 44px;
 }
-.robo-action-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
+.robo-select-all:hover {
+  background: rgba(16, 185, 129, 0.1);
 }
-.robo-action-btn.dock {
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #f59e0b;
+.robo-room-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.robo-action-btn.dock:hover {
-  background: rgba(245, 158, 11, 0.08);
+.robo-room-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-height: 40px;
+}
+.robo-room-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.robo-room-item.active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+.robo-room-item .mdi {
+  font-size: 18px;
+  width: 22px;
+  text-align: center;
 }
 
+/* ── Bottom option cards ── */
+.robo-options-card h4,
+.robo-maint-card h4 {
+  font-size: 12px;
+}
+.robo-option-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.robo-option-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 70px;
+  min-height: 60px;
+}
+.robo-option-chip .mdi {
+  font-size: 22px;
+}
+.robo-option-chip:hover {
+  background: rgba(16, 185, 129, 0.06);
+}
+.robo-option-chip.active {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.12);
+}
+
+/* ── Maintenance ── */
+.robo-maint-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.06);
+  color: #10b981;
+  font-size: 12px;
+  font-weight: 600;
+}
+.robo-maint-status.warn {
+  background: rgba(245, 158, 11, 0.08);
+  color: #f59e0b;
+}
+.robo-maint-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.robo-maint-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+.robo-maint-item span:last-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .robo-top {
+    grid-template-columns: 1fr 1fr;
+  }
+  .robo-rooms-card {
+    grid-column: 1 / -1;
+  }
+  .robo-room-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
 @media (max-width: 680px) {
-  .roborock-panel {
+  .robo-top {
+    grid-template-columns: 1fr;
+  }
+  .robo-bottom {
     grid-template-columns: 1fr;
   }
 }
