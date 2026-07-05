@@ -163,12 +163,27 @@ export const views: DashView[] = [
         ],
       },
       {
+        title: 'Cameretta',
+        icon: 'mdi-baby-face-outline',
+        color: '#f59e0b',
+        entities: [
+          { entity_id: 'light.luce_cameretta', name: 'Luce cameretta', icon: 'mdi-ceiling-light' },
+        ],
+      },
+      {
         title: 'Corridoio & Ingresso',
         icon: 'mdi-foot-print',
         color: '#f59e0b',
         entities: [
           { entity_id: 'light.luce_corridoio', name: 'Corridoio', icon: 'mdi-spotlight-beam' },
           { entity_id: 'light.luce_ingresso', name: 'Ingresso', icon: 'mdi-spotlight-beam' },
+        ],
+      },
+      {
+        title: 'Bagno',
+        icon: 'mdi-shower',
+        color: '#f59e0b',
+        entities: [
           { entity_id: 'light.luce_bagno', name: 'Bagno', icon: 'mdi-spotlight-beam' },
         ],
       },
