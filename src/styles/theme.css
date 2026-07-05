@@ -2513,38 +2513,37 @@ body::after {
 }
 
 /* When tile is off, keep the icon visible so you always know what it is */
+/* Each domain gets its own icon color so you can tell device types apart */
 .tile:not(.on) .tile-icon {
   opacity: 0.85;
-  color: rgba(255, 180, 70, 0.55);
 }
-
-/* ── Domain accent line on off-state tiles (bottom border) ──
-   A subtle bottom-line colored by domain so you always know what type
-   of device a tile controls, even when it's off. */
-.tile:not(.on)[data-domain="light"] {
-  border-bottom: 2px solid rgba(255, 170, 60, 0.35);
+.tile:not(.on)[data-domain="light"] .tile-icon {
+  color: rgba(255, 180, 70, 0.7);
 }
-.tile:not(.on)[data-domain="cover"] {
-  border-bottom: 2px solid rgba(100, 180, 100, 0.35);
+.tile:not(.on)[data-domain="cover"] .tile-icon {
+  color: rgba(100, 180, 100, 0.7);
 }
-.tile:not(.on)[data-domain="climate"] {
-  border-bottom: 2px solid rgba(6, 182, 212, 0.35);
+.tile:not(.on)[data-domain="climate"] .tile-icon {
+  color: rgba(6, 182, 212, 0.7);
 }
-.tile:not(.on)[data-domain="alarm_control_panel"] {
-  border-bottom: 2px solid rgba(16, 185, 129, 0.35);
+.tile:not(.on)[data-domain="alarm_control_panel"] .tile-icon {
+  color: rgba(16, 185, 129, 0.7);
 }
-.tile:not(.on)[data-domain="lock"] {
-  border-bottom: 2px solid rgba(99, 102, 241, 0.35);
+.tile:not(.on)[data-domain="lock"] .tile-icon {
+  color: rgba(99, 102, 241, 0.7);
 }
-.tile:not(.on)[data-domain="media_player"] {
-  border-bottom: 2px solid rgba(168, 85, 247, 0.35);
+.tile:not(.on)[data-domain="media_player"] .tile-icon {
+  color: rgba(168, 85, 247, 0.7);
 }
-.tile:not(.on)[data-domain="switch"],
-.tile:not(.on)[data-domain="input_boolean"] {
-  border-bottom: 2px solid rgba(245, 158, 11, 0.35);
+.tile:not(.on)[data-domain="switch"] .tile-icon,
+.tile:not(.on)[data-domain="input_boolean"] .tile-icon {
+  color: rgba(245, 158, 11, 0.7);
 }
-.tile:not(.on)[data-domain="camera"] {
-  border-bottom: 2px solid rgba(239, 68, 68, 0.35);
+.tile:not(.on)[data-domain="camera"] .tile-icon {
+  color: rgba(239, 68, 68, 0.7);
+}
+.tile:not(.on)[data-domain="sensor"] .tile-icon {
+  color: rgba(148, 163, 184, 0.7);
 }
 
 /* Warm amber glow on the icon when a light/switch is on (like the pic) */

@@ -85,9 +85,7 @@ export const rooms: Room[] = [
   },
 ];
 
-export const cameras = [
-  { entity_id: 'camera.corridoio', name: 'Corridoio' },
-];
+export const cameras: { entity_id: string; name: string }[] = [];
 
 export const locks = [
   { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
@@ -132,7 +130,6 @@ export const views: DashView[] = [
         entities: [
           { entity_id: 'alarm_control_panel.casa', name: 'Allarme' },
           { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
-          { entity_id: 'camera.corridoio', name: 'Camera corridoio' },
         ],
       },
       {
@@ -233,12 +230,5 @@ export const views: DashView[] = [
         ],
       },
     ],
-  },
-  {
-    id: 'cameras',
-    name: 'Camere',
-    icon: 'mdi-cctv',
-    kind: 'cameras',
-    sections: [],
   },
 ];
