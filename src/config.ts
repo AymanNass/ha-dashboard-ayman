@@ -97,8 +97,7 @@ export const spotifyPlaylists = [
 export const spotifyDevices = [
   { name: 'Echo Camera', deviceName: 'Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
   { name: 'Echo Salotto', deviceName: '3º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
-  { name: 'Echo Camera Letto', deviceName: '2º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
-  { name: 'Ovunque', deviceName: 'Ovunque', icon: 'mdi-speaker-multiple' },
+  { name: 'Echo Bagno', deviceName: '4º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
 ];
 
 export const locks = [
