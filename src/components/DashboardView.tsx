@@ -34,6 +34,7 @@ import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
 import { SecurityBar } from './SecurityBar';
 import { SpotifyPlaylist } from './SpotifyPlaylist';
+import { RoborockPanel } from './RoborockPanel';
 import { spotifyPlaylists, spotifyDevices } from '../config';
 import { useTranslation } from 'react-i18next';
 
@@ -271,6 +272,20 @@ export function DashboardView(props: Props) {
 
   if (view.kind === 'media') {
     return <MediaAutoView {...props} />;
+  }
+
+  if (view.kind === 'vacuum') {
+    return (
+      <div className="view-rows" key={view.id}>
+        <section className="view-row">
+          <div className="row-columns">
+            <div className="row-column">
+              <RoborockPanel entities={entities} callHA={props.callHA} />
+            </div>
+          </div>
+        </section>
+      </div>
+    );
   }
 
   // A sensors view becomes the enterprise NOC overview once it has a `noc`

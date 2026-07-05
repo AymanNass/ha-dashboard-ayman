@@ -121,7 +121,7 @@ export interface DashView {
   icon: string;
   /** Special render kind for non-tile views. Defaults to a sectioned tile grid.
    *  'media' auto-fills with every media_player, showing only active ones. */
-  kind?: 'tiles' | 'cameras' | 'sensors' | 'media';
+  kind?: 'tiles' | 'cameras' | 'sensors' | 'media' | 'vacuum';
   /** Scene entity_ids (from the scenes catalog) relevant to this view. */
   scenes?: string[];
   /** Legacy flat sections; auto-converted to single-column rows when `rows` is absent. */

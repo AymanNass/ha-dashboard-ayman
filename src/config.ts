@@ -246,6 +246,7 @@ export const views: DashView[] = [
     id: 'vacuum',
     name: 'Roborock',
     icon: 'mdi-robot-vacuum',
+    kind: 'vacuum',
     sections: [
       {
         title: 'Robot',
