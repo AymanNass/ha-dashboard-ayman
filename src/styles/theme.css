@@ -4675,16 +4675,17 @@ html.vt-active .detail-panel.open > * {
 .robo-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 7px 12px;
-  border-radius: 10px;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(0, 0, 0, 0.2);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px;
 }
 .robo-chip:hover {
   background: rgba(16, 185, 129, 0.08);
@@ -4698,7 +4699,7 @@ html.vt-active .detail-panel.open > * {
   transform: translateY(-1px);
 }
 .robo-chip .mdi {
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .robo-actions {
@@ -4712,17 +4713,18 @@ html.vt-active .detail-panel.open > * {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 14px 28px;
   border-radius: 14px;
   border: none;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
   letter-spacing: -0.2px;
+  min-height: 48px;
 }
 .robo-start-btn:hover:not(:disabled) {
   transform: translateY(-2px);
@@ -4743,17 +4745,18 @@ html.vt-active .detail-panel.open > * {
 .robo-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 10px 16px;
+  gap: 6px;
+  padding: 12px 18px;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.25);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
   backdrop-filter: blur(8px);
+  min-height: 44px;
 }
 .robo-action-btn:hover {
   background: rgba(255, 255, 255, 0.08);
