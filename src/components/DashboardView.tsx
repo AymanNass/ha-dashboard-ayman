@@ -783,11 +783,17 @@ function MediaAutoView(props: Props) {
             </div>
           </section>
         )}
-        <div className="page-empty">
-          <span className="mdi mdi-music-note-off page-empty-icon" />
-          <h3>{t('dash_nothing_playing')}</h3>
-          <p>{t('dash_nothing_playing_desc')}</p>
-        </div>
+        <section className="view-row">
+          <div className="row-columns">
+            <div className="row-column">
+              <SpotifyPlaylist
+                playlists={spotifyPlaylists}
+                devices={spotifyDevices}
+                callHA={props.callHA}
+              />
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
