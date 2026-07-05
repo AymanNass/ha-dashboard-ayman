@@ -105,30 +105,47 @@ export function RoborockPanel({ entities, callHA }: Props) {
       {/* ── CARD 1: Stato & Mappa ── */}
       <div className="rv-card rv-card-status">
         <div className="rv-card-title"><span className="mdi mdi-robot-vacuum" /> Stato</div>
+
+        {/* Top: Robot image + Battery ring + Status info */}
+        <div className="rv-status-top">
+          <div className="rv-robot-img">
+            <img src="/roborock.webp" alt="Roborock" />
+          </div>
+          <div className="rv-battery-ring">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="6" />
+              <circle
+                cx="50" cy="50" r="40" fill="none"
+                stroke={battery != null && battery > 50 ? '#10b981' : battery != null && battery > 20 ? '#f59e0b' : '#ef4444'}
+                strokeWidth="6" strokeLinecap="round"
+                strokeDasharray={`${(battery ?? 100) * 2.51} 251`}
+                transform="rotate(-90 50 50)"
+                style={{ transition: 'stroke-dasharray 0.5s' }}
+              />
+            </svg>
+            <div className="rv-battery-center">
+              <span className="rv-battery-pct">{battery ?? '—'}%</span>
+              <span className="mdi mdi-lightning-bolt rv-bolt" />
+            </div>
+          </div>
+          <div className="rv-status-info">
+            <div className="rv-status-line">
+              <span className={`rv-dot ${cleaning ? 'pulse' : ''}`} />
+              <strong>{statusLabel}</strong>
+            </div>
+            {cleaning && currentRoom && <div className="rv-status-room">{currentRoom}</div>}
+            <div className="rv-status-detail"><span className="mdi mdi-clock-outline" /> {lastCleanFormatted}</div>
+            <div className="rv-status-detail"><span className="mdi mdi-texture-box" /> {area} m²</div>
+          </div>
+        </div>
+
+        {/* Bottom: Map */}
         <div className="rv-map">
           {mapUrl ? <img src={mapUrl} alt="Mappa" /> : (
             <div className="rv-map-empty"><span className="mdi mdi-map-outline" /></div>
           )}
         </div>
-        <div className="rv-stats">
-          <div className="rv-stat">
-            <span className={`rv-dot ${cleaning ? 'pulse' : ''}`} />
-            <span>{statusLabel}</span>
-            {cleaning && currentRoom && <small>({currentRoom})</small>}
-          </div>
-          <div className="rv-stat">
-            <span className="mdi mdi-battery" />
-            <span>{battery ?? '—'}%</span>
-          </div>
-          <div className="rv-stat">
-            <span className="mdi mdi-clock-outline" />
-            <span>{lastCleanFormatted}</span>
-          </div>
-          <div className="rv-stat">
-            <span className="mdi mdi-texture-box" />
-            <span>{area} m²</span>
-          </div>
-        </div>
+
         {(cleaning || status === 'paused') && (
           <div className="rv-quick">
             {cleaning && <button className="rv-btn-sm" onClick={pause}><span className="mdi mdi-pause" /> Pausa</button>}
