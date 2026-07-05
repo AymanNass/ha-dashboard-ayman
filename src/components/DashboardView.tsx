@@ -35,6 +35,7 @@ import { TileSettings } from './TileSettings';
 import { SecurityBar } from './SecurityBar';
 import { SpotifyPlaylist } from './SpotifyPlaylist';
 import { RoborockPanel } from './RoborockPanel';
+import { PlantWidget } from './PlantWidget';
 import { spotifyPlaylists, spotifyDevices } from '../config';
 import { useTranslation } from 'react-i18next';
 
@@ -364,6 +365,8 @@ export function DashboardView(props: Props) {
                   </div>
                 );
               }
+              // Inject plant widget in the Soggiorno section
+              const isSoggiorno = col.title === 'Soggiorno' && view.id === 'main';
               return (
               <div className="row-column" key={ci}>
                 <CollapsibleColumn
@@ -382,6 +385,7 @@ export function DashboardView(props: Props) {
                         <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}
                   </div>
+                  {isSoggiorno && <PlantWidget entities={entities} />}
                 </CollapsibleColumn>
               </div>
               );

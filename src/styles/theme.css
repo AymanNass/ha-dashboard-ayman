@@ -4548,7 +4548,7 @@ html.vt-active .detail-panel.open > * {
 /* ── Roborock Panel ── */
 .rv-layout {
   display: grid;
-  grid-template-columns: 1fr 1.4fr 0.8fr;
+  grid-template-columns: 1fr 1.6fr 0.6fr;
   gap: 14px;
   height: calc(100vh - 150px);
   max-height: 580px;
@@ -4589,8 +4589,8 @@ html.vt-active .detail-panel.open > * {
   gap: 12px;
 }
 .rv-robot-img {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   border-radius: 12px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.2);
@@ -4603,8 +4603,8 @@ html.vt-active .detail-panel.open > * {
 }
 .rv-battery-ring {
   position: relative;
-  width: 70px;
-  height: 70px;
+  width: 56px;
+  height: 56px;
   flex-shrink: 0;
 }
 .rv-battery-ring svg {
@@ -4620,13 +4620,13 @@ html.vt-active .detail-panel.open > * {
   justify-content: center;
 }
 .rv-battery-pct {
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 800;
   color: var(--text-primary);
   line-height: 1;
 }
 .rv-bolt {
-  font-size: 12px;
+  font-size: 10px;
   color: #10b981;
 }
 .rv-status-info {
@@ -4838,47 +4838,51 @@ html.vt-active .detail-panel.open > * {
 /* ── Card 3: Manutenzione ── */
 .rv-card-maint {
   justify-content: flex-start;
+  padding: 14px;
+  gap: 8px;
 }
 .rv-maint-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  flex: 1;
+  gap: 8px;
 }
 .rv-maint-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 .rv-maint-row > span:first-child {
-  font-size: 11px;
-  color: var(--text-secondary);
+  font-size: 10px;
+  color: var(--text-muted);
   font-weight: 500;
 }
 .rv-bar {
-  height: 6px;
-  border-radius: 3px;
+  height: 4px;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.06);
   overflow: hidden;
 }
 .rv-bar-fill {
   height: 100%;
-  border-radius: 3px;
+  border-radius: 2px;
   background: linear-gradient(90deg, #10b981, #06b6d4);
   transition: width 0.4s ease;
 }
 .rv-hours {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: var(--text-primary);
 }
 .rv-maint-extra {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 8px;
+  gap: 4px;
+  padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   margin-top: auto;
+}
+.rv-maint-extra .rv-stat {
+  font-size: 10px;
 }
 
 @media (max-width: 900px) {
@@ -4895,6 +4899,75 @@ html.vt-active .detail-panel.open > * {
   .rv-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Plant Widget ── */
+.plant-widget {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  min-height: 72px;
+  transition: border-color 0.3s;
+}
+.plant-widget.plant-happy { border-color: rgba(16, 185, 129, 0.2); }
+.plant-widget.plant-thirsty { border-color: rgba(245, 158, 11, 0.3); }
+.plant-widget.plant-critical { border-color: rgba(239, 68, 68, 0.3); animation: plant-pulse 2s ease-in-out infinite; }
+@keyframes plant-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+.plant-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
+.plant-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.plant-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.plant-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.plant-status {
+  font-size: 11px;
+  font-weight: 600;
+}
+.plant-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.plant-stats .mdi {
+  font-size: 13px;
+}
+.plant-bar-wrap {
+  width: 6px;
+  height: 40px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column-reverse;
+}
+.plant-bar-fill {
+  border-radius: 3px;
+  transition: height 0.5s ease;
 }
 
 /* ── Spotify Playlist Picker ── */
