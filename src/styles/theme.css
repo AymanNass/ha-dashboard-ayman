@@ -4547,56 +4547,83 @@ html.vt-active .detail-panel.open > * {
 
 /* ── Roborock Panel ── */
 .roborock-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: 14px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(6, 78, 59, 0.08) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.roborock-panel::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .robo-status {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  backdrop-filter: blur(10px);
 }
 .robo-status-icon {
-  font-size: 28px;
-  color: var(--text-secondary);
+  font-size: 36px;
+  color: rgba(16, 185, 129, 0.6);
+  transition: color 0.3s;
 }
 .robo-status-icon.cleaning {
   color: #10b981;
-  animation: robo-spin 2s linear infinite;
+  animation: robo-pulse 1.5s ease-in-out infinite;
 }
-@keyframes robo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+@keyframes robo-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
 }
 .robo-status-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   flex: 1;
 }
 .robo-status-state {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   color: var(--text-primary);
+  letter-spacing: -0.3px;
 }
 .robo-status-room {
   font-size: 11px;
-  color: var(--text-muted);
+  color: rgba(16, 185, 129, 0.8);
+  font-weight: 500;
 }
 .robo-battery {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   color: var(--text-secondary);
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.robo-battery .mdi {
+  font-size: 18px;
+  color: #10b981;
 }
 
 .robo-section {
@@ -4606,12 +4633,17 @@ html.vt-active .detail-panel.open > * {
 }
 .robo-section h4 {
   margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(16, 185, 129, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   display: flex;
   align-items: center;
   gap: 5px;
+}
+.robo-section h4 .mdi {
+  font-size: 14px;
 }
 .robo-section-header {
   display: flex;
@@ -4619,16 +4651,20 @@ html.vt-active .detail-panel.open > * {
   justify-content: space-between;
 }
 .robo-select-all {
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
   background: transparent;
-  color: var(--text-muted);
+  color: rgba(16, 185, 129, 0.8);
   cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.15s;
 }
 .robo-select-all:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .robo-chips {
@@ -4640,54 +4676,65 @@ html.vt-active .detail-panel.open > * {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 6px 11px;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.04);
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .robo-chip:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.2);
 }
 .robo-chip.active {
-  border-color: rgba(16, 185, 129, 0.5);
+  border-color: #10b981;
   color: #10b981;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+  transform: translateY(-1px);
 }
 .robo-chip .mdi {
   font-size: 14px;
 }
 
 .robo-actions {
+  grid-column: 1 / -1;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  padding-top: 4px;
 }
 .robo-start-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  border-radius: 20px;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 14px;
   border: none;
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+  letter-spacing: -0.2px;
 }
 .robo-start-btn:hover:not(:disabled) {
-  background: #059669;
-  transform: scale(1.02);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+}
+.robo-start-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 .robo-start-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.35;
   cursor: not-allowed;
+  box-shadow: none;
 }
 .robo-start-btn .mdi {
   font-size: 20px;
@@ -4697,22 +4744,33 @@ html.vt-active .detail-panel.open > * {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 8px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.06);
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
   color: var(--text-secondary);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
+  backdrop-filter: blur(8px);
 }
 .robo-action-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
 }
 .robo-action-btn.dock {
-  border-color: rgba(245, 158, 11, 0.4);
+  border-color: rgba(245, 158, 11, 0.3);
   color: #f59e0b;
+}
+.robo-action-btn.dock:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+@media (max-width: 680px) {
+  .roborock-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Spotify Playlist Picker ── */
