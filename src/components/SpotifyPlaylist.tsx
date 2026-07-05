@@ -38,6 +38,9 @@ export function SpotifyPlaylist({ playlists, devices, callHA }: Props) {
         random_song: true,
         shuffle: true,
       });
+    } catch {
+      // Spotcast may throw spurious errors (e.g. 'serverTime') but still
+      // successfully starts playback. Ignore and trust the call went through.
     } finally {
       setTimeout(() => setPlaying(false), 2000);
     }
