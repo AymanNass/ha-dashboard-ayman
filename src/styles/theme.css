@@ -4545,6 +4545,94 @@ html.vt-active .detail-panel.open > * {
   background: linear-gradient(90deg, #ff9329 0%, #ffd9a8 40%, #ffffff 65%, #cfe0ff 100%);
 }
 
+/* ── Spotify Playlist Picker ── */
+.spotify-picker {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spotify-heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.spotify-heading .mdi-spotify {
+  color: #1db954;
+}
+
+.spotify-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.spotify-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spotify-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.spotify-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.spotify-chip.active {
+  border-color: #1db954;
+  color: #1db954;
+  background: rgba(29, 185, 84, 0.1);
+}
+.spotify-chip .mdi {
+  font-size: 15px;
+}
+
+.spotify-play-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: none;
+  background: #1db954;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.spotify-play-btn:hover:not(:disabled) {
+  background: #1ed760;
+  transform: scale(1.02);
+}
+.spotify-play-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.spotify-play-btn .mdi {
+  font-size: 20px;
+}
+
 /* ── Security Bar ── */
 .security-bar {
   display: flex;

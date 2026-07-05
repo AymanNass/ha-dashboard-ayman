@@ -87,6 +87,20 @@ export const rooms: Room[] = [
 
 export const cameras: { entity_id: string; name: string }[] = [];
 
+/** Spotify playlists shown in the Media page picker. */
+export const spotifyPlaylists = [
+  { name: 'My Ears Fav', uri: 'spotify:playlist:4aD5AzcM210BUZL9etOSHY', icon: 'mdi-heart' },
+  { name: 'Nostalgia Canaglia', uri: 'spotify:playlist:6Hr6dKFh9xQbFC1MpQR9FP', icon: 'mdi-emoticon-cool' },
+];
+
+/** Devices available as Spotify playback targets (spotcast device_name). */
+export const spotifyDevices = [
+  { name: 'Echo Camera', deviceName: 'Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
+  { name: 'Echo Salotto', deviceName: '3º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
+  { name: 'Echo Camera Letto', deviceName: '2º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
+  { name: 'Ovunque', deviceName: 'Ovunque', icon: 'mdi-speaker-multiple' },
+];
+
 export const locks = [
   { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
 ];

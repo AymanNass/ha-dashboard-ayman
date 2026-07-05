@@ -33,6 +33,8 @@ import { cameraProxyUrl } from '../hooks/useCameraFeed';
 import { getSettings } from '../settings';
 import { TileSettings } from './TileSettings';
 import { SecurityBar } from './SecurityBar';
+import { SpotifyPlaylist } from './SpotifyPlaylist';
+import { spotifyPlaylists, spotifyDevices } from '../config';
 import { useTranslation } from 'react-i18next';
 
 /** Subscribe to the "compact sections" preference (live-updated from Settings).
@@ -818,6 +820,11 @@ function MediaAutoView(props: Props) {
                 );
               })}
             </div>
+            <SpotifyPlaylist
+              playlists={spotifyPlaylists}
+              devices={spotifyDevices}
+              callHA={props.callHA}
+            />
           </div>
         </div>
       </section>
