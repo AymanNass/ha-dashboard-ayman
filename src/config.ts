@@ -15,6 +15,7 @@ export const scenes: SceneConfig[] = [
   { entity_id: 'scene.buonanotte', name: 'Buonanotte', icon: 'mdi-bed', color: '#6366f1' },
   { entity_id: 'scene.cinema', name: 'Cinema', icon: 'mdi-movie-open', color: '#a855f7' },
   { entity_id: 'scene.riposo', name: 'Riposo', icon: 'mdi-power-sleep', color: '#64748b' },
+  { entity_id: 'script.condizionatore_notte', name: 'Condizionatore Notte', icon: 'mdi-snowflake-thermometer', color: '#06b6d4' },
   { entity_id: 'input_boolean.vacation_mode', name: 'Vacanza', icon: 'mdi-airplane', color: '#ef4444' },
 ];
 
@@ -133,6 +134,7 @@ export const views: DashView[] = [
       'scene.buonanotte',
       'scene.cinema',
       'scene.riposo',
+      'script.condizionatore_notte',
       'input_boolean.vacation_mode',
     ],
     sections: [
