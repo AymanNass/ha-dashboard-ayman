@@ -25,6 +25,7 @@ import { CoverSection } from './CoverSection';
 import { CameraGrid } from './CameraGrid';
 import { ClimateView } from './ClimateView';
 import { RobotPageV2 } from './RobotPageV2';
+import { AutomationsPage } from './AutomationsPage';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -320,6 +321,15 @@ export function DashboardView(props: Props) {
         entities={entities}
         callHA={props.callHA}
         onOpenDetail={props.onOpenDetail}
+      />
+    );
+  }
+
+  if (view.kind === 'automations') {
+    return (
+      <AutomationsPage
+        entities={entities}
+        callHA={props.callHA}
       />
     );
   }

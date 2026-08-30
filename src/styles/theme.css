@@ -3592,6 +3592,138 @@ body::after {
   -webkit-backdrop-filter: none;
 }
 
+/* ── Automations Page ── */
+.atp { padding-top: 4px; }
+.atp-cols { display: grid; grid-template-columns: 280px 1fr; gap: 14px; align-items: start; }
+.atp-stitle { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); opacity: 0.7; }
+.atp-stitle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.atp-count { font-size: 11px; color: var(--text-muted); }
+.atp-empty { font-size: 11px; color: var(--text-muted); }
+
+/* Activity log (left timeline) */
+.atp-log {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.atp-log .atp-stitle { display: block; margin-bottom: 10px; }
+.atp-log-list { display: flex; flex-direction: column; gap: 0; }
+.atp-log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  position: relative;
+}
+.atp-log-time {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  width: 38px;
+  flex: none;
+  text-align: right;
+}
+.atp-log-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(var(--accent-rgb), 0.5);
+  flex: none;
+  margin-top: 4px;
+  position: relative;
+}
+/* Timeline line */
+.atp-log-item:not(:last-child) .atp-log-dot::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 2px;
+  width: 2px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.04);
+}
+.atp-log-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.atp-log-name { font-size: 11px; font-weight: 600; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atp-log-ago { font-size: 9px; color: var(--text-muted); }
+
+/* Automation groups */
+.atp-group { margin-bottom: 12px; }
+.atp-group-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.atp-group-icon { font-size: 16px; color: var(--text-muted); opacity: 0.5; }
+.atp-group-label { font-size: 12px; font-weight: 700; color: var(--text-secondary); flex: 1; }
+.atp-group-count { font-size: 10px; color: var(--text-muted); background: rgba(255, 255, 255, 0.04); padding: 1px 6px; border-radius: 8px; }
+
+.atp-group-items { display: flex; flex-direction: column; gap: 3px; }
+.atp-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background 0.12s;
+}
+.atp-item:hover { background: rgba(255, 255, 255, 0.04); }
+.atp-item.atp-disabled { opacity: 0.45; }
+.atp-item-info { flex: 1; min-width: 0; }
+.atp-item-name { font-size: 12px; font-weight: 600; color: var(--text-primary); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atp-item-last { font-size: 10px; color: var(--text-muted); }
+.atp-item-actions { display: flex; align-items: center; gap: 6px; flex: none; }
+
+.atp-trigger {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+}
+.atp-trigger:hover { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+
+/* Mini toggle switch */
+.atp-toggle {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  padding: 0;
+}
+.atp-toggle.on { background: rgba(16, 185, 129, 0.4); }
+.atp-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform 0.2s, background 0.2s;
+}
+.atp-toggle.on .atp-toggle-knob { transform: translateX(14px); background: #10b981; }
+
+/* Light theme */
+[data-theme='light'] .atp-log { background: rgba(15, 23, 42, 0.015); border-color: rgba(15, 23, 42, 0.04); }
+[data-theme='light'] .atp-item { background: rgba(15, 23, 42, 0.015); border-color: rgba(15, 23, 42, 0.04); }
+[data-theme='light'] .atp-toggle { background: rgba(15, 23, 42, 0.1); }
+
 /* ── Robot mini card (homepage Cameretta) ── */
 .robot-mini {
   display: flex;

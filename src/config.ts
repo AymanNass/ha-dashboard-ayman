@@ -261,4 +261,11 @@ export const views: DashView[] = [
     kind: 'climate',
     sections: [],
   },
+  {
+    id: 'automations',
+    name: 'Automazioni',
+    icon: 'mdi-cog-transfer',
+    kind: 'automations' as DashView['kind'],
+    sections: [],
+  },
 ];
