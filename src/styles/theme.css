@@ -3244,7 +3244,8 @@ body::after {
   flex: 1;
   position: relative;
   display: flex;
-  min-height: 120px;
+  min-height: 80px;
+  max-height: 80px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
