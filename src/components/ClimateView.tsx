@@ -29,7 +29,7 @@ const ROOMS: RoomClimate[] = [
     icon: 'mdi-bed-king',
     climate: 'climate.condizionatore_camera_da_letto',
     tempSensor: 'sensor.temperatura_media_camera',
-    tempChartSensor: 'sensor.temperatura_condizionatore_camera',
+    tempChartSensor: 'sensor.temperatura_camera',
     humiditySensor: 'sensor.umidita_camera',
   },
   {
