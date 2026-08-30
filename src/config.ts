@@ -248,20 +248,6 @@ export const views: DashView[] = [
     ],
   },
   {
-    id: 'vacuum',
-    name: 'Roborock',
-    icon: 'mdi-robot-vacuum',
-    kind: 'vacuum',
-    sections: [
-      {
-        title: 'Robot',
-        entities: [
-          { entity_id: 'vacuum.roborock_qv_35a', name: 'Roborock QV 35A' },
-        ],
-      },
-    ],
-  },
-  {
     id: 'robot-v2',
     name: 'Robot v2',
     icon: 'mdi-robot-vacuum-variant',
