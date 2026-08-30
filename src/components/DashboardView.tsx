@@ -24,6 +24,7 @@ import { SplitLightTile } from './SplitLightTile';
 import { CoverSection } from './CoverSection';
 import { CameraGrid } from './CameraGrid';
 import { ClimateView } from './ClimateView';
+import { RobotPageV2 } from './RobotPageV2';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -305,6 +306,16 @@ export function DashboardView(props: Props) {
         entities={entities}
         callHA={props.callHA}
         getHistory={props.getHistory!}
+        onOpenDetail={props.onOpenDetail}
+      />
+    );
+  }
+
+  if (view.kind === 'robot-v2') {
+    return (
+      <RobotPageV2
+        entities={entities}
+        callHA={props.callHA}
         onOpenDetail={props.onOpenDetail}
       />
     );

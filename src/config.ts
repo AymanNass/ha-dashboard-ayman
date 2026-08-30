@@ -262,6 +262,13 @@ export const views: DashView[] = [
     ],
   },
   {
+    id: 'robot-v2',
+    name: 'Robot v2',
+    icon: 'mdi-robot-vacuum-variant',
+    kind: 'robot-v2' as DashView['kind'],
+    sections: [],
+  },
+  {
     id: 'climate',
     name: 'Clima',
     icon: 'mdi-thermostat',
