@@ -3258,7 +3258,8 @@ body::after {
   top: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, #0a3d1f, #0d4a26);
+  background: linear-gradient(180deg, #072a15, #093520);
+  opacity: 0.7;
   transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
   border-radius: 13px 13px 0 0;
