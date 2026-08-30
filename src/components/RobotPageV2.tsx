@@ -182,9 +182,9 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
         </div>
       )}
 
-      {/* ── Three columns ── */}
+      {/* ── Three columns: Left(Status+Dock+Maint) | Center(Pulizia) | Right(Map) ── */}
       <div className="rv2-cols">
-        {/* ── LEFT: Status + Map ── */}
+        {/* ── LEFT: Status + Dock + Maintenance + Stats ── */}
         <div className="rv2-left">
           <div className="rv2-section">
             <span className="rv2-stitle">STATO</span>
@@ -209,20 +209,35 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
             )}
           </div>
 
-          {/* Map */}
-          <div className="rv2-section rv2-map-section">
-            <div className="rv2-stitle-row">
-              <span className="rv2-stitle">MAPPA</span>
-              <button className="rv2-icon-btn" onClick={() => setMapFull(true)} title="Fullscreen">
-                <span className="mdi mdi-fullscreen" />
-              </button>
+          {/* Dock */}
+          <div className="rv2-section">
+            <span className="rv2-stitle">DOCK</span>
+            <div className="rv2-dock-rows">
+              <div className="rv2-dock-row"><span className="mdi mdi-water" /> Acqua pulita <span className={cleanWaterOk ? 'rv2-ok' : 'rv2-warn'}>{ cleanWaterOk ? '✓' : '⚠'}</span></div>
+              <div className={`rv2-dock-row ${dirtyWaterFull ? 'rv2-dock-alert' : ''}`}><span className="mdi mdi-water-alert" /> Acqua sporca <span className={dirtyWaterFull ? 'rv2-warn' : 'rv2-ok'}>{dirtyWaterFull ? '⚠ Piena' : '✓'}</span></div>
+              <div className="rv2-dock-row"><span className="mdi mdi-spray-bottle" /> Mocio <span className={mopAttached ? 'rv2-ok' : 'rv2-muted'}>{ mopAttached ? '✓ Montato' : '✗'}</span></div>
+              <div className="rv2-dock-row"><span className="mdi mdi-weather-windy" /> Asciugatura <span className={drying ? 'rv2-accent' : 'rv2-muted'}>{drying ? 'In corso' : 'Off'}</span></div>
             </div>
-            <div className="rv2-map">
-              {mapUrl ? (
-                <img src={mapUrl} alt="Mappa casa" className="rv2-map-img" />
-              ) : (
-                <span className="rv2-map-empty">Mappa non disponibile</span>
-              )}
+          </div>
+
+          {/* Maintenance */}
+          <div className="rv2-section">
+            <span className="rv2-stitle">MANUTENZIONE</span>
+            <div className="rv2-maint-list">
+              {maint.map((m) => {
+                const expired = m.hours < 0;
+                const pct = Math.max(0, Math.min(100, (m.hours / m.max) * 100));
+                return (
+                  <div key={m.label} className={`rv2-maint ${expired ? 'rv2-maint-expired' : ''}`}>
+                    <div className="rv2-maint-head">
+                      {expired && <span className="mdi mdi-alert-circle rv2-maint-alert" />}
+                      <span className="rv2-maint-name">{m.label}</span>
+                      <span className="rv2-maint-val">{expired ? `Scaduto · ${Math.abs(Math.round(m.hours))}h` : `${formatHours(m.hours)}`}</span>
+                    </div>
+                    {!expired && <div className="rv2-maint-bar"><div className="rv2-maint-fill" style={{ width: `${pct}%` }} /></div>}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -343,35 +358,21 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
           )}
         </div>
 
-        {/* ── RIGHT: Dock + Maintenance ── */}
+        {/* ── RIGHT: Map ── */}
         <div className="rv2-right">
-          <div className="rv2-section">
-            <span className="rv2-stitle">DOCK</span>
-            <div className="rv2-dock-rows">
-              <div className="rv2-dock-row"><span className="mdi mdi-water" /> Acqua pulita <span className={cleanWaterOk ? 'rv2-ok' : 'rv2-warn'}>{ cleanWaterOk ? '✓' : '⚠'}</span></div>
-              <div className={`rv2-dock-row ${dirtyWaterFull ? 'rv2-dock-alert' : ''}`}><span className="mdi mdi-water-alert" /> Acqua sporca <span className={dirtyWaterFull ? 'rv2-warn' : 'rv2-ok'}>{dirtyWaterFull ? '⚠ Piena' : '✓'}</span></div>
-              <div className="rv2-dock-row"><span className="mdi mdi-spray-bottle" /> Mocio <span className={mopAttached ? 'rv2-ok' : 'rv2-muted'}>{ mopAttached ? '✓ Montato' : '✗'}</span></div>
-              <div className="rv2-dock-row"><span className="mdi mdi-weather-windy" /> Asciugatura <span className={drying ? 'rv2-accent' : 'rv2-muted'}>{drying ? 'In corso' : 'Off'}</span></div>
+          <div className="rv2-section rv2-map-section">
+            <div className="rv2-stitle-row">
+              <span className="rv2-stitle">MAPPA</span>
+              <button className="rv2-icon-btn" onClick={() => setMapFull(true)} title="Fullscreen">
+                <span className="mdi mdi-fullscreen" />
+              </button>
             </div>
-          </div>
-
-          <div className="rv2-section">
-            <span className="rv2-stitle">MANUTENZIONE</span>
-            <div className="rv2-maint-list">
-              {maint.map((m) => {
-                const expired = m.hours < 0;
-                const pct = Math.max(0, Math.min(100, (m.hours / m.max) * 100));
-                return (
-                  <div key={m.label} className={`rv2-maint ${expired ? 'rv2-maint-expired' : ''}`}>
-                    <div className="rv2-maint-head">
-                      {expired && <span className="mdi mdi-alert-circle rv2-maint-alert" />}
-                      <span className="rv2-maint-name">{m.label}</span>
-                      <span className="rv2-maint-val">{expired ? `Scaduto · ${Math.abs(Math.round(m.hours))}h` : `${formatHours(m.hours)}`}</span>
-                    </div>
-                    {!expired && <div className="rv2-maint-bar"><div className="rv2-maint-fill" style={{ width: `${pct}%` }} /></div>}
-                  </div>
-                );
-              })}
+            <div className="rv2-map">
+              {mapUrl ? (
+                <img src={mapUrl} alt="Mappa casa" className="rv2-map-img" />
+              ) : (
+                <span className="rv2-map-empty">Mappa non disponibile</span>
+              )}
             </div>
           </div>
         </div>
