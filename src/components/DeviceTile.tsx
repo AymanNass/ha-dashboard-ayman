@@ -418,7 +418,16 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   // Make sure a pending hold timer never fires after the tile unmounts.
   useEffect(() => () => clearHold(), []);
 
-  const tappable = TOGGLEABLE.includes(domain);
+  // TV detection: media_player with device_class "tv" gets special treatment
+  // (power button on tile, click opens remote flyout instead of toggling).
+  // Also detect Cast entities for known TVs (e.g. LG webOS Cast) that lack
+  // device_class but are clearly TV entities based on their entity_id.
+  const isTV = domain === 'media_player' && (
+    entity.attributes.device_class === 'tv' ||
+    /\btv\b/i.test(id)
+  );
+
+  const tappable = TOGGLEABLE.includes(domain) && !isTV;
   const activatable = ACTIVATABLE.includes(domain);
   // Active (but calm) glass for on lights/switches/fans/media — matches the reference.
   const on = effectiveActive && (domain === 'light' || domain === 'switch' || domain === 'input_boolean' || domain === 'fan' || domain === 'media_player' || domain === 'climate' || domain === 'alarm_control_panel');
@@ -582,7 +591,10 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
       } as React.CSSProperties}
       onClick={() => {
         if (suppressClick.current) { suppressClick.current = false; return; }
-        if (tappable) {
+        if (isTV) {
+          // TV tiles: click always opens the remote-control flyout.
+          openDetail(id);
+        } else if (tappable) {
           setOptimistic(!effectiveActive);
           if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
           optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
@@ -625,6 +637,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
       )}
       <div className="tile-top">
         <span className={`mdi ${tileIcon} tile-icon ${warmIcon ? 'warm' : ''}`} />
+        <span className="tile-name">{name}</span>
         {climateActive && (
           <button
             className="tile-climate-off"
@@ -635,6 +648,23 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
             <span className="mdi mdi-power" />
           </button>
         )}
+        {isTV && (
+          <button
+            className="tile-tv-power"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (entity.state === 'off' || entity.state === 'standby' || entity.state === 'unavailable') {
+                callHA('media_player', 'turn_on', undefined, { entity_id: id });
+              } else {
+                callHA('media_player', 'turn_off', undefined, { entity_id: id });
+              }
+            }}
+            aria-label="Power"
+            title={entity.state === 'off' || entity.state === 'standby' || entity.state === 'unavailable' ? 'Accendi' : 'Spegni'}
+          >
+            <span className={`mdi mdi-power ${entity.state !== 'off' && entity.state !== 'standby' && entity.state !== 'unavailable' ? 'tv-on' : ''}`} />
+          </button>
+        )}
         <button
           className="tile-more"
           onClick={(e) => { e.stopPropagation(); openDetail(id); }}
@@ -643,10 +673,18 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
           <span className="mdi mdi-dots-horizontal" />
         </button>
       </div>
-      <div className="tile-info">
-        <div className="tile-name">{name}</div>
-        <div className="tile-sub">{slideEnabled && dragPct != null ? `${dragPct}%` : entitySummary(entity)}</div>
-      </div>
+      {/* Status line: only for domains where it adds info (not plain lights/switches) */}
+      {domain !== 'light' && domain !== 'switch' && domain !== 'input_boolean' && domain !== 'scene' && domain !== 'script' && (
+        <div className="tile-info">
+          <div className="tile-sub">{slideEnabled && dragPct != null ? `${dragPct}%` : entitySummary(entity)}</div>
+        </div>
+      )}
+      {/* For dimmable lights show the percentage inline when dragging */}
+      {(domain === 'light' || domain === 'switch' || domain === 'input_boolean') && slideEnabled && dragPct != null && (
+        <div className="tile-info">
+          <div className="tile-sub">{dragPct}%</div>
+        </div>
+      )}
       {domain === 'media_player' && entity.state === 'playing' && (
         <div className="tile-eq" aria-hidden="true">
           <span /><span /><span /><span />

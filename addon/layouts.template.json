@@ -80,6 +80,7 @@
         "color": "#166534",
         "entities": [
           { "entity_id": "cover.tapparella_tavolo", "name": "Tapparella Tavolo", "size": "1x2" },
+          { "entity_id": "cover.0xc02cedfffe163a38", "name": "Tapparella Salotto TV", "size": "1x2" },
           { "entity_id": "cover.tapparella_camera", "name": "Tapparella Camera", "size": "1x2" }
         ]
       }

@@ -13,6 +13,7 @@ import { DashboardView } from './components/DashboardView';
 import { DetailPanel } from './components/DetailPanel';
 import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
+import { SensorsModal } from './components/SensorsModal';
 import { NowPlayingTakeover } from './components/NowPlayingTakeover';
 import { Screensaver } from './components/Screensaver';
 import { CalendarFlyout } from './components/CalendarFlyout';
@@ -22,7 +23,7 @@ import { PageDots } from './components/PageDots';
 import { Onboarding } from './components/Onboarding';
 import { viewRows } from './lib/layout';
 import { effectiveSize, sizeToSpan } from './lib/tileSize';
-import { getSettings } from './settings';
+import { getSettings, applyTheme } from './settings';
 import { runNavTransition } from './lib/viewTransition';
 import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity, DashView } from './types';
@@ -40,6 +41,7 @@ export default function App() {
   const [editing, setEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPages, setShowPages] = useState(false);
+  const [showSensors, setShowSensors] = useState(false);
   const [scenePicker, setScenePicker] = useState(false);
   // First-run guided setup shows when no token is configured; can be dismissed
   // for this session to explore the shell without connecting.
@@ -73,6 +75,27 @@ export default function App() {
     window.addEventListener('ha:np-takeover', onChange);
     return () => window.removeEventListener('ha:np-takeover', onChange);
   }, []);
+
+  // ── Auto theme switching ──
+  // When theme is 'auto', react to OS dark/light preference changes (system
+  // mode) or poll the clock every minute (time mode) so the theme transitions
+  // smoothly without a page reload.
+  useEffect(() => {
+    const s = getSettings();
+    if (s.theme !== 'auto') return;
+
+    if (s.autoThemeMode === 'system') {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const onChange = () => applyTheme(getSettings());
+      mql.addEventListener('change', onChange);
+      return () => mql.removeEventListener('change', onChange);
+    }
+
+    // Time mode: re-evaluate every 60 s so the switch happens within a minute
+    // of the configured hour boundary.
+    const timer = setInterval(() => applyTheme(getSettings()), 60_000);
+    return () => clearInterval(timer);
+  });
 
   // ── Idle screensaver (issue #20) ──
   // After the configured idle minutes (Settings → Appearance; 0 = off) the
@@ -257,6 +280,13 @@ export default function App() {
           hideWeather={view.hideWeather}
           hidePeople={view.hidePeople}
           onOpenDetail={setDetailEntity}
+          callHA={callHA}
+          viewName={view.name}
+          editing={editing}
+          onToggleEdit={() => setEditing((e) => !e)}
+          saving={layout.saving}
+          onResetLayout={layout.resetLayout}
+          onOpenSensors={() => setShowSensors(true)}
         />
 
         {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}
@@ -323,42 +353,6 @@ export default function App() {
           </div>
         )}
 
-        <div className="view-heading-row">
-          <h1 className="view-heading">{view.name}</h1>
-          <div className="edit-toolbar">
-            {editing ? (
-              <>
-                <span className="edit-status">
-                  {layout.saving ? (
-                    <>
-                      <span className="mdi mdi-loading mdi-spin" /> {t('app_saving')}
-                    </>
-                  ) : (
-                    <>
-                      <span className="mdi mdi-check-circle-outline" /> {t('app_saved')}
-                    </>
-                  )}
-                </span>
-                <button
-                  className="toolbar-btn"
-                  onClick={() => {
-                    if (confirm(t('app_reset_confirm'))) layout.resetLayout();
-                  }}
-                >
-                  <span className="mdi mdi-restore" />{' '}{t('app_reset')}
-                </button>
-                <button className="toolbar-btn primary" onClick={() => setEditing(false)}>
-                  <span className="mdi mdi-check" />{' '}{t('app_done')}
-                </button>
-              </>
-            ) : (
-              <button className="toolbar-btn" onClick={() => setEditing(true)}>
-                <span className="mdi mdi-pencil" />{' '}{t('app_edit')}
-              </button>
-            )}
-          </div>
-        </div>
-
         {booting ? (
           <SkeletonGrid view={view} />
         ) : (
@@ -420,6 +414,14 @@ export default function App() {
           onStartBlank={layout.startBlank}
           onExportLayout={layout.exportLayout}
           onImportLayout={layout.importLayout}
+        />
+      )}
+
+      {showSensors && (
+        <SensorsModal
+          entities={entities}
+          getHistory={getHistory}
+          onClose={() => setShowSensors(false)}
         />
       )}
 

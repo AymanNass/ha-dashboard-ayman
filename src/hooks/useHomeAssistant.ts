@@ -119,6 +119,7 @@ export function useHomeAssistant() {
 
   useEffect(() => {
     if (!HA_TOKEN) {
+      console.error('[Glance] No token! HA_URL:', HA_URL, 'HA_TOKEN:', HA_TOKEN ? '(present)' : '(empty)');
       setError('No HA token configured. Set VITE_HA_TOKEN in .env');
       return;
     }
@@ -126,6 +127,7 @@ export function useHomeAssistant() {
     let cancelled = false;
 
     async function connect() {
+      console.log('[Glance] Connecting to', HA_URL, '...');
       try {
         const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
         const conn = await createConnection({ auth });
@@ -157,6 +159,7 @@ export function useHomeAssistant() {
           if (!cancelled) broadcastTempUnit(config.unit_system?.temperature ?? '');
         });
       } catch (err) {
+        console.error('[Glance] Connection failed:', err);
         if (!cancelled) {
           const detail = buildConnectionError(err, HA_URL);
           setError(detail);

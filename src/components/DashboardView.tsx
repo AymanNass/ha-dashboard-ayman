@@ -20,10 +20,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { DashView, DashRow, MediaTileConfig, RoomEntity, NocConfig, NocNode, NocMetric } from '../types';
 import { DeviceTile } from './DeviceTile';
+import { SplitLightTile } from './SplitLightTile';
 import { CameraGrid } from './CameraGrid';
+import { ClimateView } from './ClimateView';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
+import { tempColor, humidityColor, classifyHumidity } from '../lib/comfort';
 import { viewRows } from '../lib/layout';
 import { isSpecialTile, SPECIAL_TILES } from '../lib/musicAssistant';
 import { isActiveState, entityIcon } from '../lib/entityInfo';
@@ -36,6 +39,7 @@ import { SecurityBar } from './SecurityBar';
 import { SpotifyPlaylist } from './SpotifyPlaylist';
 import { RoborockPanel } from './RoborockPanel';
 import { PlantWidget } from './PlantWidget';
+import { TvWidget } from './TvWidget';
 import { spotifyPlaylists, spotifyDevices } from '../config';
 import { useTranslation } from 'react-i18next';
 
@@ -130,7 +134,19 @@ function CollapsibleColumn({
         const entity = entities[e.entity_id];
         const val = parseFloat(entity.state);
         const unit = (entity.attributes.unit_of_measurement as string) || '';
-        return { name: e.name, value: isNaN(val) ? entity.state : `${val.toFixed(1)}${unit}`, icon: e.icon, entityId: e.entity_id };
+        const eid = e.entity_id.toLowerCase();
+        let color = '';
+        let advice = '';
+        if (!isNaN(val)) {
+          if (eid.includes('temperature') || eid.includes('temperatura')) {
+            color = tempColor(val);
+          } else if (eid.includes('humidity') || eid.includes('umidita')) {
+            color = humidityColor(val);
+            const hum = classifyHumidity(val);
+            if (hum.advice) advice = hum.advice;
+          }
+        }
+        return { name: e.name, value: isNaN(val) ? entity.state : `${val.toFixed(1)}${unit}`, icon: e.icon, entityId: e.entity_id, color, advice };
       });
 
     return (
@@ -142,7 +158,14 @@ function CollapsibleColumn({
             {sensorValues.length > 0 && (
               <span className="column-sensors">
                 {sensorValues.map((s, i) => (
-                  <button key={i} className="column-sensor-val" onClick={() => onOpenDetail?.(s.entityId)}>
+                  <button
+                    key={i}
+                    className="column-sensor-val"
+                    style={s.color ? { color: s.color } : undefined}
+                    onClick={() => onOpenDetail?.(s.entityId)}
+                    title={s.advice || undefined}
+                  >
+                    {s.advice && <span className="mdi mdi-alert-circle sensor-alert-icon" />}
                     {s.icon && <span className={`mdi ${s.icon}`} />}
                     {s.value}
                   </button>
@@ -275,6 +298,17 @@ export function DashboardView(props: Props) {
     return <MediaAutoView {...props} />;
   }
 
+  if (view.kind === 'climate') {
+    return (
+      <ClimateView
+        entities={entities}
+        callHA={props.callHA}
+        getHistory={props.getHistory!}
+        onOpenDetail={props.onOpenDetail}
+      />
+    );
+  }
+
   if (view.kind === 'vacuum') {
     return (
       <div className="view-rows" key={view.id}>
@@ -386,6 +420,7 @@ export function DashboardView(props: Props) {
                       ))}
                   </div>
                   {isSoggiorno && <PlantWidget entities={entities} />}
+                  {isSoggiorno && <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />}
                 </CollapsibleColumn>
               </div>
               );
@@ -445,6 +480,28 @@ function Tile({
 
   const entity = entities[re.entity_id];
   if (!entity) return null;
+
+  // ── Split tile (dual light, e.g. bedside lamps) ──
+  if (re.split) {
+    const leftEnt = entities[re.split.left.entity_id];
+    const rightEnt = entities[re.split.right.entity_id];
+    if (!leftEnt || !rightEnt) return null;
+    return (
+      <SplitLightTile
+        leftEntity={leftEnt}
+        rightEntity={rightEnt}
+        leftLabel={re.split.left.label}
+        rightLabel={re.split.right.label}
+        leftId={re.split.left.entity_id}
+        rightId={re.split.right.entity_id}
+        callHA={callHA}
+        onOpenDetail={onOpenDetail}
+        enterIndex={enterIndex}
+        image={re.split.image}
+      />
+    );
+  }
+
   const name = re.name || (entity.attributes.friendly_name as string);
   const domain = re.entity_id.split('.')[0];
   const { span, tall } = sizeToSpan(effectiveSize(re, entity));
@@ -778,12 +835,14 @@ function MediaAutoView(props: Props) {
     );
   }
 
-  // Read mode: one tile per device that has an active member and isn't hidden.
+  // Read mode: one tile per device that isn't hidden. Show all devices
+  // regardless of playback state so the user always sees their full setup.
   const active = devices
     .filter((members) => !members.some((m) => exclude.has(m.entity_id)))
-    .map((members) => members.filter((m) => isMediaActive(m.state)))
-    .filter((activeMembers) => activeMembers.length > 0)
-    .map((activeMembers) => pickRepresentative(activeMembers, true));
+    .map((members) => {
+      const playing = members.filter((m) => isMediaActive(m.state));
+      return playing.length > 0 ? pickRepresentative(playing, true) : pickRepresentative(members);
+    });
 
   // Collapse synchronized speaker groups (e.g. a Cast "Kitchen Group" plus its
   // member speakers) to just the group's card, unless the page opts to show

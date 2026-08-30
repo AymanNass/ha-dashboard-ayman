@@ -189,7 +189,8 @@ export function DetailPanel({
                 {domain === 'climate' && <ClimateDetail entity={entity} entityId={entityId!} callHA={callHA} />}
                 {domain === 'cover' && <CoverDetail entity={entity} entityId={entityId!} callHA={callHA} reverse={!!reverseSlider} />}
                 {domain === 'vacuum' && <VacuumDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} />}
-                {domain === 'media_player' && <MediaDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} artworkEntity={artworkEntity} />}
+                {domain === 'media_player' && (entity.attributes.device_class === 'tv' || /\btv\b/i.test(entityId!)) && <TVRemoteDetail entity={entity} entityId={entityId!} callHA={callHA} />}
+                {domain === 'media_player' && entity.attributes.device_class !== 'tv' && !/\btv\b/i.test(entityId!) && <MediaDetail entity={entity} entityId={entityId!} callHA={callHA} entities={entities} artworkEntity={artworkEntity} />}
                 {domain === 'alarm_control_panel' && <AlarmDetail entity={entity} entityId={entityId!} callHA={callHA} />}
               </div>
             )}
@@ -866,6 +867,127 @@ function VacuumDetail({ entity, entityId, callHA, entities }: EntityProps & { en
           <div className="vac-consumables">
             {consumables.map((c) => (
               <Consumable key={c.label} icon={c.icon} label={c.label} pct={Math.round(c.pct)} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TVRemoteDetail({ entity, entityId, callHA }: EntityProps) {
+  const { t } = useTranslation();
+  const sourceList = (entity.attributes.source_list as string[] | undefined) ?? [];
+  const currentSource = entity.attributes.source as string | undefined;
+  const volume = entity.attributes.volume_level as number | undefined;
+  const isOff = entity.state === 'off' || entity.state === 'standby' || entity.state === 'unavailable';
+
+  // For Cast-backed TV entities (no webostv platform), route commands to the
+  // companion webOS entity so that webostv.button / source_select actually work.
+  const webosId = entityId.includes('webos') ? 'media_player.lg_tv' : entityId;
+
+  const sendCommand = (command: string) =>
+    callHA('webostv', 'button', { button: command }, { entity_id: webosId });
+
+  const selectSource = (source: string) =>
+    callHA('media_player', 'select_source', { source }, { entity_id: webosId });
+
+  return (
+    <div className="glass-card tv-remote">
+      {/* Power + Source header */}
+      <div className="tv-remote-header">
+        <button
+          className={`tv-remote-power ${isOff ? '' : 'is-on'}`}
+          onClick={() => {
+            if (isOff) callHA('media_player', 'turn_on', undefined, { entity_id: webosId });
+            else callHA('media_player', 'turn_off', undefined, { entity_id: webosId });
+          }}
+        >
+          <span className="mdi mdi-power" />
+        </button>
+        <span className="tv-remote-status">{isOff ? 'Off' : currentSource || entity.state}</span>
+      </div>
+
+      {/* D-Pad navigation */}
+      <div className="tv-remote-dpad">
+        <button className="tv-dpad-btn tv-dpad-up" onClick={() => sendCommand('UP')}>
+          <span className="mdi mdi-chevron-up" />
+        </button>
+        <button className="tv-dpad-btn tv-dpad-left" onClick={() => sendCommand('LEFT')}>
+          <span className="mdi mdi-chevron-left" />
+        </button>
+        <button className="tv-dpad-btn tv-dpad-ok" onClick={() => sendCommand('ENTER')}>
+          OK
+        </button>
+        <button className="tv-dpad-btn tv-dpad-right" onClick={() => sendCommand('RIGHT')}>
+          <span className="mdi mdi-chevron-right" />
+        </button>
+        <button className="tv-dpad-btn tv-dpad-down" onClick={() => sendCommand('DOWN')}>
+          <span className="mdi mdi-chevron-down" />
+        </button>
+      </div>
+
+      {/* Quick actions row */}
+      <div className="tv-remote-actions">
+        <button className="tv-action-btn" onClick={() => sendCommand('BACK')} title="Indietro">
+          <span className="mdi mdi-arrow-left" />
+        </button>
+        <button className="tv-action-btn" onClick={() => sendCommand('HOME')} title="Home">
+          <span className="mdi mdi-home" />
+        </button>
+        <button className="tv-action-btn" onClick={() => callHA('media_player', 'media_play_pause', undefined, { entity_id: webosId })} title="Play/Pausa">
+          <span className={`mdi ${entity.state === 'playing' ? 'mdi-pause' : 'mdi-play'}`} />
+        </button>
+        <button className="tv-action-btn" onClick={() => sendCommand('MUTE')} title="Muto">
+          <span className="mdi mdi-volume-mute" />
+        </button>
+      </div>
+
+      {/* Volume */}
+      {volume !== undefined && (
+        <div className="tv-remote-volume">
+          <button className="tv-action-btn" onClick={() => callHA('media_player', 'volume_down', undefined, { entity_id: webosId })}>
+            <span className="mdi mdi-volume-minus" />
+          </button>
+          <input
+            type="range"
+            className="light-slider"
+            min={0}
+            max={100}
+            value={Math.round(volume * 100)}
+            onChange={(e) => callHA('media_player', 'volume_set', { volume_level: parseInt(e.target.value) / 100 }, { entity_id: webosId })}
+          />
+          <button className="tv-action-btn" onClick={() => callHA('media_player', 'volume_up', undefined, { entity_id: webosId })}>
+            <span className="mdi mdi-volume-plus" />
+          </button>
+        </div>
+      )}
+
+      {/* Channel buttons */}
+      <div className="tv-remote-actions">
+        <button className="tv-action-btn" onClick={() => sendCommand('CHANNELUP')} title="Canale +">
+          <span className="mdi mdi-chevron-up" />
+          <small>CH</small>
+        </button>
+        <button className="tv-action-btn" onClick={() => sendCommand('CHANNELDOWN')} title="Canale -">
+          <span className="mdi mdi-chevron-down" />
+          <small>CH</small>
+        </button>
+      </div>
+
+      {/* Source selector */}
+      {sourceList.length > 0 && (
+        <div className="tv-remote-sources">
+          <label className="tv-sources-label">{t('detail_source') || 'Sorgente'}</label>
+          <div className="tv-sources-grid">
+            {sourceList.map((src) => (
+              <button
+                key={src}
+                className={`tv-source-btn ${src === currentSource ? 'is-active' : ''}`}
+                onClick={() => selectSource(src)}
+              >
+                {src}
+              </button>
             ))}
           </div>
         </div>

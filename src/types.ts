@@ -46,6 +46,9 @@ export interface RoomEntity {
   /** Companion media_player entity to pull now-playing artwork from (media players). */
   artworkEntity?: string;
   type?: 'light' | 'switch' | 'cover' | 'lock' | 'climate' | 'camera' | 'media_player' | 'vacuum' | 'sensor' | 'binary_sensor' | 'scene' | 'script';
+  /** Split tile: two entities rendered as left/right halves with a center zone for both.
+   *  Each entry has an entity_id and a label. The tile itself uses the parent entity_id for display. */
+  split?: { left: { entity_id: string; label: string }; right: { entity_id: string; label: string }; image?: string };
 }
 
 export interface MediaTileConfig {
@@ -121,7 +124,7 @@ export interface DashView {
   icon: string;
   /** Special render kind for non-tile views. Defaults to a sectioned tile grid.
    *  'media' auto-fills with every media_player, showing only active ones. */
-  kind?: 'tiles' | 'cameras' | 'sensors' | 'media' | 'vacuum';
+  kind?: 'tiles' | 'cameras' | 'sensors' | 'media' | 'vacuum' | 'climate';
   /** Scene entity_ids (from the scenes catalog) relevant to this view. */
   scenes?: string[];
   /** Legacy flat sections; auto-converted to single-column rows when `rows` is absent. */

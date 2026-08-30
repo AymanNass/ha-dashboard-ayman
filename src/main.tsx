@@ -10,6 +10,26 @@ import './styles/theme.css';
 applyTheme();
 installHaptics();
 
+// ── Debug overlay for runtime errors (visible on-screen) ──
+if (import.meta.env.DEV) {
+  const showErr = (msg: string) => {
+    let box = document.getElementById('__dbg');
+    if (!box) {
+      box = document.createElement('pre');
+      box.id = '__dbg';
+      box.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;max-height:40vh;overflow:auto;background:rgba(0,0,0,0.92);color:#f87171;font:12px/1.5 monospace;padding:12px;pointer-events:auto;white-space:pre-wrap;';
+      document.body.appendChild(box);
+    }
+    box.textContent += msg + '\n\n';
+  };
+  window.addEventListener('error', (e) => showErr(`[ERROR] ${e.message}\n  at ${e.filename}:${e.lineno}:${e.colno}`));
+  window.addEventListener('unhandledrejection', (e) => showErr(`[UNHANDLED] ${e.reason}`));
+  console.log('[Glance debug] ENV token present:', !!import.meta.env.VITE_HA_TOKEN);
+  console.log('[Glance debug] Settings token present:', !!getSettings().haToken);
+  console.log('[Glance debug] Effective token present:', !!getSettings().haToken || !!import.meta.env.VITE_HA_TOKEN);
+  console.log('[Glance debug] HA URL:', getSettings().haUrl || import.meta.env.VITE_HA_URL || '(none)');
+}
+
 const root = createRoot(document.getElementById('root')!);
 
 function render() {

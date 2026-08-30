@@ -16,7 +16,7 @@ export const scenes: SceneConfig[] = [
   { entity_id: 'scene.cinema', name: 'Cinema', icon: 'mdi-movie-open', color: '#a855f7' },
   { entity_id: 'scene.riposo', name: 'Riposo', icon: 'mdi-power-sleep', color: '#64748b' },
   { entity_id: 'script.condizionatore_notte', name: 'Condizionatore Notte', icon: 'mdi-snowflake-thermometer', color: '#06b6d4' },
-  { entity_id: 'input_boolean.vacation_mode', name: 'Vacanza', icon: 'mdi-airplane', color: '#ef4444' },
+  { entity_id: 'input_boolean.vacation_mode', name: 'Vacanza', icon: 'mdi-palm-tree', color: '#ef4444' },
 ];
 
 export const persons: PersonConfig[] = [
@@ -34,8 +34,10 @@ export const rooms: Room[] = [
       { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella' },
       { entity_id: 'light.lampada_sala', name: 'Lampada sala' },
       { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
+      { entity_id: 'cover.0xc02cedfffe163a38', name: 'Tapparella Salotto TV' },
+      { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera' },
       { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore' },
-      { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
+      { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV' },
     ],
   },
   {
@@ -139,20 +141,12 @@ export const views: DashView[] = [
     ],
     sections: [
       {
-        title: 'Sicurezza',
-        icon: 'mdi-shield-home',
-        color: '#10b981',
-        kind: 'security',
-        entities: [
-          { entity_id: 'alarm_control_panel.casa', name: 'Allarme' },
-          { entity_id: 'lock.pl_2_casa', name: 'Porta casa' },
-        ],
-      },
-      {
         title: 'Soggiorno',
         icon: 'mdi-sofa',
         color: '#f59e0b',
         entities: [
+          { entity_id: 'sensor.temperatura_salotto', name: 'Temp', icon: 'mdi-thermometer' },
+          { entity_id: 'sensor.umidita_salotto', name: 'Umidità', icon: 'mdi-water-percent' },
           { entity_id: 'light.luce_soggiorno', name: 'Muro salotto', icon: 'mdi-wall-sconce-flat' },
           { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella', icon: 'mdi-circle-outline' },
           { entity_id: 'light.lampada_sala', name: 'Lampada sala', icon: 'mdi-desk-lamp' },
@@ -172,9 +166,16 @@ export const views: DashView[] = [
         icon: 'mdi-bed-king',
         color: '#f59e0b',
         entities: [
+          { entity_id: 'sensor.temperatura_media_camera', name: 'Temp', icon: 'mdi-thermometer' },
+          { entity_id: 'sensor.umidita_camera', name: 'Umidità', icon: 'mdi-water-percent' },
           { entity_id: 'light.luce_camera', name: 'Luce camera', icon: 'mdi-ceiling-light' },
-          { entity_id: 'light.luce_letto_ayman', name: 'Letto Ayman', icon: 'mdi-lamp' },
-          { entity_id: 'light.luce_letto_martina', name: 'Letto Martina', icon: 'mdi-lamp' },
+          {
+            entity_id: 'light.luce_letto_ayman', name: 'Luci letto', icon: 'mdi-lamp', size: '2x1',
+            split: {
+              left: { entity_id: 'light.luce_letto_ayman', label: 'Ayman' },
+              right: { entity_id: 'light.luce_letto_martina', label: 'Martina' },
+            },
+          },
         ],
       },
       {
@@ -199,6 +200,8 @@ export const views: DashView[] = [
         icon: 'mdi-shower',
         color: '#f59e0b',
         entities: [
+          { entity_id: 'sensor.0xa4c138304177ffff_temperature', name: 'Temp', icon: 'mdi-thermometer' },
+          { entity_id: 'sensor.0xa4c138304177ffff_humidity', name: 'Umidità', icon: 'mdi-water-percent' },
           { entity_id: 'light.luce_bagno', name: 'Bagno', icon: 'mdi-spotlight-beam' },
         ],
       },
@@ -208,6 +211,7 @@ export const views: DashView[] = [
         color: '#166534',
         entities: [
           { entity_id: 'cover.tapparella_tavolo', name: 'Tapparella Tavolo' },
+          { entity_id: 'cover.0xc02cedfffe163a38', name: 'Tapparella Salotto TV' },
           { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera' },
         ],
       },
@@ -235,7 +239,6 @@ export const views: DashView[] = [
         title: 'Media Players',
         entities: [
           { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
-          { entity_id: 'media_player.lg_tv', name: 'LG TV' },
           { entity_id: 'media_player.spotify_martina', name: 'Spotify Martina' },
           { entity_id: 'media_player.2o_echo_dot_di_martina', name: 'Echo Dot Camera' },
           { entity_id: 'media_player.3o_echo_dot_di_martina', name: 'Echo Dot Salotto' },
@@ -257,5 +260,12 @@ export const views: DashView[] = [
         ],
       },
     ],
+  },
+  {
+    id: 'climate',
+    name: 'Clima',
+    icon: 'mdi-thermostat',
+    kind: 'climate',
+    sections: [],
   },
 ];

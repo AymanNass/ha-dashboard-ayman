@@ -15,6 +15,7 @@ import {
   THEMES,
   ACCENT_SWATCHES,
   type ThemeId,
+  type AutoThemeMode,
 } from '../settings';
 import type { DashView } from '../types';
 import type { HassEntities } from 'home-assistant-js-websocket';
@@ -43,6 +44,10 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
   const [showToken, setShowToken] = useState(false);
   const [rememberOnServer, setRememberOnServer] = useState(initial.rememberOnServer);
   const [theme, setTheme] = useState<ThemeId>(initial.theme);
+  const [autoThemeMode, setAutoThemeMode] = useState<AutoThemeMode>(initial.autoThemeMode);
+  const [autoThemeDark, setAutoThemeDark] = useState<Exclude<ThemeId, 'auto' | 'light'>>(initial.autoThemeDark);
+  const [autoLightFrom, setAutoLightFrom] = useState(initial.autoLightFrom);
+  const [autoDarkFrom, setAutoDarkFrom] = useState(initial.autoDarkFrom);
   const [accent, setAccent] = useState(initial.accent);
   const [ambientEffects, setAmbientEffects] = useState(initial.ambientEffects);
   const [compactSections, setCompactSections] = useState(initial.compactSections);
@@ -73,7 +78,23 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
   // Appearance changes preview instantly.
   const pickTheme = (t: ThemeId) => {
     setTheme(t);
-    applyTheme({ ...getSettings(), theme: t, accent });
+    applyTheme({ ...getSettings(), theme: t, accent, autoThemeMode, autoThemeDark, autoLightFrom, autoDarkFrom });
+  };
+  const pickAutoMode = (m: AutoThemeMode) => {
+    setAutoThemeMode(m);
+    applyTheme({ ...getSettings(), theme, accent, autoThemeMode: m, autoThemeDark, autoLightFrom, autoDarkFrom });
+  };
+  const pickAutoDark = (d: Exclude<ThemeId, 'auto' | 'light'>) => {
+    setAutoThemeDark(d);
+    applyTheme({ ...getSettings(), theme, accent, autoThemeMode, autoThemeDark: d, autoLightFrom, autoDarkFrom });
+  };
+  const pickAutoLightFrom = (h: number) => {
+    setAutoLightFrom(h);
+    applyTheme({ ...getSettings(), theme, accent, autoThemeMode, autoThemeDark, autoLightFrom: h, autoDarkFrom });
+  };
+  const pickAutoDarkFrom = (h: number) => {
+    setAutoDarkFrom(h);
+    applyTheme({ ...getSettings(), theme, accent, autoThemeMode, autoThemeDark, autoLightFrom, autoDarkFrom: h });
   };
   const pickAccent = (c: string) => {
     setAccent(c);
@@ -145,7 +166,7 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
   const save = (reload: boolean) => {
     const url = haUrl.trim();
     const token = haToken.trim();
-    saveSettings({ haUrl: url, haToken: token, theme, accent, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover, calendarChip, calendarEntities, screensaverShortcut, syncSettings, statusDots, smartGrouping });
+    saveSettings({ haUrl: url, haToken: token, theme, accent, autoThemeMode, autoThemeDark, autoLightFrom, autoDarkFrom, ambientEffects, compactSections, rememberOnServer, weatherEntity, dateFormat, durationStyle, screensaverMinutes, nowPlayingTakeover, calendarChip, calendarEntities, screensaverShortcut, syncSettings, statusDots, smartGrouping });
     // Share the non-credential preferences with other devices (issue #8).
     void pushSettingsToServer();
     // Sync the opt-in shared connection on the server. Store the *effective* URL
@@ -335,6 +356,74 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
                 ))}
               </div>
             </div>
+            {theme === 'auto' && (
+              <div className="ts-field settings-auto-theme">
+                <span>{t('settings_auto_mode')}</span>
+                <div className="settings-theme-row">
+                  <button
+                    className={`settings-theme-btn ${autoThemeMode === 'system' ? 'active' : ''}`}
+                    onClick={() => pickAutoMode('system')}
+                  >
+                    <span className="mdi mdi-monitor-cellphone" style={{ fontSize: 16 }} />
+                    {t('settings_auto_system')}
+                  </button>
+                  <button
+                    className={`settings-theme-btn ${autoThemeMode === 'time' ? 'active' : ''}`}
+                    onClick={() => pickAutoMode('time')}
+                  >
+                    <span className="mdi mdi-clock-outline" style={{ fontSize: 16 }} />
+                    {t('settings_auto_time')}
+                  </button>
+                </div>
+                <div className="settings-auto-detail">
+                  <label className="ts-field">
+                    <span>{t('settings_auto_dark_theme')}</span>
+                    <select
+                      value={autoThemeDark}
+                      onChange={(e) => pickAutoDark(e.target.value as Exclude<ThemeId, 'auto' | 'light'>)}
+                    >
+                      <option value="midnight">Midnight</option>
+                      <option value="slate">Slate</option>
+                      <option value="black">OLED Black</option>
+                    </select>
+                  </label>
+                  {autoThemeMode === 'time' && (
+                    <>
+                      <label className="ts-field">
+                        <span>{t('settings_auto_light_from')}</span>
+                        <select
+                          value={autoLightFrom}
+                          onChange={(e) => pickAutoLightFrom(parseInt(e.target.value))}
+                        >
+                          {Array.from({ length: 24 }, (_, h) => (
+                            <option key={h} value={h}>{`${h.toString().padStart(2, '0')}:00`}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="ts-field">
+                        <span>{t('settings_auto_dark_from')}</span>
+                        <select
+                          value={autoDarkFrom}
+                          onChange={(e) => pickAutoDarkFrom(parseInt(e.target.value))}
+                        >
+                          {Array.from({ length: 24 }, (_, h) => (
+                            <option key={h} value={h}>{`${h.toString().padStart(2, '0')}:00`}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <small className="settings-hint">
+                        {t('settings_auto_time_hint', { light: `${autoLightFrom.toString().padStart(2, '0')}:00`, dark: `${autoDarkFrom.toString().padStart(2, '0')}:00` })}
+                      </small>
+                    </>
+                  )}
+                  {autoThemeMode === 'system' && (
+                    <small className="settings-hint">
+                      {t('settings_auto_system_hint')}
+                    </small>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="ts-field">
               <span>{t('settings_accent')}</span>
               <div className="settings-accent-row">

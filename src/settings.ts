@@ -1,13 +1,24 @@
 // Runtime app settings, persisted in localStorage. Connection values fall back
 // to Vite env vars / defaults when not set so the app still works out of the box.
 
-export type ThemeId = 'midnight' | 'slate' | 'black' | 'light';
+export type ThemeId = 'midnight' | 'slate' | 'black' | 'light' | 'auto';
+
+/** How the 'auto' theme decides which concrete theme to use. */
+export type AutoThemeMode = 'system' | 'time';
 
 export interface AppSettings {
   haUrl: string;
   haToken: string;
   theme: ThemeId;
   accent: string; // hex color used as the primary accent
+  /** How the 'auto' theme resolves: follow the OS preference or a fixed schedule. */
+  autoThemeMode: AutoThemeMode;
+  /** Which dark theme 'auto' uses when dark is active (midnight/slate/black). */
+  autoThemeDark: Exclude<ThemeId, 'auto' | 'light'>;
+  /** Hour (0-23) when light mode starts (auto + time mode). */
+  autoLightFrom: number;
+  /** Hour (0-23) when dark mode starts (auto + time mode). */
+  autoDarkFrom: number;
   ambientEffects: boolean; // weather backdrop (rain/snow particles, lightning)
   compactSections: boolean; // flow sections into a masonry so short ones sit side-by-side (less wasted vertical space)
   rememberOnServer: boolean; // opt-in: store connection (URL + token) on the server so new devices auto-connect
@@ -31,7 +42,8 @@ export const DEFAULT_ACCENT = '#ff6b35';
 const ENV_URL = (import.meta.env.VITE_HA_URL as string) || 'http://homeassistant.local:8123';
 const ENV_TOKEN = (import.meta.env.VITE_HA_TOKEN as string) || '';
 
-export const THEMES: { id: ThemeId; name: string }[] = [
+export const THEMES: { id: ThemeId; name: string; icon?: string }[] = [
+  { id: 'auto', name: 'Auto', icon: 'mdi-theme-light-dark' },
   { id: 'midnight', name: 'Midnight' },
   { id: 'slate', name: 'Slate' },
   { id: 'black', name: 'OLED Black' },
@@ -54,6 +66,10 @@ const DEFAULTS: AppSettings = {
   haToken: '',
   theme: 'midnight',
   accent: DEFAULT_ACCENT,
+  autoThemeMode: 'system',
+  autoThemeDark: 'midnight',
+  autoLightFrom: 7,
+  autoDarkFrom: 21,
   ambientEffects: true,
   compactSections: true,
   rememberOnServer: false,
@@ -107,6 +123,10 @@ export type ExportableSettings = Pick<
   AppSettings,
   | 'theme'
   | 'accent'
+  | 'autoThemeMode'
+  | 'autoThemeDark'
+  | 'autoLightFrom'
+  | 'autoDarkFrom'
   | 'ambientEffects'
   | 'compactSections'
   | 'weatherEntity'
@@ -124,6 +144,10 @@ export type ExportableSettings = Pick<
 const EXPORTABLE_KEYS: (keyof ExportableSettings)[] = [
   'theme',
   'accent',
+  'autoThemeMode',
+  'autoThemeDark',
+  'autoLightFrom',
+  'autoDarkFrom',
   'ambientEffects',
   'compactSections',
   'weatherEntity',
@@ -144,6 +168,10 @@ export function getExportableSettings(): ExportableSettings {
   return {
     theme: s.theme,
     accent: s.accent,
+    autoThemeMode: s.autoThemeMode,
+    autoThemeDark: s.autoThemeDark,
+    autoLightFrom: s.autoLightFrom,
+    autoDarkFrom: s.autoDarkFrom,
     ambientEffects: s.ambientEffects,
     compactSections: s.compactSections,
     weatherEntity: s.weatherEntity,
@@ -301,6 +329,10 @@ export async function hydrateConnectionFromServer(): Promise<boolean> {
 const SYNCED_KEYS: (keyof ExportableSettings)[] = [
   'theme',
   'accent',
+  'autoThemeMode',
+  'autoThemeDark',
+  'autoLightFrom',
+  'autoDarkFrom',
   'ambientEffects',
   'compactSections',
   'weatherEntity',
@@ -363,10 +395,33 @@ export async function hydrateSettingsFromServer(): Promise<boolean> {
   }
 }
 
+/** Resolve the 'auto' theme to a concrete theme id based on settings. */
+export function resolveAutoTheme(s: AppSettings = getSettings()): Exclude<ThemeId, 'auto'> {
+  if (s.theme !== 'auto') return s.theme as Exclude<ThemeId, 'auto'>;
+
+  if (s.autoThemeMode === 'system') {
+    const prefersDark =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? s.autoThemeDark : 'light';
+  }
+
+  // Time-based schedule
+  const hour = new Date().getHours();
+  const { autoLightFrom, autoDarkFrom } = s;
+  // Handle wrap-around (e.g. light 7-21, or light 22-6)
+  const isLight =
+    autoLightFrom < autoDarkFrom
+      ? hour >= autoLightFrom && hour < autoDarkFrom
+      : hour >= autoLightFrom || hour < autoDarkFrom;
+  return isLight ? 'light' : s.autoThemeDark;
+}
+
 /** Apply theme + accent to the document root via data attribute and CSS vars. */
 export function applyTheme(s: AppSettings = getSettings()): void {
   const root = document.documentElement;
-  root.setAttribute('data-theme', s.theme);
+  const effective = resolveAutoTheme(s);
+  root.setAttribute('data-theme', effective);
   root.style.setProperty('--accent-orange', s.accent);
   root.style.setProperty('--accent-primary', s.accent);
   root.style.setProperty('--accent-rgb', hexToRgbTriplet(s.accent));
