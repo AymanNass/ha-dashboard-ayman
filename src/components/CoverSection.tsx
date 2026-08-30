@@ -63,15 +63,8 @@ export function CoverSection({ entities, covers, callHA, onOpenDetail }: Props) 
       <div className="cv-toolbar">
         <span className="cv-toolbar-label">Tutte le tapparelle</span>
         <div className="cv-toolbar-btns">
-          <button className="cv-tb" onClick={() => callHA('cover', 'open_cover', undefined, { entity_id: allIds })} title="Apri tutte">
-            <span className="mdi mdi-arrow-up" />
-          </button>
-          <button className="cv-tb" onClick={() => callHA('cover', 'stop_cover', undefined, { entity_id: allIds })} title="Stop">
-            <span className="mdi mdi-stop" />
-          </button>
-          <button className="cv-tb" onClick={() => callHA('cover', 'close_cover', undefined, { entity_id: allIds })} title="Chiudi tutte">
-            <span className="mdi mdi-arrow-down" />
-          </button>
+          <button className="cv-tb-text" onClick={() => callHA('cover', 'open_cover', undefined, { entity_id: allIds })}>Apri tutto</button>
+          <button className="cv-tb-text" onClick={() => callHA('cover', 'close_cover', undefined, { entity_id: allIds })}>Chiudi tutto</button>
         </div>
       </div>
       <div className="cv-cards">
