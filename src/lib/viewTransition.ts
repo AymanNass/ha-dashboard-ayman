@@ -45,15 +45,7 @@ export function runViewTransition(update: () => void, afterUpdate?: () => void):
  * giving phone swipe-navigation a native, app-like feel. Falls back to an
  * instant update when View Transitions aren't available or motion is reduced.
  */
-export function runNavTransition(dir: 'next' | 'prev', update: () => void): Promise<void> {
-  if (!viewTransitionsAvailable() || !document.startViewTransition) {
-    update();
-    return Promise.resolve();
-  }
-  const root = document.documentElement;
-  const cls = dir === 'next' ? 'vt-nav-next' : 'vt-nav-prev';
-  root.classList.add(cls);
-  const transition = document.startViewTransition(() => flushSync(update));
-  transition.finished.finally(() => root.classList.remove(cls));
-  return transition.finished;
+export function runNavTransition(_dir: 'next' | 'prev', update: () => void): Promise<void> {
+  update();
+  return Promise.resolve();
 }
