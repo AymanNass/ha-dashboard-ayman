@@ -3252,28 +3252,32 @@ body::after {
   transition: border-color 0.2s;
 }
 
-/* The shutter itself: solid green block from the top with slat texture */
+/* The shutter itself: deep green block from the top with elegant slat texture */
 .cv-shutter {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  background: #166534;
+  background: linear-gradient(180deg, #0a3d1f, #0d4a26);
   transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 0;
   border-radius: 13px 13px 0 0;
 }
 
-/* Horizontal slat lines */
+/* Elegant slat lines — alternating subtle highlight and shadow */
 .cv-slats {
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
     to bottom,
-    transparent,
-    transparent 7px,
-    rgba(0, 0, 0, 0.15) 7px,
-    rgba(0, 0, 0, 0.15) 8px
+    rgba(255, 255, 255, 0.06) 0px,
+    rgba(255, 255, 255, 0.02) 3px,
+    transparent 3px,
+    transparent 5px,
+    rgba(0, 0, 0, 0.12) 5px,
+    rgba(0, 0, 0, 0.06) 6px,
+    transparent 6px,
+    transparent 10px
   );
 }
 
