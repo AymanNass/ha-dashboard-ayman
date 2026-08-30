@@ -1,4 +1,21 @@
 # Changelog
+## 2.0.0 — Major Dashboard Restyling
+
+- **Premium header redesign**: compact greeting + mini status cards (alarm, lights, covers, temperature, door, humidity) + presence badges (Ayman & Martina with home/away indicator)
+- **Control Center**: horizontal toolbar with Routines (I'm Back, I'm Leaving, Buonanotte, Film, Robot with sub-menu) and Quick Actions (Tutto OFF, Luci OFF, Chiudi/Apri tapparelle, Clima OFF)
+- **Auto light/dark theme**: switches based on system preference or configurable time schedule
+- **Room containers**: subtle grouping of each section with nearly invisible background and border
+- **Compact tiles**: flatter design with minimal shadows, subtle ON state (warm tint + amber border), icon+name on same row, no On/Off text
+- **Split bedside light tile**: minimal bed shape with lamp icons on each side (Ayman/Martina/Entrambe)
+- **Clima page**: dedicated page with room cards, 24h temperature/humidity charts, and AC controls
+- **Seasonal comfort system**: summer/winter ranges for temperature and humidity with color-coded values and actionable advice
+- **Sensors modal**: accessible via temperature chip, shows 24h sparkline charts for all sensors
+- **Light theme overhaul**: clean flat design without blur/glow artifacts
+- **HA automations**: humidity alert notifications, updated cover scripts for third tapparella, average temperature sensor for camera
+- **Strelitzia + TV side by side** in Soggiorno
+- **Removed scene pills** (replaced by Control Center routines)
+- **Fixed iPad focus persistence** after tap
+
 ## 1.7.1
 
 - **Fixed: thermostats showed the wrong temperature unit.** Climate cards and the
