@@ -42,6 +42,7 @@ import { SpotifyPlaylist } from './SpotifyPlaylist';
 import { RoborockPanel } from './RoborockPanel';
 import { PlantWidget } from './PlantWidget';
 import { TvWidget } from './TvWidget';
+import { RobotMiniCard } from './RobotMiniCard';
 import { spotifyPlaylists, spotifyDevices } from '../config';
 import { useTranslation } from 'react-i18next';
 
@@ -268,6 +269,8 @@ interface Props {
   layout: LayoutActions;
   /** Switch the dashboard into edit mode (used by the empty-page call to action). */
   onRequestEdit?: () => void;
+  /** Navigate to a different view/page. */
+  onNavigate?: (viewId: string) => void;
   /** Music Assistant search (for the special MA search tile). */
   searchMusic?: SearchMusic;
   /** Music Assistant playback (for the special MA search tile). */
@@ -413,6 +416,7 @@ export function DashboardView(props: Props) {
               }
               // Inject plant widget in the Soggiorno section
               const isSoggiorno = col.title === 'Soggiorno' && view.id === 'main';
+              const isCameretta = col.title === 'Cameretta' && view.id === 'main';
               const isCoverSection = col.entities.every((e) => e.entity_id.startsWith('cover.'));
               return (
               <div className="row-column" key={ci}>
@@ -446,6 +450,9 @@ export function DashboardView(props: Props) {
                       <PlantWidget entities={entities} />
                       <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
                     </div>
+                  )}
+                  {isCameretta && (
+                    <RobotMiniCard entities={entities} callHA={props.callHA} onNavigate={props.onNavigate ?? (() => {})} />
                   )}
                 </CollapsibleColumn>
               </div>

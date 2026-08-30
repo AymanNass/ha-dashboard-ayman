@@ -374,6 +374,7 @@ export default function App() {
             editing={editing}
             layout={layout}
             onRequestEdit={() => setEditing(true)}
+            onNavigate={goToView}
             searchMusic={searchMusic}
             playMusic={playMusic}
             getMaPlayers={getMaPlayers}
