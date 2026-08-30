@@ -3200,6 +3200,148 @@ body::after {
   border: 1px solid var(--border-glass);
 }
 
+/* ── Cover section (mini window cards) ── */
+.cover-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cover-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cover-toolbar-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.cover-toolbar-btns {
+  display: flex;
+  gap: 4px;
+}
+.cover-tb-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+.cover-tb-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+.cover-tb-btn:active {
+  transform: scale(0.9);
+}
+
+.cover-cards {
+  display: flex;
+  gap: 8px;
+}
+
+.cover-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 8px 8px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cover-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.cover-card.is-open {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.cover-card-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.cover-window-svg {
+  width: 40px;
+  height: 48px;
+  flex: none;
+}
+
+.cover-card-status {
+  text-align: center;
+}
+.cover-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cover-card-btns {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+.cover-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, color 0.12s;
+  font-family: inherit;
+}
+.cover-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+.cover-btn:active {
+  transform: scale(0.88);
+}
+
+/* Light theme cover overrides */
+[data-theme='light'] .cover-card {
+  background: rgba(15, 23, 42, 0.02);
+  border-color: rgba(15, 23, 42, 0.06);
+}
+[data-theme='light'] .cover-card.is-open {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+[data-theme='light'] .cover-tb-btn {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.08);
+}
+[data-theme='light'] .cover-btn {
+  background: rgba(15, 23, 42, 0.04);
+}
+
 /* ── Climate view (dedicated page) ── */
 .climate-view {
   padding-top: 8px;

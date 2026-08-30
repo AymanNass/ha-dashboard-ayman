@@ -21,6 +21,7 @@ import { CSS } from '@dnd-kit/utilities';
 import type { DashView, DashRow, MediaTileConfig, RoomEntity, NocConfig, NocNode, NocMetric } from '../types';
 import { DeviceTile } from './DeviceTile';
 import { SplitLightTile } from './SplitLightTile';
+import { CoverSection } from './CoverSection';
 import { CameraGrid } from './CameraGrid';
 import { ClimateView } from './ClimateView';
 import { NocView } from './NocView';
@@ -401,6 +402,7 @@ export function DashboardView(props: Props) {
               }
               // Inject plant widget in the Soggiorno section
               const isSoggiorno = col.title === 'Soggiorno' && view.id === 'main';
+              const isCoverSection = col.entities.every((e) => e.entity_id.startsWith('cover.'));
               return (
               <div className="row-column" key={ci}>
                 <CollapsibleColumn
@@ -412,6 +414,14 @@ export function DashboardView(props: Props) {
                   noCollapse={col.noCollapse}
                   onOpenDetail={props.onOpenDetail}
                 >
+                  {isCoverSection ? (
+                    <CoverSection
+                      entities={entities}
+                      covers={col.entities.map((e) => ({ entity_id: e.entity_id, name: e.name || entities[e.entity_id]?.attributes.friendly_name as string || e.entity_id }))}
+                      callHA={props.callHA}
+                      onOpenDetail={props.onOpenDetail}
+                    />
+                  ) : (
                   <div className="tile-grid">
                     {col.entities
                       .filter((e) => (entities[e.entity_id] || isSpecialTile(e.entity_id)) && !e.entity_id.startsWith('sensor.'))
@@ -419,6 +429,7 @@ export function DashboardView(props: Props) {
                         <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}
                   </div>
+                  )}
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
                       <PlantWidget entities={entities} />
