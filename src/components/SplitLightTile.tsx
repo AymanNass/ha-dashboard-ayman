@@ -1,4 +1,4 @@
-import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
+import type { HassEntity } from 'home-assistant-js-websocket';
 
 interface Props {
   leftEntity: HassEntity;
@@ -13,66 +13,53 @@ interface Props {
   image?: string;
 }
 
-export function SplitLightTile({ leftEntity, rightEntity, leftLabel, rightLabel, callHA, onOpenDetail, leftId, rightId, enterIndex, image }: Props) {
+export function SplitLightTile({ leftEntity, rightEntity, leftLabel, rightLabel, callHA, onOpenDetail, leftId, rightId, enterIndex }: Props) {
   const leftOn = leftEntity.state === 'on';
   const rightOn = rightEntity.state === 'on';
-  const bothOn = leftOn && rightOn;
-
-  const leftBrightness = leftOn ? (leftEntity.attributes.brightness as number | undefined) : undefined;
-  const rightBrightness = rightOn ? (rightEntity.attributes.brightness as number | undefined) : undefined;
-  const leftPct = leftBrightness != null ? Math.round((leftBrightness / 255) * 100) : undefined;
-  const rightPct = rightBrightness != null ? Math.round((rightBrightness / 255) * 100) : undefined;
 
   const toggle = (entityId: string, isOn: boolean) => {
     callHA('light', isOn ? 'turn_off' : 'turn_on', undefined, { entity_id: entityId });
   };
 
   const toggleBoth = () => {
-    // If any is on, turn both off. Otherwise turn both on.
     const service = (leftOn || rightOn) ? 'turn_off' : 'turn_on';
     callHA('light', service, undefined, { entity_id: [leftId, rightId] });
   };
 
   return (
     <div
-      className={`tile split-tile span tile-enter ${image ? 'has-bg' : ''}`}
-      style={{
-        '--enter-i': enterIndex ?? 0,
-        ...(image ? { '--split-bg': `url("${image}")` } as React.CSSProperties : {}),
-      } as React.CSSProperties}
+      className="tile split-tile span tile-enter"
+      style={{ '--enter-i': enterIndex ?? 0 } as React.CSSProperties}
     >
-      {image && <div className="split-bg" />}
-      {/* Left zone */}
+      {/* Left lamp */}
       <button
-        className={`split-zone split-left ${leftOn ? 'is-on' : ''}`}
+        className={`bed-lamp bed-lamp-left ${leftOn ? 'is-on' : ''}`}
         onClick={() => toggle(leftId, leftOn)}
         onContextMenu={(e) => { e.preventDefault(); onOpenDetail(leftId); }}
       >
-        <span className="mdi mdi-lamp split-icon" />
-        <span className="split-label">{leftLabel}</span>
-        <span className="split-state">{leftOn ? (leftPct != null ? `${leftPct}%` : 'On') : 'Off'}</span>
+        <span className="mdi mdi-lamp bed-lamp-icon" />
+        <span className="bed-lamp-name">{leftLabel}</span>
       </button>
 
-      {/* Center zone — both */}
-      <button
-        className={`split-zone split-center ${bothOn ? 'is-on' : (leftOn || rightOn) ? 'is-partial' : ''}`}
-        onClick={toggleBoth}
-      >
-        <span className="mdi mdi-lightbulb-group split-icon" />
-        <span className="split-state">
-          {bothOn ? 'Entrambe' : (leftOn || rightOn) ? '1 accesa' : 'Entrambe off'}
+      {/* Center: minimal bed + both toggle */}
+      <button className="bed-center" onClick={toggleBoth}>
+        <div className="bed-shape">
+          <div className="bed-headboard" />
+          <div className="bed-mattress" />
+        </div>
+        <span className="bed-center-label">
+          {leftOn && rightOn ? 'Entrambe' : leftOn || rightOn ? '1 accesa' : 'Spente'}
         </span>
       </button>
 
-      {/* Right zone */}
+      {/* Right lamp */}
       <button
-        className={`split-zone split-right ${rightOn ? 'is-on' : ''}`}
+        className={`bed-lamp bed-lamp-right ${rightOn ? 'is-on' : ''}`}
         onClick={() => toggle(rightId, rightOn)}
         onContextMenu={(e) => { e.preventDefault(); onOpenDetail(rightId); }}
       >
-        <span className="mdi mdi-lamp split-icon" />
-        <span className="split-label">{rightLabel}</span>
-        <span className="split-state">{rightOn ? (rightPct != null ? `${rightPct}%` : 'On') : 'Off'}</span>
+        <span className="mdi mdi-lamp bed-lamp-icon" />
+        <span className="bed-lamp-name">{rightLabel}</span>
       </button>
     </div>
   );

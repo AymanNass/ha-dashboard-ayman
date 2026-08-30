@@ -14,6 +14,7 @@ import { DetailPanel } from './components/DetailPanel';
 import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
 import { SensorsModal } from './components/SensorsModal';
+import { ControlCenter } from './components/ControlCenter';
 import { NowPlayingTakeover } from './components/NowPlayingTakeover';
 import { Screensaver } from './components/Screensaver';
 import { CalendarFlyout } from './components/CalendarFlyout';
@@ -289,6 +290,10 @@ export default function App() {
           onOpenSensors={() => setShowSensors(true)}
         />
 
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && (
+          <ControlCenter callHA={callHA} />
+        )}
+
         {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}
         {false && view.kind !== 'cameras' && view.kind !== 'sensors' && (
           <GlanceStrip
@@ -373,13 +378,6 @@ export default function App() {
             playMusic={playMusic}
             getMaPlayers={getMaPlayers}
           />
-        )}
-
-        {!editing && viewScenes.length > 0 && (
-          <div className="scenes-section">
-            <div className="scenes-separator"><span>{t('app_scenes')}</span></div>
-            <ScenePills entities={entities} onToggle={toggleEntity} scenes={viewScenes} />
-          </div>
         )}
       </main>
 

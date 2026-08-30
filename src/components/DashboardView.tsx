@@ -419,8 +419,12 @@ export function DashboardView(props: Props) {
                         <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}
                   </div>
-                  {isSoggiorno && <PlantWidget entities={entities} />}
-                  {isSoggiorno && <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />}
+                  {isSoggiorno && (
+                    <div className="soggiorno-widgets">
+                      <PlantWidget entities={entities} />
+                      <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
+                    </div>
+                  )}
                 </CollapsibleColumn>
               </div>
               );

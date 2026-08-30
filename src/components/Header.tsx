@@ -6,7 +6,7 @@ import { resolveWeatherId, getWeatherIcon, getWeatherColor } from '../lib/weathe
 import { dedupeMediaPlayers } from '../lib/mediaDevices';
 import { useHaTempUnit } from '../hooks/useHomeAssistant';
 import { useTranslation } from 'react-i18next';
-import { tempColor } from '../lib/comfort';
+import { tempColor, humidityColor } from '../lib/comfort';
 
 interface ForecastDay {
   datetime: string;
@@ -22,19 +22,12 @@ interface Props {
   hideWeather?: boolean;
   hidePeople?: boolean;
   onOpenDetail?: (entityId: string) => void;
-  /** HA service call function for actionable chips. */
   callHA?: (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
-  /** Current view name shown inline. */
   viewName?: string;
-  /** Whether edit mode is active. */
   editing?: boolean;
-  /** Toggle edit mode. */
   onToggleEdit?: () => void;
-  /** Saving status for edit toolbar. */
   saving?: boolean;
-  /** Reset layout callback. */
   onResetLayout?: () => void;
-  /** Open sensors modal callback. */
   onOpenSensors?: () => void;
 }
 
@@ -70,9 +63,8 @@ export function Header({
   const weather = weatherId ? entities[weatherId] : undefined;
   const temp = weather?.attributes?.temperature as number | undefined;
   const tempUnit = (weather?.attributes?.temperature_unit as string | undefined) ?? haTempUnit;
-  const state = weather?.state || '';
+  const weatherState = weather?.state || '';
   const humidity = weather?.attributes?.humidity as number | undefined;
-  const feelsLike = weather?.attributes?.apparent_temperature as number | undefined;
 
   const [forecast, setForecast] = useState<ForecastDay[]>([]);
   useEffect(() => {
@@ -92,14 +84,12 @@ export function Header({
   const homeNames = getHomeNames(entities);
   const greetingName = joinNames(homeNames);
 
-  // Live clock
   const [now, setNow] = useState(new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(timer);
   }, []);
   const time = now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-  const date = now.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
 
   if (hideGreeting && hideWeather && hidePeople) return null;
 
@@ -110,181 +100,162 @@ export function Header({
   const alarmEntity = entities['alarm_control_panel.casa'];
   const alarmState = alarmEntity?.state;
   const alarmArmed = alarmState?.startsWith('armed');
-  const alarmLabel = alarmState === 'disarmed' ? 'Disarmato' : alarmArmed ? 'Armato' : alarmState ?? '—';
   const coversOpen = Object.values(entities).filter(e => e.entity_id.startsWith('cover.') && e.state === 'open').length;
-  const vacuumState = entities['vacuum.roborock_qv_35a']?.state;
-  const vacuumLabel = vacuumState === 'docked' ? 'In carica' : vacuumState === 'cleaning' ? 'Pulisce' : vacuumState ?? '—';
+  const coversTotal = Object.values(entities).filter(e => e.entity_id.startsWith('cover.')).length;
   const tempSalotto = entities['sensor.temperatura_salotto']?.state;
-  const mediaPlaying = dedupeMediaPlayers(
-    Object.values(entities).filter(e => e.entity_id.startsWith('media_player.') && e.state === 'playing'),
-  );
+  const humSalotto = entities['sensor.umidita_salotto']?.state;
 
-  // ── Actionable chip handlers (with confirmation) ──
+  // Security: both alarm + lock combined
+  const secureCount = (alarmArmed ? 1 : 0) + (lockState === 'locked' ? 1 : 0);
+  const secureLabel = secureCount === 2 ? 'Sicura' : secureCount === 1 ? 'Parziale' : 'Aperta';
+  const secureColor = secureCount === 2 ? '#10b981' : secureCount === 1 ? '#f59e0b' : '#ef4444';
+
+  // ── Actionable handlers ──
   const handleAlarm = () => {
     if (!callHA) return;
     if (alarmArmed) {
-      if (confirm('Vuoi disarmare l\'allarme?')) {
+      if (confirm('Vuoi disarmare l\'allarme?'))
         callHA('alarm_control_panel', 'alarm_disarm', undefined, { entity_id: 'alarm_control_panel.casa' });
-      }
     } else {
-      if (confirm('Vuoi armare l\'allarme?')) {
+      if (confirm('Vuoi armare l\'allarme?'))
         callHA('alarm_control_panel', 'alarm_arm_away', undefined, { entity_id: 'alarm_control_panel.casa' });
-      }
     }
   };
 
   const handleLock = () => {
     if (!callHA) return;
     if (lockState === 'locked') {
-      if (confirm('Vuoi sbloccare la porta?')) {
+      if (confirm('Vuoi sbloccare la porta?'))
         callHA('lock', 'unlock', undefined, { entity_id: 'lock.pl_2_casa' });
-      }
     } else {
-      if (confirm('Vuoi bloccare la porta?')) {
+      if (confirm('Vuoi bloccare la porta?'))
         callHA('lock', 'lock', undefined, { entity_id: 'lock.pl_2_casa' });
-      }
     }
   };
 
   return (
     <header className="hdr">
-      {/* ── Row 1: clock + greeting | weather + people ── */}
-      <div className="hdr-row1">
+      {/* ── Row 1: greeting left | weather + edit right ── */}
+      <div className="hdr-top">
         {!hideGreeting && (
-          <div className="hdr-left">
+          <div className="hdr-greeting">
+            <span className="hdr-hello">
+              {greeting},{' '}
+              {greetingName || ''} <span className="hdr-emoji">&#127769;</span>
+            </span>
             <span className="hdr-time">{time}</span>
-            <div className="hdr-greet">
-              <span className="hdr-hello">
-                {greeting}{greetingName ? `, ${greetingName}!` : ''}
-              </span>
-              <span className="hdr-date">{date}</span>
-            </div>
           </div>
         )}
-
-        <div className="hdr-right">
+        <div className="hdr-top-right">
           {!hideWeather && weather && (
-            <div className="hdr-weather" onClick={() => onOpenDetail?.(weatherId!)}>
-              <span className={`mdi ${getWeatherIcon(state)}`} style={{ fontSize: 22, color: getWeatherColor(state) }} />
-              <span className="hdr-temp"><AnimatedNumber value={Math.round(temp ?? 0)} /><sup>{tempUnit}</sup></span>
-              <div className="hdr-weather-detail">
-                <span className="hdr-condition">{state.replace(/-/g, ' ')} · {humidity}%</span>
-                {feelsLike != null && (
-                  <span className="hdr-feels">{t('weather_feels_like')} {Math.round(feelsLike)}°</span>
-                )}
-              </div>
+            <div className="hdr-weather-compact" onClick={() => onOpenDetail?.(weatherId!)}>
+              <span className={`mdi ${getWeatherIcon(weatherState)}`} style={{ fontSize: 18, color: getWeatherColor(weatherState) }} />
+              <span className="hdr-wt">{Math.round(temp ?? 0)}°</span>
+              <span className="hdr-wc">{weatherState.replace(/-/g, ' ')}</span>
+              {humidity != null && <span className="hdr-wh">{humidity}%</span>}
             </div>
           )}
           {!hideWeather && forecast.length > 0 && (
-            <div className="hdr-forecast">
-              {forecast.map((d, i) => (
-                <div className="hdr-fc-day" key={d.datetime ?? i}>
-                  <span className="hdr-fc-dow">
-                    {i === 0
-                      ? t('greeting_today')
-                      : new Date(d.datetime).toLocaleDateString(i18n.language, { weekday: 'short' }).toUpperCase()}
+            <div className="hdr-fc-row">
+              {forecast.slice(0, 4).map((d, i) => (
+                <div className="hdr-fc-item" key={d.datetime ?? i}>
+                  <span className="hdr-fc-d">
+                    {i === 0 ? 'Oggi' : new Date(d.datetime).toLocaleDateString(i18n.language, { weekday: 'short' })}
                   </span>
-                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 14, color: getWeatherColor(d.condition) }} />
-                  <span className="hdr-fc-temp">
-                    {Math.round(d.temperature)}°
-                    {d.templow !== undefined && <span className="hdr-fc-low">{Math.round(d.templow)}°</span>}
-                  </span>
+                  <span className={`mdi ${getWeatherIcon(d.condition)}`} style={{ fontSize: 12, color: getWeatherColor(d.condition) }} />
+                  <span className="hdr-fc-t">{Math.round(d.temperature)}°</span>
                 </div>
               ))}
-            </div>
-          )}
-          {!hidePeople && (
-            <div className="hdr-persons">
-              {resolvePersons(entities)
-                .filter((p) => ['person.ayman', 'person.martina'].includes(p.entity_id))
-                .map((p) => {
-                  const ent = entities[p.entity_id];
-                  const home = ent?.state === 'home';
-                  return (
-                    <span key={p.entity_id} className={`hdr-person ${home ? 'home' : 'away'}`} title={home ? `${p.name} è a casa` : `${p.name} è fuori`}>
-                      <span className={`mdi ${home ? 'mdi-home-account' : 'mdi-map-marker-distance'}`} />
-                      {p.name}
-                    </span>
-                  );
-                })}
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Row 2: view title + actionable status chips + edit btn ── */}
-      <div className="hdr-status">
-        {viewName && <span className="hdr-view-name">{viewName}</span>}
-
-        <button
-          className={`hdr-chip hdr-chip-action ${alarmArmed ? 'chip-ok' : 'chip-warn'}`}
-          onClick={handleAlarm}
-          title={alarmArmed ? 'Tap per disarmare' : 'Tap per armare'}
-        >
-          <span className={`mdi ${alarmArmed ? 'mdi-shield-check' : 'mdi-shield-off-outline'}`} />
-          Allarme {alarmArmed ? 'armato' : 'disarmato'}
-        </button>
-        <button
-          className={`hdr-chip hdr-chip-action ${lockState === 'locked' ? 'chip-ok' : 'chip-warn'}`}
-          onClick={handleLock}
-          title={lockState === 'locked' ? 'Tap per sbloccare' : 'Tap per bloccare'}
-        >
-          <span className={`mdi ${lockState === 'locked' ? 'mdi-lock' : 'mdi-lock-open-variant'}`} />
-          Porta {lockState === 'locked' ? 'chiusa' : 'aperta'}
-        </button>
-        <button className="hdr-chip" onClick={() => onOpenDetail?.('light.lampada_ciambella')}>
-          <span className="mdi mdi-lightbulb-on" />
-          {lightsOn} {lightsOn === 1 ? 'luce accesa' : 'luci accese'}
-        </button>
-        <button className="hdr-chip" onClick={() => onOpenDetail?.('cover.tapparella_tavolo')}>
-          <span className="mdi mdi-blinds" />
-          {coversOpen} {coversOpen === 1 ? 'tapparella aperta' : 'tapparelle aperte'}
-        </button>
-        {tempSalotto && (
-          <button
-            className="hdr-chip"
-            style={{ color: tempColor(parseFloat(tempSalotto)) }}
-            onClick={() => onOpenSensors?.()}
-            title="Apri sensori"
-          >
-            <span className="mdi mdi-thermometer" />
-            {parseFloat(tempSalotto).toFixed(1)}°
-            <span className="mdi mdi-chart-line" style={{ fontSize: 12, opacity: 0.5, marginLeft: 2 }} />
-          </button>
-        )}
-        <button className="hdr-chip" onClick={() => onOpenDetail?.('vacuum.roborock_qv_35a')}>
-          <span className={`mdi mdi-robot-vacuum ${vacuumState === 'cleaning' ? 'spin' : ''}`} />
-          {vacuumLabel}
-        </button>
-        {mediaPlaying.length > 0 && (
-          <button className="hdr-chip chip-accent" onClick={() => onOpenDetail?.(mediaPlaying[0].entity_id)}>
-            <span className="mdi mdi-music" />
-            {mediaPlaying.length} in riproduzione
-          </button>
-        )}
-
-        {/* Edit toggle — pushed to the right */}
-        <div className="hdr-edit-spacer" />
-        {editing ? (
-          <div className="hdr-edit-bar">
-            <span className="hdr-edit-status">
-              {saving ? (
-                <><span className="mdi mdi-loading mdi-spin" /> {t('app_saving')}</>
-              ) : (
-                <><span className="mdi mdi-check-circle-outline" /> {t('app_saved')}</>
-              )}
+      {/* ── Row 2: status cards left + presence right ── */}
+      <div className="hdr-cards-row">
+        <div className="hdr-cards">
+          <div className="sc" onClick={handleAlarm} style={{ cursor: 'pointer' }}>
+            <span className="sc-icon" style={{ color: alarmArmed ? '#10b981' : '#ef4444' }}>
+              <span className={`mdi ${alarmArmed ? 'mdi-shield-check' : 'mdi-shield-off-outline'}`} />
             </span>
-            <button className="toolbar-btn" onClick={() => { if (confirm(t('app_reset_confirm'))) onResetLayout?.(); }}>
-              <span className="mdi mdi-restore" /> {t('app_reset')}
-            </button>
-            <button className="toolbar-btn primary" onClick={onToggleEdit}>
-              <span className="mdi mdi-check" /> {t('app_done')}
-            </button>
+            <div className="sc-text">
+              <span className="sc-label">Allarme</span>
+              <span className="sc-value" style={{ color: alarmArmed ? '#10b981' : '#ef4444' }}>{alarmArmed ? 'Armato' : 'Disarmato'}</span>
+            </div>
           </div>
-        ) : (
-          <button className="toolbar-btn hdr-edit-btn" onClick={onToggleEdit}>
-            <span className="mdi mdi-pencil" /> {t('app_edit')}
-          </button>
+          <div className="sc" onClick={() => onOpenDetail?.('light.lampada_ciambella')}>
+            <span className="sc-icon" style={{ color: lightsOn > 0 ? '#f59e0b' : 'var(--text-muted)' }}>
+              <span className={`mdi ${lightsOn > 0 ? 'mdi-lightbulb-on' : 'mdi-lightbulb-off-outline'}`} />
+            </span>
+            <div className="sc-text">
+              <span className="sc-label">Luci accese</span>
+              <span className="sc-value">{lightsOn}</span>
+            </div>
+          </div>
+          <div className="sc" onClick={() => onOpenDetail?.('cover.tapparella_tavolo')}>
+            <span className="sc-icon" style={{ color: coversOpen > 0 ? '#10b981' : 'var(--text-muted)' }}>
+              <span className={`mdi ${coversOpen > 0 ? 'mdi-blinds-open' : 'mdi-blinds'}`} />
+            </span>
+            <div className="sc-text">
+              <span className="sc-label">Tapparelle</span>
+              <span className="sc-value">{coversOpen > 0 ? `${coversOpen} aperte` : 'Chiuse'}</span>
+            </div>
+          </div>
+          {tempSalotto && (
+            <div className="sc" onClick={() => onOpenSensors?.()}>
+              <span className="sc-icon" style={{ color: tempColor(parseFloat(tempSalotto)) }}>
+                <span className="mdi mdi-thermometer" />
+              </span>
+              <div className="sc-text">
+                <span className="sc-label">Temperatura</span>
+                <span className="sc-value">{parseFloat(tempSalotto).toFixed(1)}°</span>
+              </div>
+            </div>
+          )}
+          <div className="sc" onClick={handleLock} style={{ cursor: 'pointer' }}>
+            <span className="sc-icon" style={{ color: lockState === 'locked' ? '#10b981' : '#ef4444' }}>
+              <span className={`mdi ${lockState === 'locked' ? 'mdi-door-closed-lock' : 'mdi-door-open'}`} />
+            </span>
+            <div className="sc-text">
+              <span className="sc-label">Porta</span>
+              <span className="sc-value">{lockState === 'locked' ? 'Chiusa' : 'Aperta'}</span>
+            </div>
+          </div>
+          {humSalotto && (
+            <div className="sc" onClick={() => onOpenSensors?.()}>
+              <span className="sc-icon" style={{ color: humidityColor(parseFloat(humSalotto)) }}>
+                <span className="mdi mdi-water-percent" />
+              </span>
+              <div className="sc-text">
+                <span className="sc-label">Umidità</span>
+                <span className="sc-value">{parseFloat(humSalotto).toFixed(0)}%</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Presence box — right aligned */}
+        {!hidePeople && (
+          <div className="hdr-presence">
+            {resolvePersons(entities)
+              .filter((p) => ['person.ayman', 'person.martina'].includes(p.entity_id))
+              .map((p) => {
+                const ent = entities[p.entity_id];
+                const home = ent?.state === 'home';
+                return (
+                  <div className="presence-item" key={p.entity_id}>
+                    <span className={`presence-avatar ${home ? 'home' : 'away'}`}>{p.name.charAt(0)}</span>
+                    <div className="presence-info">
+                      <span className="presence-name">{p.name}</span>
+                      <span className={`presence-status ${home ? 'home' : 'away'}`}>
+                        <span className="presence-dot" />
+                        {home ? 'A casa' : 'Fuori'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         )}
       </div>
     </header>
