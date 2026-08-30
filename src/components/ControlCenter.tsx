@@ -102,12 +102,12 @@ export function ControlCenter({ callHA }: Props) {
         }
       },
     },
-    { id: 'lightsoff', icon: 'mdi-lightbulb-off', label: 'Luci OFF', action: () => callHA('light', 'turn_off', undefined, { entity_id: 'all' }) },
-    { id: 'coverclose', icon: 'mdi-blinds', label: 'Chiudi', action: () => callHA('script', 'turn_on', undefined, { entity_id: 'script.chiudi_tutte_le_tapparelle' }) },
-    { id: 'coveropen', icon: 'mdi-blinds-open', label: 'Apri', action: () => callHA('script', 'turn_on', undefined, { entity_id: 'script.apri_tutte_le_tapparelle' }) },
+    { id: 'lightsoff', icon: 'mdi-lightbulb-off', label: 'Luci OFF', action: () => { if (confirm('Spegnere tutte le luci?')) callHA('light', 'turn_off', undefined, { entity_id: 'all' }); } },
+    { id: 'coverclose', icon: 'mdi-blinds', label: 'Chiudi', action: () => { if (confirm('Chiudere tutte le tapparelle?')) callHA('script', 'turn_on', undefined, { entity_id: 'script.chiudi_tutte_le_tapparelle' }); } },
+    { id: 'coveropen', icon: 'mdi-blinds-open', label: 'Apri', action: () => { if (confirm('Aprire tutte le tapparelle?')) callHA('script', 'turn_on', undefined, { entity_id: 'script.apri_tutte_le_tapparelle' }); } },
     {
       id: 'climaoff', icon: 'mdi-snowflake-off', label: 'Clima OFF',
-      action: () => callHA('climate', 'turn_off', undefined, { entity_id: ['climate.condizionatore_camera_da_letto', 'climate.condizionatore_soggiorno_2'] }),
+      action: () => { if (confirm('Spegnere tutti i condizionatori?')) callHA('climate', 'turn_off', undefined, { entity_id: ['climate.condizionatore_camera_da_letto', 'climate.condizionatore_soggiorno_2'] }); },
     },
   ];
 
@@ -116,7 +116,7 @@ export function ControlCenter({ callHA }: Props) {
     { id: 'audiooff', icon: 'mdi-volume-off', label: 'Audio OFF', action: () => { callHA('media_player', 'media_stop', undefined, { entity_id: ['media_player.2o_echo_dot_di_martina', 'media_player.3o_echo_dot_di_martina', 'media_player.ovunque_2'] }); closeMenus(); } },
     { id: 'salaoff', icon: 'mdi-sofa', label: 'Sala OFF', action: () => { callHA('light', 'turn_off', { }, { entity_id: ['light.luce_soggiorno', 'light.lampada_ciambella', 'light.lampada_sala'] }); closeMenus(); } },
     { id: 'cameraoff', icon: 'mdi-bed', label: 'Camera OFF', action: () => { callHA('light', 'turn_off', { }, { entity_id: ['light.luce_camera', 'light.luce_letto_ayman', 'light.luce_letto_martina'] }); closeMenus(); } },
-    { id: 'lockhouse', icon: 'mdi-lock', label: 'Chiudi casa', action: () => { callHA('lock', 'lock', undefined, { entity_id: 'lock.pl_2_casa' }); callHA('script', 'turn_on', undefined, { entity_id: 'script.chiudi_tutte_le_tapparelle' }); closeMenus(); } },
+    { id: 'lockhouse', icon: 'mdi-lock', label: 'Chiudi casa', action: () => { if (confirm('Chiudere porta e tapparelle?')) { callHA('lock', 'lock', undefined, { entity_id: 'lock.pl_2_casa' }); callHA('script', 'turn_on', undefined, { entity_id: 'script.chiudi_tutte_le_tapparelle' }); } closeMenus(); } },
   ];
 
   return (
