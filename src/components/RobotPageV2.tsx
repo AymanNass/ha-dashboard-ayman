@@ -144,7 +144,7 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
   // ── Alerts ──
   const alerts: { icon: string; text: string; sub: string; level: 'warn' | 'crit' }[] = [];
   if (dirtyWaterFull) alerts.push({ icon: 'mdi-water-alert', text: 'Serbatoio acqua sporca pieno', sub: 'Svuotalo prima della prossima pulizia', level: 'warn' });
-  if (dockError && dockError !== 'none' && dockError !== 'ok') alerts.push({ icon: 'mdi-alert-circle', text: `Dock: ${dockError.replace(/_/g, ' ')}`, sub: 'Controlla la base', level: 'warn' });
+  if (dockError && dockError !== 'none' && dockError !== 'ok' && dockError !== 'waste_water_tank_full') alerts.push({ icon: 'mdi-alert-circle', text: `Dock: ${dockError.replace(/_/g, ' ')}`, sub: 'Controlla la base', level: 'warn' });
   if (sensorH < 0) alerts.push({ icon: 'mdi-wrench-clock', text: 'Sensore: manutenzione scaduta', sub: `Scaduto da ${Math.abs(Math.round(sensorH))}h`, level: 'crit' });
   if (filterH < 10) alerts.push({ icon: 'mdi-air-filter', text: `Filtro: ${filterH < 0 ? 'scaduto' : formatHours(filterH) + ' rimanenti'}`, sub: 'Sostituisci presto', level: filterH < 0 ? 'crit' : 'warn' });
   if (errorState && errorState !== 'none') alerts.push({ icon: 'mdi-robot-vacuum-alert', text: `Errore: ${errorState}`, sub: 'Controlla il robot', level: 'crit' });
