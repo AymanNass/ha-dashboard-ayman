@@ -3200,30 +3200,29 @@ body::after {
   border: 1px solid var(--border-glass);
 }
 
-/* ── Cover section (mini window cards) ── */
-.cover-section {
+/* ── Cover section (fill cards + integrated slider) ── */
+.cv-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
-.cover-toolbar {
+.cv-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.cover-toolbar-label {
+.cv-toolbar-label {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.cover-toolbar-btns {
+.cv-toolbar-btns {
   display: flex;
   gap: 4px;
 }
-.cover-tb-btn {
+.cv-tb {
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -3235,111 +3234,139 @@ body::after {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s;
   font-family: inherit;
 }
-.cover-tb-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-}
-.cover-tb-btn:active {
-  transform: scale(0.9);
-}
+.cv-tb:hover { background: rgba(255, 255, 255, 0.08); color: var(--text-primary); }
+.cv-tb:active { transform: scale(0.9); }
 
-.cover-cards {
+.cv-cards {
   display: flex;
   gap: 8px;
 }
 
-.cover-card {
+/* Each card IS the window — fill shows position */
+.cv-card {
   flex: 1;
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 10px 8px 8px;
+  justify-content: flex-end;
+  min-height: 110px;
+  padding: 10px 10px 6px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
   cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
   -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.2s;
 }
-.cover-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-}
-.cover-card.is-open {
-  border-color: rgba(16, 185, 129, 0.2);
+.cv-card.is-open { border-color: rgba(16, 185, 129, 0.25); }
+
+/* Green fill from the bottom */
+.cv-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--cv-fill, 0%);
+  background: linear-gradient(to top, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.04));
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  border-radius: 0 0 13px 13px;
 }
 
-.cover-card-name {
-  font-size: 10px;
+.cv-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+.cv-icon {
+  font-size: 20px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+.cv-card.is-open .cv-icon {
+  color: #10b981;
+  opacity: 0.8;
+}
+.cv-name {
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-secondary);
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
 }
-
-.cover-window-svg {
-  width: 40px;
-  height: 48px;
-  flex: none;
-}
-
-.cover-card-status {
-  text-align: center;
-}
-.cover-card-label {
-  font-size: 11px;
-  font-weight: 600;
+.cv-pct {
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
-.cover-card-btns {
-  display: flex;
-  gap: 3px;
-  margin-top: 2px;
-}
-.cover-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-muted);
-  font-size: 13px;
+/* Ultra-modern integrated slider */
+.cv-slider {
+  position: relative;
+  z-index: 2;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  margin: 6px 0 0;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  outline: none;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s, color 0.12s;
-  font-family: inherit;
 }
-.cover-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+.cv-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  cursor: grab;
+  transition: transform 0.12s;
 }
-.cover-btn:active {
-  transform: scale(0.88);
+.cv-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.cv-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.3);
+}
+.cv-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  cursor: grab;
 }
 
-/* Light theme cover overrides */
-[data-theme='light'] .cover-card {
+/* Light theme */
+[data-theme='light'] .cv-card {
   background: rgba(15, 23, 42, 0.02);
   border-color: rgba(15, 23, 42, 0.06);
 }
-[data-theme='light'] .cover-card.is-open {
-  border-color: rgba(16, 185, 129, 0.2);
+[data-theme='light'] .cv-fill {
+  background: linear-gradient(to top, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.03));
 }
-[data-theme='light'] .cover-tb-btn {
+[data-theme='light'] .cv-slider {
+  background: rgba(15, 23, 42, 0.08);
+}
+[data-theme='light'] .cv-slider::-webkit-slider-thumb {
+  border-color: rgba(15, 23, 42, 0.15);
+}
+[data-theme='light'] .cv-tb {
   background: rgba(15, 23, 42, 0.03);
   border-color: rgba(15, 23, 42, 0.08);
-}
-[data-theme='light'] .cover-btn {
-  background: rgba(15, 23, 42, 0.04);
 }
 
 /* ── Climate view (dedicated page) ── */
