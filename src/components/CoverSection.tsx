@@ -18,38 +18,39 @@ function CoverCard({ entity_id, name, entities, callHA, onOpenDetail }: CoverDef
   const position = (entity?.attributes.current_position as number) ?? (entity?.state === 'open' ? 100 : 0);
   const [local, setLocal] = useState<number | null>(null);
   const display = local ?? position;
+  // Shutter covers from top: 100% open = 0% covered, 0% open = 100% covered
+  const shutterPct = 100 - display;
 
   return (
-    <div
-      className={`cv-card ${position > 0 ? 'is-open' : ''}`}
-      style={{ '--cv-fill': `${display}%` } as React.CSSProperties}
-      onClick={() => onOpenDetail(entity_id)}
-    >
-      {/* Green fill from bottom */}
-      <div className="cv-fill" />
+    <div className="cv-card" onClick={() => onOpenDetail(entity_id)}>
+      {/* Shutter: green block from top with slat lines */}
+      <div className="cv-shutter" style={{ height: `${shutterPct}%` }}>
+        {/* Horizontal slat lines */}
+        <div className="cv-slats" />
+      </div>
 
-      {/* Content on top */}
-      <div className="cv-content">
-        <span className="mdi mdi-blinds cv-icon" />
+      {/* Content overlay */}
+      <div className="cv-info">
         <span className="cv-name">{name.replace('Tapparella ', '')}</span>
         <span className="cv-pct">{display === 100 ? 'Aperta' : display === 0 ? 'Chiusa' : `${display}%`}</span>
       </div>
 
-      {/* Integrated slider */}
-      <input
-        type="range"
-        className="cv-slider"
-        min={0}
-        max={100}
-        value={display}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => setLocal(parseInt(e.target.value))}
-        onPointerUp={(e) => {
-          const v = parseInt((e.target as HTMLInputElement).value);
-          setLocal(null);
-          callHA('cover', 'set_cover_position', { position: v }, { entity_id });
-        }}
-      />
+      {/* Vertical slider on the right */}
+      <div className="cv-vslider-track" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="range"
+          className="cv-vslider"
+          min={0}
+          max={100}
+          value={display}
+          onChange={(e) => setLocal(parseInt(e.target.value))}
+          onPointerUp={(e) => {
+            const v = parseInt((e.target as HTMLInputElement).value);
+            setLocal(null);
+            callHA('cover', 'set_cover_position', { position: v }, { entity_id });
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -59,7 +60,6 @@ export function CoverSection({ entities, covers, callHA, onOpenDetail }: Props) 
 
   return (
     <div className="cv-section">
-      {/* Toolbar */}
       <div className="cv-toolbar">
         <span className="cv-toolbar-label">Tutte le tapparelle</span>
         <div className="cv-toolbar-btns">
@@ -74,8 +74,6 @@ export function CoverSection({ entities, covers, callHA, onOpenDetail }: Props) 
           </button>
         </div>
       </div>
-
-      {/* Cards */}
       <div className="cv-cards">
         {covers.map((c) => (
           <CoverCard key={c.entity_id} {...c} entities={entities} callHA={callHA} onOpenDetail={onOpenDetail} />
