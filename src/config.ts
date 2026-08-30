@@ -229,23 +229,9 @@ export const views: DashView[] = [
   {
     id: 'media',
     name: 'Media',
-    icon: 'mdi-television',
-    kind: 'media',
-    scenes: [
-      'scene.cinema',
-    ],
-    sections: [
-      {
-        title: 'Media Players',
-        entities: [
-          { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG' },
-          { entity_id: 'media_player.spotify_martina', name: 'Spotify Martina' },
-          { entity_id: 'media_player.2o_echo_dot_di_martina', name: 'Echo Dot Camera' },
-          { entity_id: 'media_player.3o_echo_dot_di_martina', name: 'Echo Dot Salotto' },
-          { entity_id: 'media_player.ovunque_2', name: 'Ovunque' },
-        ],
-      },
-    ],
+    icon: 'mdi-speaker',
+    kind: 'media-v2' as DashView['kind'],
+    sections: [],
   },
   {
     id: 'robot-v2',

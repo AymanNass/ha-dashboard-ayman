@@ -290,7 +290,7 @@ export default function App() {
           onOpenSensors={() => setShowSensors(true)}
         />
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && (
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && (
           <ControlCenter callHA={callHA} />
         )}
 

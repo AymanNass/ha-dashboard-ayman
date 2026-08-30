@@ -26,6 +26,7 @@ import { CameraGrid } from './CameraGrid';
 import { ClimateView } from './ClimateView';
 import { RobotPageV2 } from './RobotPageV2';
 import { AutomationsPage } from './AutomationsPage';
+import { MediaPageV2 } from './MediaPageV2';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -302,6 +303,16 @@ export function DashboardView(props: Props) {
 
   if (view.kind === 'media') {
     return <MediaAutoView {...props} />;
+  }
+
+  if (view.kind === 'media-v2') {
+    return (
+      <MediaPageV2
+        entities={entities}
+        callHA={props.callHA}
+        onOpenDetail={props.onOpenDetail}
+      />
+    );
   }
 
   if (view.kind === 'climate') {
