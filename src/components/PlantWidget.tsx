@@ -39,7 +39,7 @@ export function PlantWidget({ entities }: Props) {
   return (
     <div className={`plant-widget plant-${status}`}>
       <div className="plant-img">
-        <img src="/strelitzia.png" alt="Strelitzia" />
+        <img src={`${import.meta.env.BASE_URL}strelitzia.png`} alt="Strelitzia" />
       </div>
       <div className="plant-info">
         <div className="plant-name">Strelitzia</div>
