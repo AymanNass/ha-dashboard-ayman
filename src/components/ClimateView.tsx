@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 import { Sparkline } from './Sparkline';
+import { DetailChartModal } from './DetailChart';
 import { useHaTempUnit } from '../hooks/useHomeAssistant';
 import { classifyTemp, classifyHumidity } from '../lib/comfort';
 
@@ -8,9 +9,11 @@ import { classifyTemp, classifyHumidity } from '../lib/comfort';
 interface RoomClimate {
   name: string;
   icon: string;
-  climate?: string;        // climate.* entity_id
-  tempSensor?: string;     // sensor.* for temperature
-  humiditySensor?: string; // sensor.* for humidity
+  climate?: string;
+  tempSensor?: string;
+  /** Separate sensor for the chart history (avoids zig-zag from min_max helpers). */
+  tempChartSensor?: string;
+  humiditySensor?: string;
 }
 
 const ROOMS: RoomClimate[] = [
@@ -26,6 +29,7 @@ const ROOMS: RoomClimate[] = [
     icon: 'mdi-bed-king',
     climate: 'climate.condizionatore_camera_da_letto',
     tempSensor: 'sensor.temperatura_media_camera',
+    tempChartSensor: 'sensor.temperatura_condizionatore_camera',
     humiditySensor: 'sensor.umidita_camera',
   },
   {
@@ -67,12 +71,13 @@ interface Props {
 
 export function ClimateView({ entities, callHA, getHistory, onOpenDetail }: Props) {
   const haTempUnit = useHaTempUnit();
+  const [chartModal, setChartModal] = useState<{ title: string; charts: { data: number[]; unit: string; color: string; label: string }[] } | null>(null);
 
   // Fetch 24h history for all sensors
   const [histories, setHistories] = useState<Record<string, number[]>>({});
   useEffect(() => {
     let cancelled = false;
-    const ids = ROOMS.flatMap((r) => [r.tempSensor, r.humiditySensor].filter(Boolean) as string[]);
+    const ids = ROOMS.flatMap((r) => [r.tempChartSensor || r.tempSensor, r.humiditySensor].filter(Boolean) as string[]);
     Promise.all(ids.map(async (id) => [id, await getHistory(id, 24)] as const)).then((results) => {
       if (cancelled) return;
       const map: Record<string, number[]> = {};
@@ -105,7 +110,8 @@ export function ClimateView({ entities, callHA, getHistory, onOpenDetail }: Prop
           const tClass = currentTemp != null && !isNaN(currentTemp) ? classifyTemp(currentTemp) : null;
           const hClass = humidity != null && !isNaN(humidity) ? classifyHumidity(humidity) : null;
 
-          const tempHistory = room.tempSensor ? (histories[room.tempSensor] ?? []) : [];
+          const chartTempId = room.tempChartSensor || room.tempSensor;
+          const tempHistory = chartTempId ? (histories[chartTempId] ?? []) : [];
           const humHistory = room.humiditySensor ? (histories[room.humiditySensor] ?? []) : [];
 
           const modeColor = MODE_COLORS[mode] ?? 'var(--text-muted)';
@@ -136,7 +142,7 @@ export function ClimateView({ entities, callHA, getHistory, onOpenDetail }: Prop
                 </div>
               </div>
 
-              {/* Charts */}
+              {/* Charts + detail button */}
               <div className="climate-charts">
                 {tempHistory.length > 1 && (
                   <div className="climate-chart">
@@ -163,6 +169,20 @@ export function ClimateView({ entities, callHA, getHistory, onOpenDetail }: Prop
                   </div>
                 )}
               </div>
+              {(tempHistory.length > 1 || humHistory.length > 1) && (
+                <button
+                  className="climate-detail-btn"
+                  onClick={() => setChartModal({
+                    title: room.name,
+                    charts: [
+                      ...(tempHistory.length > 1 ? [{ data: tempHistory, unit: '°', color: '#f59e0b', label: `Temperatura ${room.name}` }] : []),
+                      ...(humHistory.length > 1 ? [{ data: humHistory, unit: '%', color: '#3b82f6', label: `Umidità ${room.name}` }] : []),
+                    ],
+                  })}
+                >
+                  <span className="mdi mdi-chart-line" /> Vedi dettaglio grafico
+                </button>
+              )}
 
               {/* AC controls (only if this room has a climate entity) */}
               {climateEntity && room.climate && (
@@ -227,6 +247,13 @@ export function ClimateView({ entities, callHA, getHistory, onOpenDetail }: Prop
           );
         })}
       </div>
+      {chartModal && (
+        <DetailChartModal
+          title={chartModal.title}
+          charts={chartModal.charts}
+          onClose={() => setChartModal(null)}
+        />
+      )}
     </div>
   );
 }
