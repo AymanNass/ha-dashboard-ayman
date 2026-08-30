@@ -288,7 +288,16 @@ export default function App() {
           saving={layout.saving}
           onResetLayout={layout.resetLayout}
           onOpenSensors={() => setShowSensors(true)}
-          nextEvent={calendarEvents.length > 0 ? { summary: calendarEvents[0].summary, time: calendarEvents[0].start.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) } : null}
+          nextEvent={calendarEvents.length > 0 ? (() => {
+            const ev = calendarEvents[0];
+            const now = new Date();
+            const evDate = ev.start;
+            const isToday = evDate.toDateString() === now.toDateString();
+            const isTomorrow = evDate.toDateString() === new Date(now.getTime() + 86400000).toDateString();
+            const dayLabel = isToday ? 'Oggi' : isTomorrow ? 'Domani' : evDate.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric' });
+            const timeLabel = ev.allDay ? 'tutto il giorno' : evDate.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            return { summary: ev.summary, time: `${dayLabel} · ${timeLabel}` };
+          })() : null}
           onOpenCalendar={() => setCalendarOpen(true)}
         />
 

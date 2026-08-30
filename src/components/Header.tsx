@@ -241,7 +241,7 @@ export function Header({
                 <span className="mdi mdi-calendar-clock" />
               </span>
               <div className="sc-text">
-                <span className="sc-label">Prossimo</span>
+                <span className="sc-label">{nextEvent.time}</span>
                 <span className="sc-value">{nextEvent.summary}</span>
               </div>
             </div>
