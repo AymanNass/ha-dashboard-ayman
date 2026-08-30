@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 
 interface CalEvent {
@@ -6,7 +6,6 @@ interface CalEvent {
   end: string;
   summary: string;
   location?: string;
-  description?: string;
 }
 
 type Person = 'condiviso' | 'ayman' | 'martina';
@@ -33,43 +32,44 @@ const CALENDAR_LABELS: Record<string, string> = {
   'calendar.vacanze': 'Vacanze',
 };
 
+const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
 interface Props {
   entities: HassEntities;
   getCalendarEvents: (entityIds: string[], days?: number) => Promise<Record<string, { events?: unknown[] }>>;
 }
 
-function formatEventTime(start: string, end: string): string {
-  const s = new Date(start);
-  const e = new Date(end);
-  // All day event check (date only, no time component)
-  if (start.length <= 10 || (!start.includes('T'))) return 'Tutto il giorno';
-  const st = s.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-  const et = e.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-  return `${st} — ${et}`;
+function sameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-function formatDay(date: Date): string {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const diff = (d.getTime() - today.getTime()) / 86400000;
-  if (diff === 0) return 'Oggi';
-  if (diff === 1) return 'Domani';
-  if (diff === 2) return 'Dopodomani';
-  return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'short' });
+function eventTime(start: string): string {
+  if (start.length <= 10 || !start.includes('T')) return '';
+  return new Date(start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function CalendarPage({ entities, getCalendarEvents }: Props) {
   const [person, setPerson] = useState<Person>('condiviso');
   const [events, setEvents] = useState<(CalEvent & { calendarId: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [monthOffset, setMonthOffset] = useState(0);
 
+  const viewDate = useMemo(() => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + monthOffset);
+    return d;
+  }, [monthOffset]);
+
+  const monthLabel = viewDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+
+  // Fetch events for the visible month range (+ padding)
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     const ids = PERSON_CALENDARS[person];
-    getCalendarEvents(ids, 14).then((resp) => {
+    // Fetch 45 days from the start of the month to cover the whole grid
+    getCalendarEvents(ids, 45).then((resp) => {
       if (cancelled) return;
       const all: (CalEvent & { calendarId: string })[] = [];
       for (const [calId, data] of Object.entries(resp)) {
@@ -82,28 +82,67 @@ export function CalendarPage({ entities, getCalendarEvents }: Props) {
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [person, getCalendarEvents]);
+  }, [person, getCalendarEvents, monthOffset]);
 
-  // Group events by day
-  const grouped = events.reduce<Record<string, typeof events>>((acc, ev) => {
-    const d = new Date(ev.start);
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    (acc[key] ??= []).push(ev);
-    return acc;
-  }, {});
+  // Build the month grid
+  const grid = useMemo(() => {
+    const year = viewDate.getFullYear();
+    const month = viewDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
 
-  const days = Object.entries(grouped).map(([key, evts]) => ({
-    key,
-    date: new Date(evts[0].start),
-    events: evts,
-  }));
+    // Monday = 0 in our grid
+    let startDow = firstDay.getDay() - 1;
+    if (startDow < 0) startDow = 6;
+
+    const cells: { date: Date; inMonth: boolean; isToday: boolean }[] = [];
+    const today = new Date();
+
+    // Fill leading days from previous month
+    for (let i = startDow - 1; i >= 0; i--) {
+      const d = new Date(year, month, -i);
+      cells.push({ date: d, inMonth: false, isToday: sameDay(d, today) });
+    }
+    // Fill current month
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      const date = new Date(year, month, d);
+      cells.push({ date, inMonth: true, isToday: sameDay(date, today) });
+    }
+    // Fill trailing days
+    while (cells.length % 7 !== 0 || cells.length < 35) {
+      const d = new Date(year, month + 1, cells.length - (startDow + lastDay.getDate()) + 1);
+      cells.push({ date: d, inMonth: false, isToday: sameDay(d, today) });
+    }
+
+    return cells;
+  }, [viewDate]);
+
+  // Map events to day keys
+  const eventsByDay = useMemo(() => {
+    const map: Record<string, (CalEvent & { calendarId: string })[]> = {};
+    for (const ev of events) {
+      const d = new Date(ev.start);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      (map[key] ??= []).push(ev);
+    }
+    return map;
+  }, [events]);
 
   return (
     <div className="calp">
+      {/* Header */}
       <div className="calp-header">
-        <div>
-          <span className="calp-title">Calendario</span>
-          <span className="calp-sub">Prossimi 14 giorni · {events.length} eventi</span>
+        <div className="calp-nav">
+          <button className="calp-nav-btn" onClick={() => setMonthOffset((o) => o - 1)}>
+            <span className="mdi mdi-chevron-left" />
+          </button>
+          <span className="calp-month">{monthLabel}</span>
+          <button className="calp-nav-btn" onClick={() => setMonthOffset((o) => o + 1)}>
+            <span className="mdi mdi-chevron-right" />
+          </button>
+          {monthOffset !== 0 && (
+            <button className="calp-nav-today" onClick={() => setMonthOffset(0)}>Oggi</button>
+          )}
         </div>
         <div className="calp-person-sel">
           {(['condiviso', 'ayman', 'martina'] as Person[]).map((p) => (
@@ -114,7 +153,7 @@ export function CalendarPage({ entities, getCalendarEvents }: Props) {
         </div>
       </div>
 
-      {/* Calendar legend */}
+      {/* Legend */}
       <div className="calp-legend">
         {PERSON_CALENDARS[person].map((id) => (
           <span key={id} className="calp-legend-item">
@@ -124,34 +163,44 @@ export function CalendarPage({ entities, getCalendarEvents }: Props) {
         ))}
       </div>
 
-      {loading ? (
-        <div className="calp-loading">Caricamento eventi...</div>
-      ) : events.length === 0 ? (
-        <div className="calp-empty">
-          <span className="mdi mdi-calendar-blank" />
-          <span>Nessun evento nei prossimi 14 giorni</span>
-        </div>
-      ) : (
-        <div className="calp-days">
-          {days.map((day) => (
-            <div key={day.key} className="calp-day">
-              <div className="calp-day-head">
-                <span className="calp-day-label">{formatDay(day.date)}</span>
-                <span className="calp-day-date">{day.date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' })}</span>
-              </div>
-              <div className="calp-events">
-                {day.events.map((ev, i) => (
-                  <div key={i} className="calp-event" style={{ borderLeftColor: CALENDAR_COLORS[ev.calendarId] || 'var(--text-muted)' }}>
-                    <div className="calp-event-time">{formatEventTime(ev.start, ev.end)}</div>
-                    <div className="calp-event-summary">{ev.summary}</div>
-                    {ev.location && <div className="calp-event-loc"><span className="mdi mdi-map-marker" /> {ev.location}</div>}
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Month grid */}
+      <div className="calg">
+        {/* Weekday headers */}
+        <div className="calg-head">
+          {WEEKDAYS.map((d) => (
+            <span key={d} className="calg-dow">{d}</span>
           ))}
         </div>
-      )}
+
+        {/* Day cells */}
+        <div className="calg-grid">
+          {grid.map((cell, i) => {
+            const key = `${cell.date.getFullYear()}-${cell.date.getMonth()}-${cell.date.getDate()}`;
+            const dayEvents = eventsByDay[key] ?? [];
+            return (
+              <div
+                key={i}
+                className={`calg-cell ${cell.inMonth ? '' : 'out'} ${cell.isToday ? 'today' : ''} ${dayEvents.length > 0 ? 'has-events' : ''}`}
+              >
+                <span className="calg-num">{cell.date.getDate()}</span>
+                <div className="calg-events">
+                  {dayEvents.slice(0, 3).map((ev, j) => (
+                    <div key={j} className="calg-ev" style={{ background: CALENDAR_COLORS[ev.calendarId] || '#64748b' }}>
+                      {eventTime(ev.start) && <span className="calg-ev-time">{eventTime(ev.start)}</span>}
+                      <span className="calg-ev-name">{ev.summary}</span>
+                    </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="calg-more">+{dayEvents.length - 3}</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {loading && <div className="calp-loading">Caricamento...</div>}
     </div>
   );
 }
