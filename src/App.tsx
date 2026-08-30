@@ -288,9 +288,11 @@ export default function App() {
           saving={layout.saving}
           onResetLayout={layout.resetLayout}
           onOpenSensors={() => setShowSensors(true)}
+          nextEvent={calendarEvents.length > 0 ? { summary: calendarEvents[0].summary, time: calendarEvents[0].start.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) } : null}
+          onOpenCalendar={() => setCalendarOpen(true)}
         />
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && (
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && (
           <ControlCenter callHA={callHA} />
         )}
 
@@ -371,6 +373,7 @@ export default function App() {
             onOpenCalendar={() => setCalendarOpen(true)}
             callHA={callHA}
             getHistory={getHistory}
+            getCalendarEvents={getCalendarEvents}
             editing={editing}
             layout={layout}
             onRequestEdit={() => setEditing(true)}

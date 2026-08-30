@@ -254,4 +254,11 @@ export const views: DashView[] = [
     kind: 'automations' as DashView['kind'],
     sections: [],
   },
+  {
+    id: 'calendar',
+    name: 'Calendario',
+    icon: 'mdi-calendar',
+    kind: 'calendar' as DashView['kind'],
+    sections: [],
+  },
 ];

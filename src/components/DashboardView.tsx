@@ -27,6 +27,7 @@ import { ClimateView } from './ClimateView';
 import { RobotPageV2 } from './RobotPageV2';
 import { AutomationsPage } from './AutomationsPage';
 import { MediaPageV2 } from './MediaPageV2';
+import { CalendarPage } from './CalendarPage';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -267,6 +268,7 @@ interface Props {
   onOpenCalendar?: () => void;
   callHA: CallHA;
   getHistory?: (entityId: string, hours?: number) => Promise<number[]>;
+  getCalendarEvents?: (entityIds: string[], days?: number) => Promise<Record<string, { events?: unknown[] }>>;
   editing: boolean;
   layout: LayoutActions;
   /** Switch the dashboard into edit mode (used by the empty-page call to action). */
@@ -341,6 +343,15 @@ export function DashboardView(props: Props) {
       <AutomationsPage
         entities={entities}
         callHA={props.callHA}
+      />
+    );
+  }
+
+  if (view.kind === 'calendar') {
+    return (
+      <CalendarPage
+        entities={entities}
+        getCalendarEvents={props.getCalendarEvents ?? (async () => ({}))}
       />
     );
   }

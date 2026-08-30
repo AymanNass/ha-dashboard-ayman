@@ -29,6 +29,9 @@ interface Props {
   saving?: boolean;
   onResetLayout?: () => void;
   onOpenSensors?: () => void;
+  /** Next upcoming calendar event to show in header. */
+  nextEvent?: { summary: string; time: string } | null;
+  onOpenCalendar?: () => void;
 }
 
 function joinNames(names: string[]): string {
@@ -45,7 +48,7 @@ function getHomeNames(entities: HassEntities): string[] {
 
 export function Header({
   entities, getForecast, hideGreeting, hideWeather, hidePeople,
-  onOpenDetail, callHA, viewName, editing, onToggleEdit, saving, onResetLayout, onOpenSensors,
+  onOpenDetail, callHA, viewName, editing, onToggleEdit, saving, onResetLayout, onOpenSensors, nextEvent, onOpenCalendar,
 }: Props) {
   const { t, i18n } = useTranslation();
   const haTempUnit = useHaTempUnit();
@@ -229,6 +232,17 @@ export function Header({
               <div className="sc-text">
                 <span className="sc-label">Umidità</span>
                 <span className="sc-value">{parseFloat(humSalotto).toFixed(0)}%</span>
+              </div>
+            </div>
+          )}
+          {nextEvent && (
+            <div className="sc sc-calendar" onClick={() => onOpenCalendar?.()}>
+              <span className="sc-icon" style={{ color: '#ec4899' }}>
+                <span className="mdi mdi-calendar-clock" />
+              </span>
+              <div className="sc-text">
+                <span className="sc-label">Prossimo</span>
+                <span className="sc-value">{nextEvent.summary}</span>
               </div>
             </div>
           )}
