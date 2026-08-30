@@ -3636,6 +3636,18 @@ body::after {
 
 [data-theme='light'] .robot-mini { background: rgba(15, 23, 42, 0.02); border-color: rgba(15, 23, 42, 0.06); }
 
+.cameretta-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.cameretta-row .tile-grid {
+  flex: none;
+}
+.cameretta-row .robot-mini {
+  flex: 1;
+}
+
 /* ── Robot Page V2 (premium) ── */
 .rv2 { padding-top: 4px; }
 

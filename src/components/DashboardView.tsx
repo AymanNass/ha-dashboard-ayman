@@ -429,7 +429,18 @@ export function DashboardView(props: Props) {
                   noCollapse={col.noCollapse}
                   onOpenDetail={props.onOpenDetail}
                 >
-                  {isCoverSection ? (
+                  {isCameretta ? (
+                    <div className="cameretta-row">
+                      <div className="tile-grid">
+                        {col.entities
+                          .filter((e) => (entities[e.entity_id] || isSpecialTile(e.entity_id)) && !e.entity_id.startsWith('sensor.'))
+                          .map((re) => (
+                            <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
+                          ))}
+                      </div>
+                      <RobotMiniCard entities={entities} callHA={props.callHA} onNavigate={props.onNavigate ?? (() => {})} />
+                    </div>
+                  ) : isCoverSection ? (
                     <CoverSection
                       entities={entities}
                       covers={col.entities.map((e) => ({ entity_id: e.entity_id, name: e.name || entities[e.entity_id]?.attributes.friendly_name as string || e.entity_id }))}
@@ -450,9 +461,6 @@ export function DashboardView(props: Props) {
                       <PlantWidget entities={entities} />
                       <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
                     </div>
-                  )}
-                  {isCameretta && (
-                    <RobotMiniCard entities={entities} callHA={props.callHA} onNavigate={props.onNavigate ?? (() => {})} />
                   )}
                 </CollapsibleColumn>
               </div>
