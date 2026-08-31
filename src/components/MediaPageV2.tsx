@@ -53,7 +53,11 @@ function DeviceCard({ device, entity, callHA, onOpenDetail }: { device: DeviceDe
       {artUrl && isActive && <div className="mp2-art" style={{ backgroundImage: `url("${artUrl}")` }} />}
 
       <div className="mp2-card-top">
-        <span className={`mdi ${device.icon} mp2-device-icon`} style={{ color: isActive ? typeColor : undefined }} />
+        {artUrl && isActive ? (
+          <img className="mp2-card-thumb" src={artUrl} alt="" />
+        ) : (
+          <span className={`mdi ${device.icon} mp2-device-icon`} style={{ color: isActive ? typeColor : undefined }} />
+        )}
         <div className="mp2-device-info">
           <span className="mp2-device-name">{device.name}</span>
           <span className="mp2-device-room">{device.room}</span>
@@ -201,6 +205,7 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
               {/* TV status + artwork */}
               <div className="mp2-tv-head">
                 {tvArt && !tvOff && <div className="mp2-tv-art" style={{ backgroundImage: `url("${tvArt}")` }} />}
+                {tvArt && !tvOff && <img className="mp2-tv-thumb" src={tvArt} alt="" />}
                 <div className="mp2-tv-info">
                   <span className="mp2-tv-state">{tvOff ? 'Spenta' : tvSource || 'Accesa'}</span>
                   {tvTitle && <span className="mp2-tv-title">{tvTitle}</span>}

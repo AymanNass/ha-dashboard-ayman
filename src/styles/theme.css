@@ -3733,6 +3733,11 @@ body::after {
 
 .mp2-card-top { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
 .mp2-device-icon { font-size: 22px; color: var(--text-muted); opacity: 0.5; flex: none; }
+.mp2-card-thumb {
+  width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
+  flex: none; position: relative; z-index: 1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
 .mp2-device-info { flex: 1; min-width: 0; }
 .mp2-device-name { font-size: 13px; font-weight: 700; color: var(--text-primary); display: block; }
 .mp2-device-room { font-size: 10px; color: var(--text-muted); }
@@ -3797,6 +3802,11 @@ body::after {
   position: relative; overflow: hidden;
 }
 .mp2-tv-head { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+.mp2-tv-thumb {
+  width: 56px; height: 56px; border-radius: 8px; object-fit: cover;
+  flex: none; position: relative; z-index: 1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
 .mp2-tv-art {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
