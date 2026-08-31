@@ -1,17 +1,10 @@
 import { useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
-import { resolveArtwork } from '../lib/entityInfo';
-import { useArtworkColor } from '../hooks/useArtworkColor';
+import { HA_URL } from '../config';
 
-const CAST_ID = 'media_player.lg_webos_tv_oled65g26la';
-const WEBOS_ID = 'media_player.lg_tv';
+const TV_ID = 'media_player.lg_tv';
 
-type CallHA = (
-  domain: string,
-  service: string,
-  data?: Record<string, unknown>,
-  target?: { entity_id: string | string[] },
-) => Promise<void>;
+type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
 interface Props {
   entities: HassEntities;
@@ -19,182 +12,155 @@ interface Props {
   onOpenDetail: (entityId: string) => void;
 }
 
-/** Known streaming app icons (MDI). */
 const APP_ICONS: Record<string, string> = {
-  netflix: 'mdi-netflix',
-  youtube: 'mdi-youtube',
-  'youtube tv': 'mdi-youtube-tv',
-  disney: 'mdi-disney',
-  'disney+': 'mdi-disney',
-  plex: 'mdi-plex',
-  spotify: 'mdi-spotify',
-  'amazon prime video': 'mdi-amazon',
-  'prime video': 'mdi-amazon',
-  kodi: 'mdi-kodi',
-  'apple tv': 'mdi-apple',
-  hbo: 'mdi-alpha-h-box',
-  'hbo max': 'mdi-alpha-h-box',
-  twitch: 'mdi-twitch',
-  dazn: 'mdi-soccer',
-  'now tv': 'mdi-television-play',
-  raiplay: 'mdi-television-classic',
-  mediaset: 'mdi-television-classic',
+  netflix: 'mdi-netflix', youtube: 'mdi-youtube', 'disney+': 'mdi-disney', disney: 'mdi-disney',
+  'prime video': 'mdi-amazon', 'amazon prime video': 'mdi-amazon', spotify: 'mdi-spotify',
+  'apple tv': 'mdi-apple', dazn: 'mdi-soccer', raiplay: 'mdi-television-classic',
+  'mediaset infinity': 'mdi-television-classic', stremio: 'mdi-play-circle', now: 'mdi-television-play',
 };
 
-function getAppIcon(appName?: string, source?: string): string {
-  const key = (appName || source || '').toLowerCase();
+function getAppIcon(source?: string): string {
+  const key = (source || '').toLowerCase();
   for (const [k, icon] of Object.entries(APP_ICONS)) {
     if (key.includes(k)) return icon;
   }
+  if (key.startsWith('hdmi')) return 'mdi-video-input-hdmi';
   return 'mdi-television';
 }
 
-/**
- * Modern multimedia TV card for the LG TV.
- * Shows artwork when playing, app info, quick transport controls,
- * and a power toggle. Tapping opens the full TV detail panel.
- */
 export function TvWidget({ entities, callHA, onOpenDetail }: Props) {
-  const entity = entities[CAST_ID];
-  const webosEntity = entities[WEBOS_ID];
-  const [powering, setPowering] = useState(false);
+  const entity = entities[TV_ID];
+  const [showSources, setShowSources] = useState(false);
 
-  const isOff =
-    !entity ||
-    entity.state === 'off' ||
-    entity.state === 'unavailable' ||
-    entity.state === 'standby';
+  const state = entity?.state ?? 'unavailable';
+  const isOff = state === 'off' || state === 'unavailable' || state === 'standby';
+  const isPlaying = state === 'playing';
+  const isPaused = state === 'paused';
 
-  const isPlaying = entity?.state === 'playing';
-  const isPaused = entity?.state === 'paused';
-  const isIdle = entity?.state === 'idle';
-  const isActive = isPlaying || isPaused || isIdle;
+  const attrs = entity?.attributes ?? {};
+  const source = attrs.source as string | undefined;
+  const sourceList = (attrs.source_list as string[]) ?? [];
+  const volume = attrs.volume_level as number | undefined;
+  const muted = attrs.is_volume_muted as boolean | undefined;
+  const title = attrs.media_title as string | undefined;
+  const artist = attrs.media_artist as string | undefined;
+  const picture = attrs.entity_picture as string | undefined;
+  const artUrl = picture ? (picture.startsWith('http') ? picture : `${HA_URL}${picture}`) : undefined;
 
-  const a = entity?.attributes ?? {};
-  const title = a.media_title as string | undefined;
-  const artist = a.media_artist as string | undefined;
-  const appName = a.app_name as string | undefined;
-  const source = (entity?.attributes.source as string | undefined) ??
-    (webosEntity?.attributes.source as string | undefined);
-  const volume = a.volume_level as number | undefined;
+  const volPct = volume != null ? Math.round(volume * 100) : null;
+  const appIcon = getAppIcon(source);
 
-  const artwork = isActive ? resolveArtwork(entity, CAST_ID, entities) : undefined;
-  const tint = useArtworkColor(artwork);
-
-  const appIcon = getAppIcon(appName, source);
-
-  const togglePower = async (e: React.MouseEvent) => {
+  const togglePower = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setPowering(true);
-    try {
-      if (isOff) {
-        await callHA('media_player', 'turn_on', undefined, { entity_id: WEBOS_ID });
-      } else {
-        await callHA('media_player', 'turn_off', undefined, { entity_id: WEBOS_ID });
-      }
-    } finally {
-      setTimeout(() => setPowering(false), 2000);
-    }
+    callHA('media_player', isOff ? 'turn_on' : 'turn_off', undefined, { entity_id: TV_ID });
   };
 
-  const playPause = (e: React.MouseEvent) => {
+  const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
-    callHA('media_player', 'media_play_pause', undefined, { entity_id: CAST_ID });
+    callHA('media_player', 'volume_mute', { is_volume_muted: !muted }, { entity_id: TV_ID });
   };
 
-  const volumeDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    callHA('media_player', 'volume_down', undefined, { entity_id: WEBOS_ID });
+  const setSource = (s: string) => {
+    callHA('media_player', 'select_source', { source: s }, { entity_id: TV_ID });
+    setShowSources(false);
   };
 
-  const volumeUp = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    callHA('media_player', 'volume_up', undefined, { entity_id: WEBOS_ID });
-  };
+  // Top 6 favorite sources to show as quick buttons
+  const favSources = ['Netflix', 'YouTube', 'Prime Video', 'Disney+', 'DAZN', 'RaiPlay']
+    .filter((s) => sourceList.some((sl) => sl.toLowerCase() === s.toLowerCase()));
 
   return (
-    <div
-      className={`tv-widget ${isOff ? 'is-off' : 'is-on'} ${isPlaying ? 'is-playing' : ''}`}
-      style={tint ? ({ '--tv-tint': tint } as React.CSSProperties) : undefined}
-      onClick={() => onOpenDetail(CAST_ID)}
-      role="button"
-      tabIndex={0}
-      aria-label="TV LG"
-    >
-      {/* Artwork backdrop (blurred) */}
-      {artwork && (
-        <div
-          className="tv-widget-backdrop"
-          style={{ backgroundImage: `url("${artwork}")` }}
-          aria-hidden="true"
-        />
-      )}
+    <div className="tvw" onClick={() => onOpenDetail(TV_ID)}>
+      {/* Artwork blur bg */}
+      {artUrl && !isOff && <div className="tvw-art-bg" style={{ backgroundImage: `url("${artUrl}")` }} />}
 
-      {/* Main content */}
-      <div className="tv-widget-content">
-        {/* Left: app icon or artwork thumbnail */}
-        <div className="tv-widget-visual">
-          {artwork ? (
-            <img className="tv-widget-art" src={artwork} alt={title || 'Now playing'} />
-          ) : (
-            <div className="tv-widget-icon-wrap">
-              <span className={`mdi ${appIcon}`} />
-            </div>
-          )}
-        </div>
-
-        {/* Center: info */}
-        <div className="tv-widget-info">
-          <div className="tv-widget-name">TV LG</div>
+      <div className="tvw-top">
+        <span className={`mdi ${appIcon} tvw-icon`} style={{ color: isOff ? 'var(--text-muted)' : '#a855f7' }} />
+        <div className="tvw-info">
+          <span className="tvw-name">TV LG</span>
           {isOff ? (
-            <div className="tv-widget-status">Spenta</div>
+            <span className="tvw-state">Spenta</span>
           ) : (
-            <>
-              {title && <div className="tv-widget-title">{title}</div>}
-              {artist && <div className="tv-widget-artist">{artist}</div>}
-              {!title && (appName || source) && (
-                <div className="tv-widget-app">{appName || source}</div>
-              )}
-              {!title && !appName && !source && (
-                <div className="tv-widget-status">Accesa</div>
-              )}
-            </>
+            <span className="tvw-state">{source || 'Accesa'}</span>
           )}
         </div>
-
-        {/* Right: controls */}
-        <div className="tv-widget-controls">
-          {!isOff && (
-            <>
-              <button className="tv-widget-btn" onClick={volumeDown} title="Volume -" aria-label="Volume giù">
-                <span className="mdi mdi-volume-minus" />
-              </button>
-              {isActive && (
-                <button className="tv-widget-btn tv-widget-btn-play" onClick={playPause} title={isPlaying ? 'Pausa' : 'Play'} aria-label={isPlaying ? 'Pausa' : 'Play'}>
-                  <span className={`mdi ${isPlaying ? 'mdi-pause' : 'mdi-play'}`} />
-                </button>
-              )}
-              <button className="tv-widget-btn" onClick={volumeUp} title="Volume +" aria-label="Volume su">
-                <span className="mdi mdi-volume-plus" />
-              </button>
-            </>
-          )}
-          <button
-            className={`tv-widget-btn tv-widget-btn-power ${isOff ? '' : 'is-on'} ${powering ? 'powering' : ''}`}
-            onClick={togglePower}
-            title={isOff ? 'Accendi' : 'Spegni'}
-            aria-label={isOff ? 'Accendi TV' : 'Spegni TV'}
-          >
-            <span className="mdi mdi-power" />
-          </button>
-        </div>
+        <button className={`tvw-power ${isOff ? '' : 'on'}`} onClick={togglePower}>
+          <span className="mdi mdi-power" />
+        </button>
       </div>
 
-      {/* Volume bar (thin, at the bottom) */}
-      {volume != null && !isOff && (
-        <div className="tv-widget-vol-track" aria-hidden="true">
-          <div className="tv-widget-vol-fill" style={{ width: `${Math.round(volume * 100)}%` }} />
+      {/* Now playing */}
+      {!isOff && (title || artist) && (
+        <div className="tvw-now">
+          {title && <span className="tvw-title">{title}</span>}
+          {artist && <span className="tvw-artist">{artist}</span>}
         </div>
+      )}
+
+      {/* Controls — only when on */}
+      {!isOff && (
+        <div className="tvw-controls" onClick={(e) => e.stopPropagation()}>
+          {/* Play/pause */}
+          {(isPlaying || isPaused) && (
+            <button className="tvw-btn" onClick={() => callHA('media_player', 'media_play_pause', undefined, { entity_id: TV_ID })}>
+              <span className={`mdi ${isPlaying ? 'mdi-pause' : 'mdi-play'}`} />
+            </button>
+          )}
+
+          {/* Mute */}
+          <button className={`tvw-btn ${muted ? 'muted' : ''}`} onClick={toggleMute}>
+            <span className={`mdi ${muted ? 'mdi-volume-off' : 'mdi-volume-high'}`} />
+          </button>
+
+          {/* Volume slider */}
+          {volPct != null && (
+            <input
+              type="range"
+              className="tvw-vol"
+              min={0}
+              max={100}
+              value={volPct}
+              onChange={(e) => callHA('media_player', 'volume_set', { volume_level: parseInt(e.target.value) / 100 }, { entity_id: TV_ID })}
+            />
+          )}
+          {volPct != null && <span className="tvw-vol-val">{volPct}%</span>}
+
+          {/* Source picker */}
+          <button className="tvw-btn tvw-src-btn" onClick={() => setShowSources((v) => !v)}>
+            <span className="mdi mdi-import" />
+          </button>
+        </div>
+      )}
+
+      {/* Quick source buttons */}
+      {!isOff && favSources.length > 0 && !showSources && (
+        <div className="tvw-fav-sources" onClick={(e) => e.stopPropagation()}>
+          {favSources.map((s) => (
+            <button
+              key={s}
+              className={`tvw-fav ${source?.toLowerCase() === s.toLowerCase() ? 'active' : ''}`}
+              onClick={() => setSource(s)}
+            >
+              <span className={`mdi ${getAppIcon(s)}`} />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Full source list popup */}
+      {showSources && (
+        <div className="tvw-source-list" onClick={(e) => e.stopPropagation()}>
+          {sourceList.map((s) => (
+            <button key={s} className={`tvw-source-item ${source === s ? 'active' : ''}`} onClick={() => setSource(s)}>
+              <span className={`mdi ${getAppIcon(s)}`} /> {s}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Volume bar bottom */}
+      {volPct != null && !isOff && (
+        <div className="tvw-vol-bar"><div className="tvw-vol-fill" style={{ width: `${volPct}%` }} /></div>
       )}
     </div>
   );
