@@ -162,6 +162,91 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
         </div>
       )}
 
+      {/* TV Control Center */}
+      {(() => {
+        const tv = entities['media_player.lg_tv'];
+        if (!tv) return null;
+        const tvState = tv.state;
+        const tvOff = tvState === 'off' || tvState === 'unavailable' || tvState === 'standby';
+        const tvAttrs = tv.attributes ?? {};
+        const tvSource = tvAttrs.source as string | undefined;
+        const tvVol = tvAttrs.volume_level as number | undefined;
+        const tvMuted = tvAttrs.is_volume_muted as boolean | undefined;
+        const tvTitle = tvAttrs.media_title as string | undefined;
+        const tvArtist = tvAttrs.media_artist as string | undefined;
+        const tvPic = tvAttrs.entity_picture as string | undefined;
+        const tvArt = tvPic ? (tvPic.startsWith('http') ? tvPic : `${HA_URL}${tvPic}`) : undefined;
+        const tvVolPct = tvVol != null ? Math.round(tvVol * 100) : null;
+        const tvPlaying = tvState === 'playing';
+        const tvPaused = tvState === 'paused';
+
+        const APPS = [
+          { name: 'Netflix', icon: 'mdi-netflix', color: '#e50914' },
+          { name: 'Prime Video', icon: 'mdi-amazon', color: '#00a8e1' },
+          { name: 'Disney+', icon: 'mdi-disney', color: '#113ccf' },
+          { name: 'YouTube', icon: 'mdi-youtube', color: '#ff0000' },
+          { name: 'DAZN', icon: 'mdi-soccer', color: '#f8f8f5' },
+          { name: 'RaiPlay', icon: 'mdi-television-classic', color: '#003fa2' },
+          { name: 'Stremio', icon: 'mdi-filmstrip', color: '#8b5cf6' },
+          { name: 'NOW', icon: 'mdi-television-play', color: '#06b6d4' },
+          { name: 'Mediaset Infinity', icon: 'mdi-television-classic', color: '#1e40af' },
+          { name: 'Apple TV', icon: 'mdi-apple', color: '#a3a3a3' },
+          { name: 'Spotify', icon: 'mdi-spotify', color: '#1db954' },
+          { name: 'HDMI 1', icon: 'mdi-video-input-hdmi', color: '#64748b' },
+          { name: 'HDMI 2', icon: 'mdi-video-input-hdmi', color: '#64748b' },
+        ];
+
+        return (
+          <div className="mp2-section">
+            <span className="mp2-stitle">TV LG</span>
+            <div className="mp2-tv">
+              {/* TV status + artwork */}
+              <div className="mp2-tv-head">
+                {tvArt && !tvOff && <div className="mp2-tv-art" style={{ backgroundImage: `url("${tvArt}")` }} />}
+                <div className="mp2-tv-info">
+                  <span className="mp2-tv-state">{tvOff ? 'Spenta' : tvSource || 'Accesa'}</span>
+                  {tvTitle && <span className="mp2-tv-title">{tvTitle}</span>}
+                  {tvArtist && <span className="mp2-tv-artist">{tvArtist}</span>}
+                </div>
+                <button className={`mp2-tv-power ${tvOff ? '' : 'on'}`} onClick={() => callHA('media_player', tvOff ? 'turn_on' : 'turn_off', undefined, { entity_id: 'media_player.lg_tv' })}>
+                  <span className="mdi mdi-power" />
+                </button>
+              </div>
+
+              {!tvOff && (
+                <>
+                  {/* Volume */}
+                  <div className="mp2-tv-vol">
+                    <button className="mp2-tv-btn" onClick={() => callHA('media_player', 'volume_mute', { is_volume_muted: !tvMuted }, { entity_id: 'media_player.lg_tv' })}>
+                      <span className={`mdi ${tvMuted ? 'mdi-volume-off' : 'mdi-volume-high'}`} />
+                    </button>
+                    <input type="range" className="mp2-tv-slider" min={0} max={100} value={tvVolPct ?? 0}
+                      onChange={(e) => callHA('media_player', 'volume_set', { volume_level: parseInt(e.target.value) / 100 }, { entity_id: 'media_player.lg_tv' })} />
+                    <span className="mp2-tv-volval">{tvVolPct}%</span>
+                    {(tvPlaying || tvPaused) && (
+                      <button className="mp2-tv-btn" onClick={() => callHA('media_player', 'media_play_pause', undefined, { entity_id: 'media_player.lg_tv' })}>
+                        <span className={`mdi ${tvPlaying ? 'mdi-pause' : 'mdi-play'}`} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* App launcher */}
+                  <div className="mp2-apps">
+                    {APPS.map((app) => (
+                      <button key={app.name} className={`mp2-app ${tvSource === app.name ? 'active' : ''}`}
+                        onClick={() => callHA('media_player', 'select_source', { source: app.name }, { entity_id: 'media_player.lg_tv' })}>
+                        <span className={`mdi ${app.icon}`} style={{ color: app.color }} />
+                        <span className="mp2-app-name">{app.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Devices */}
       <div className="mp2-section">
         <span className="mp2-stitle">DISPOSITIVI</span>
