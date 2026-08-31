@@ -63,12 +63,18 @@ function DeviceCard({ device, entity, callHA, onOpenDetail }: { device: DeviceDe
         </span>
       </div>
 
-      {/* Now playing */}
-      {isActive && (title || artist) && (
+      {/* Now playing info */}
+      {isActive && (title || artist || source) && (
         <div className="mp2-now">
           {title && <span className="mp2-title">{title}</span>}
           {artist && <span className="mp2-artist">{artist}</span>}
-          {app && !title && <span className="mp2-app">{app}</span>}
+          {!title && source && <span className="mp2-title">{source}</span>}
+          {!title && !source && app && <span className="mp2-app">{app}</span>}
+        </div>
+      )}
+      {!isActive && source && !isOff && (
+        <div className="mp2-now">
+          <span className="mp2-app">{source}</span>
         </div>
       )}
 
@@ -150,17 +156,7 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
         )}
       </div>
 
-      {/* Now playing section */}
-      {playing.length > 0 && (
-        <div className="mp2-section">
-          <span className="mp2-stitle">IN RIPRODUZIONE</span>
-          <div className="mp2-grid mp2-grid-playing">
-            {playing.map((d) => (
-              <DeviceCard key={d.entity_id} device={d} entity={entities[d.entity_id]} callHA={callHA} onOpenDetail={onOpenDetail} />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Now playing section — removed, devices are shown in unified grid below with active ones highlighted */}
 
       {/* TV Control Center */}
       {(() => {
@@ -247,14 +243,11 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
         );
       })()}
 
-      {/* Devices */}
+      {/* All devices — playing ones first, highlighted */}
       <div className="mp2-section">
         <span className="mp2-stitle">DISPOSITIVI</span>
         <div className="mp2-grid">
-          {idle.map((d) => (
-            <DeviceCard key={d.entity_id} device={d} entity={entities[d.entity_id]} callHA={callHA} onOpenDetail={onOpenDetail} />
-          ))}
-          {offline.map((d) => (
+          {[...playing, ...idle, ...offline].map((d) => (
             <DeviceCard key={d.entity_id} device={d} entity={entities[d.entity_id]} callHA={callHA} onOpenDetail={onOpenDetail} />
           ))}
         </div>

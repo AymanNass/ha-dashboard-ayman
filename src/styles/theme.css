@@ -3721,8 +3721,14 @@ body::after {
 .mp2-art {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  opacity: 0.15; filter: blur(20px) saturate(1.5);
+  opacity: 0.3; filter: blur(12px) saturate(1.4);
   pointer-events: none; border-radius: inherit;
+}
+.mp2-art::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+  border-radius: inherit;
 }
 
 .mp2-card-top { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
@@ -3735,9 +3741,9 @@ body::after {
 
 /* Now playing info */
 .mp2-now { position: relative; z-index: 1; }
-.mp2-title { font-size: 13px; font-weight: 700; color: var(--text-primary); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mp2-artist { font-size: 11px; color: var(--text-secondary); display: block; }
-.mp2-app { font-size: 11px; color: var(--text-muted); }
+.mp2-title { font-size: 14px; font-weight: 700; color: var(--text-primary); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp2-artist { font-size: 12px; color: var(--text-secondary); display: block; }
+.mp2-app { font-size: 12px; color: var(--text-muted); }
 
 /* Controls */
 .mp2-controls { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; }
