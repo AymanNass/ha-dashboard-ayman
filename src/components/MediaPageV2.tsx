@@ -24,7 +24,7 @@ const DEVICES: DeviceDef[] = [
   { entity_id: 'media_player.echo_dot_bagno', name: 'Echo Bagno', icon: 'mdi-speaker', room: 'Bagno', type: 'echo' },
   { entity_id: 'media_player.ovunque', name: 'Ovunque', icon: 'mdi-speaker-group', room: 'Tutta casa', type: 'group' },
   { entity_id: 'media_player.spotify_martina', name: 'Spotify', icon: 'mdi-spotify', room: 'Streaming', type: 'spotify' },
-  { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV LG', icon: 'mdi-television', room: 'Salotto', type: 'tv' },
+  { entity_id: 'media_player.lg_tv', name: 'TV LG', icon: 'mdi-television', room: 'Salotto', type: 'tv' },
 ];
 
 function DeviceCard({ device, entity, callHA, onOpenDetail }: { device: DeviceDef; entity: HassEntity | undefined; callHA: CallHA; onOpenDetail: (id: string) => void }) {

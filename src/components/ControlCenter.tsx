@@ -112,7 +112,7 @@ export function ControlCenter({ callHA }: Props) {
   ];
 
   const extraActions: QuickAction[] = [
-    { id: 'tvoff', icon: 'mdi-television-off', label: 'TV OFF', action: () => { callHA('media_player', 'turn_off', undefined, { entity_id: 'media_player.lg_webos_tv_oled65g26la' }); closeMenus(); } },
+    { id: 'tvoff', icon: 'mdi-television-off', label: 'TV OFF', action: () => { callHA('media_player', 'turn_off', undefined, { entity_id: 'media_player.lg_tv' }); closeMenus(); } },
     { id: 'audiooff', icon: 'mdi-volume-off', label: 'Audio OFF', action: () => { callHA('media_player', 'media_stop', undefined, { entity_id: ['media_player.2o_echo_dot_di_martina', 'media_player.3o_echo_dot_di_martina', 'media_player.ovunque_2'] }); closeMenus(); } },
     { id: 'salaoff', icon: 'mdi-sofa', label: 'Sala OFF', action: () => { callHA('light', 'turn_off', { }, { entity_id: ['light.luce_soggiorno', 'light.lampada_ciambella', 'light.lampada_sala'] }); closeMenus(); } },
     { id: 'cameraoff', icon: 'mdi-bed', label: 'Camera OFF', action: () => { callHA('light', 'turn_off', { }, { entity_id: ['light.luce_camera', 'light.luce_letto_ayman', 'light.luce_letto_martina'] }); closeMenus(); } },

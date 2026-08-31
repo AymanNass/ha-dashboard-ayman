@@ -37,7 +37,7 @@ export const rooms: Room[] = [
       { entity_id: 'cover.0xc02cedfffe163a38', name: 'Tapparella Salotto TV' },
       { entity_id: 'cover.tapparella_camera', name: 'Tapparella Camera' },
       { entity_id: 'climate.condizionatore_soggiorno_2', name: 'Condizionatore' },
-      { entity_id: 'media_player.lg_webos_tv_oled65g26la', name: 'TV' },
+      { entity_id: 'media_player.lg_tv', name: 'TV' },
     ],
   },
   {
