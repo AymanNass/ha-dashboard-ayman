@@ -3721,7 +3721,7 @@ body::after {
 .mp2-art {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  opacity: 0.3; filter: blur(12px) saturate(1.4);
+  opacity: 0.3; filter: blur(4px) saturate(1.4);
   pointer-events: none; border-radius: inherit;
 }
 .mp2-art::after {
@@ -3800,7 +3800,7 @@ body::after {
 .mp2-tv-art {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  opacity: 0.2; filter: blur(16px) saturate(1.3);
+  opacity: 0.2; filter: blur(4px) saturate(1.3);
 }
 .mp2-tv-art::after {
   content: ''; position: absolute; inset: 0;
@@ -6618,7 +6618,7 @@ html.vt-active .detail-panel.open > * {
 .tvw-art {
   position: absolute; inset: 0; z-index: 0;
   background-size: cover; background-position: center;
-  opacity: 0.25; filter: blur(16px) saturate(1.3);
+  opacity: 0.25; filter: blur(4px) saturate(1.3);
   pointer-events: none; border-radius: inherit;
 }
 .tvw-art::after {

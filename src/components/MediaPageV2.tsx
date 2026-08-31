@@ -135,6 +135,8 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
     return !e || e.state === 'off' || e.state === 'unavailable';
   });
 
+  const allDevices = [...playing, ...idle, ...offline].filter((d) => d.entity_id !== 'media_player.lg_tv');
+
   const stopAll = () => {
     if (confirm('Fermare la musica su tutti i dispositivi?')) {
       callHA('media_player', 'media_stop', undefined, { entity_id: DEVICES.map((d) => d.entity_id) });
@@ -247,7 +249,7 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
       <div className="mp2-section">
         <span className="mp2-stitle">DISPOSITIVI</span>
         <div className="mp2-grid">
-          {[...playing, ...idle, ...offline].map((d) => (
+          {allDevices.map((d) => (
             <DeviceCard key={d.entity_id} device={d} entity={entities[d.entity_id]} callHA={callHA} onOpenDetail={onOpenDetail} />
           ))}
         </div>
