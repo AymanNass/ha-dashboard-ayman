@@ -109,7 +109,7 @@ export function RoborockPanel({ entities, callHA }: Props) {
         {/* Top: Robot image + Battery ring + Status info */}
         <div className="rv-status-top">
           <div className="rv-robot-img">
-            <img src="/roborock.webp" alt="Roborock" />
+            <img src={`${import.meta.env.BASE_URL}roborock.webp`} alt="Roborock" />
           </div>
           <div className="rv-battery-ring">
             <svg viewBox="0 0 100 100">
