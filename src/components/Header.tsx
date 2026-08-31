@@ -144,7 +144,7 @@ export function Header({
           <div className="hdr-greeting">
             <span className="hdr-hello">
               {greeting},{' '}
-              {greetingName || ''} <span className="hdr-emoji">&#127769;</span>
+              {greetingName || ''}
             </span>
             <span className="hdr-time">{time}</span>
           </div>

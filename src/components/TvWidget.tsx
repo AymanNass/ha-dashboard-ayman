@@ -47,7 +47,13 @@ export function TvWidget({ entities, callHA, onOpenDetail }: Props) {
 
   const toggle = (e: React.MouseEvent) => {
     e.stopPropagation();
-    callHA('media_player', isOff ? 'turn_on' : 'turn_off', undefined, { entity_id: TV_ID });
+    if (isOff) {
+      // Wake-on-LAN to turn on
+      callHA('button', 'press', undefined, { entity_id: 'button.wake_on_lan_ac_b6_87_2f_d3_be' });
+    } else {
+      // WebOS to turn off
+      callHA('media_player', 'turn_off', undefined, { entity_id: TV_ID });
+    }
   };
 
   return (

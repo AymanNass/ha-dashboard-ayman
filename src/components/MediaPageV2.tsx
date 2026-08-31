@@ -211,7 +211,10 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
                   {tvTitle && <span className="mp2-tv-title">{tvTitle}</span>}
                   {tvArtist && <span className="mp2-tv-artist">{tvArtist}</span>}
                 </div>
-                <button className={`mp2-tv-power ${tvOff ? '' : 'on'}`} onClick={() => callHA('media_player', tvOff ? 'turn_on' : 'turn_off', undefined, { entity_id: 'media_player.lg_tv' })}>
+                <button className={`mp2-tv-power ${tvOff ? '' : 'on'}`} onClick={() => {
+                  if (tvOff) callHA('button', 'press', undefined, { entity_id: 'button.wake_on_lan_ac_b6_87_2f_d3_be' });
+                  else callHA('media_player', 'turn_off', undefined, { entity_id: 'media_player.lg_tv' });
+                }}>
                   <span className="mdi mdi-power" />
                 </button>
               </div>
