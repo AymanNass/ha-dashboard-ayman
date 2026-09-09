@@ -51,8 +51,11 @@ export function ControlCenter({ callHA }: Props) {
       },
     },
     {
-      id: 'buonanotte', icon: 'mdi-weather-night', label: 'Buonanotte', color: '#6366f1',
-      action: () => callHA('scene', 'turn_on', undefined, { entity_id: 'scene.buonanotte' }),
+      id: 'andiamo_dormire', icon: 'mdi-sleep', label: 'A dormire', color: '#6366f1',
+      action: () => {
+        if (confirm('Chiudo le tapparelle (camera e tavolo) e inserisco l\'allarme. Le luci restano come sono. Confermi?'))
+          callHA('script', 'turn_on', undefined, { entity_id: 'script.andiamo_a_dormire' });
+      },
     },
     {
       id: 'cinema', icon: 'mdi-movie-open', label: 'Film', color: '#a855f7',
