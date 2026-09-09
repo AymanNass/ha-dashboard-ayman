@@ -15,6 +15,7 @@ import { EntityPicker } from './components/DashboardView';
 import { SettingsModal } from './components/SettingsModal';
 import { SensorsModal } from './components/SensorsModal';
 import { ControlCenter } from './components/ControlCenter';
+import { WindowSuggestion } from './components/WindowSuggestion';
 import { NowPlayingTakeover } from './components/NowPlayingTakeover';
 import { Screensaver } from './components/Screensaver';
 import { CalendarFlyout } from './components/CalendarFlyout';
@@ -303,6 +304,10 @@ export default function App() {
 
         {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && (
           <ControlCenter callHA={callHA} />
+        )}
+
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && (
+          <WindowSuggestion entities={entities} onOpenDetail={setDetailEntity} />
         )}
 
         {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}
