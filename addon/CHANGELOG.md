@@ -1,4 +1,20 @@
 # Changelog
+## 2.2.0
+
+**Notifiche, sicurezza e batterie**
+
+- **Zona notifiche in home**: al posto del singolo suggerimento finestra, un riquadro che raccoglie gli avvisi dello stato reale della casa e li fa ruotare ogni 6s — serbatoio acqua sporca pieno, manca acqua, manutenzione robot (filtro/spazzole/sensori), errore robot, batterie scariche, tapparelle ancora aperte dopo le 22:30, e il consiglio apri-finestra (temperatura interno vs esterno). Tap per aprire la pagina robot/automazioni o la tapparella.
+- **Sezione batterie** nella pagina Automazioni: tutte le batterie con barre colorate, la più scarica in cima.
+- **Automazioni sicurezza** (solo iPhone Ayman, messaggi sobri): notifica se l'allarme suona o viene disinserito mentre sei fuori; notifica se la porta viene aperta mentre sei fuori (anti furto-chiavi).
+- **Promemoria robot del giovedì**: ricorda di passare l'aspirapolvere (solo notifica).
+- **Promemoria tapparelle la sera**: alle 23:45, se tavolo o camera sono ancora aperte, notifica con pulsante "Attiva Riposo".
+- **Notifiche robot manutenzione** e **clima acceso mentre sei fuori casa**.
+- **Toggle automazioni stagionali** nelle Impostazioni: attiva/disattiva "Clima notte camera" senza uscire dalla dashboard.
+- **Routine buonanotte**: "A dormire" (chiude camera+tavolo, arma allarme, luci invariate) e "Buonanotte con luce" (spegne tutto, camera al 50%, arma allarme).
+- **Meteo di sfondo dietro a tutto**: pioggia/neve sempre dietro all'interfaccia.
+- **Pagina Media**: launcher playlist Spotify + selettore Echo.
+- Scene Buonanotte/Riposo: rimossa la gestione del condizionatore (fuori stagione).
+
 ## 2.0.0 — Major Dashboard Restyling
 
 - **Premium header redesign**: compact greeting + mini status cards (alarm, lights, covers, temperature, door, humidity) + presence badges (Ayman & Martina with home/away indicator)
