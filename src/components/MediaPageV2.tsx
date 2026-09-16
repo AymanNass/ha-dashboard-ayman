@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
-import { HA_URL } from '../config';
+import { HA_URL, spotifyPlaylists, spotifyDevices } from '../config';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -122,6 +122,69 @@ function DeviceCard({ device, entity, callHA, onOpenDetail }: { device: DeviceDe
   );
 }
 
+// ── Music launcher: pick a playlist + target speakers, play via spotcast ──
+function MusicLauncher({ callHA }: { callHA: CallHA }) {
+  const [device, setDevice] = useState<string>(spotifyDevices[0]?.deviceName ?? '');
+  const [busy, setBusy] = useState<string | null>(null);
+
+  const play = async (uri: string) => {
+    if (!device) return;
+    setBusy(uri);
+    try {
+      await callHA('spotcast', 'start', {
+        uri,
+        device_name: device,
+        random_song: true,
+        shuffle: true,
+      });
+    } catch {
+      // spotcast can throw spurious errors but still start playback
+    } finally {
+      setTimeout(() => setBusy(null), 1800);
+    }
+  };
+
+  return (
+    <div className="mp2-section">
+      <span className="mp2-stitle">MUSICA</span>
+
+      {/* Target speaker selector */}
+      <div className="ml-targets">
+        {spotifyDevices.map((d) => (
+          <button
+            key={d.deviceName}
+            className={`ml-target ${device === d.deviceName ? 'active' : ''}`}
+            onClick={() => setDevice(d.deviceName)}
+          >
+            <span className={`mdi ${d.icon || 'mdi-speaker-wireless'}`} />
+            <span>{d.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Playlist tiles — tap to play on the selected speaker */}
+      <div className="ml-grid">
+        {spotifyPlaylists.map((pl) => (
+          <button
+            key={pl.uri}
+            className={`ml-tile ${busy === pl.uri ? 'busy' : ''}`}
+            onClick={() => play(pl.uri)}
+            disabled={busy !== null}
+          >
+            <span className="ml-tile-art">
+              <span className={`mdi ${busy === pl.uri ? 'mdi-loading mdi-spin' : pl.icon || 'mdi-playlist-music'}`} />
+            </span>
+            <span className="ml-tile-name">{pl.name}</span>
+            <span className="ml-tile-play">
+              <span className="mdi mdi-play" />
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
   // Find what's currently playing
   const playing = DEVICES.filter((d) => {
@@ -163,6 +226,9 @@ export function MediaPageV2({ entities, callHA, onOpenDetail }: Props) {
       </div>
 
       {/* Now playing section — removed, devices are shown in unified grid below with active ones highlighted */}
+
+      {/* Music launcher — playlists + target speakers */}
+      <MusicLauncher callHA={callHA} />
 
       {/* TV Control Center */}
       {(() => {

@@ -3696,6 +3696,50 @@ body::after {
 .mp2-stitle { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); opacity: 0.7; display: block; margin-bottom: 8px; }
 
 .mp2-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+
+/* ── Music launcher (playlists + target speakers) ── */
+.ml-targets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.ml-target {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--bg-glass); border: 1px solid var(--border-glass);
+  color: var(--text-secondary); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.16s ease;
+}
+.ml-target .mdi { font-size: 15px; }
+.ml-target:hover { border-color: var(--border-glass-light); color: var(--text-primary); }
+.ml-target.active {
+  background: rgba(29, 185, 84, 0.16);
+  border-color: rgba(29, 185, 84, 0.5);
+  color: #1db954;
+}
+.ml-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.ml-tile {
+  position: relative; display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; border-radius: 14px; text-align: left;
+  background:
+    linear-gradient(140deg, rgba(29, 185, 84, 0.12), rgba(255, 255, 255, 0.02) 65%),
+    var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  cursor: pointer; transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.ml-tile:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(29, 185, 84, 0.45); }
+.ml-tile:disabled { opacity: 0.6; cursor: default; }
+.ml-tile.busy { border-color: rgba(29, 185, 84, 0.6); }
+.ml-tile-art {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 10px;
+  background: rgba(29, 185, 84, 0.18); color: #1db954; font-size: 24px;
+}
+.ml-tile-name { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.2; }
+.ml-tile-play {
+  position: absolute; top: 12px; right: 12px;
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #1db954; color: #06210f; font-size: 16px;
+  opacity: 0; transform: scale(0.8); transition: all 0.16s ease;
+}
+.ml-tile:hover .ml-tile-play { opacity: 1; transform: scale(1); }
 .mp2-grid-playing { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 
 /* Device card */
@@ -3875,6 +3919,38 @@ body::after {
 
 /* ── Automations Page ── */
 .atp { padding-top: 4px; }
+
+/* Battery status band */
+.atp-batteries { margin-bottom: 16px; }
+.atp-batteries .atp-stitle { display: block; margin-bottom: 10px; }
+.atp-batt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+}
+.atp-batt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+}
+.atp-batt.low { border-color: rgba(245, 158, 11, 0.35); }
+.atp-batt.crit { border-color: rgba(239, 68, 68, 0.4); }
+.atp-batt-icon { font-size: 22px; flex-shrink: 0; }
+.atp-batt-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.atp-batt-name {
+  font-size: 12px; font-weight: 500; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.atp-batt-bar {
+  height: 4px; border-radius: 2px; overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+.atp-batt-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.atp-batt-pct { font-size: 13px; font-weight: 700; flex-shrink: 0; min-width: 34px; text-align: right; }
 .atp-cols { display: grid; grid-template-columns: 280px 1fr; gap: 14px; align-items: start; }
 .atp-stitle { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); opacity: 0.7; }
 .atp-stitle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -6613,6 +6689,61 @@ html.vt-active .detail-panel.open > * {
 .ws-in { font-size: 15px; color: var(--text-primary); }
 .ws-out { font-size: 15px; color: var(--ws-accent); }
 .ws-arrow { font-size: 13px; color: var(--text-muted); }
+
+/* ── Notification zone (rotating home alerts) ── */
+.nz { margin: 8px 0 4px; display: flex; flex-direction: column; gap: 6px; }
+.nz-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--nz-accent) 14%, transparent),
+      rgba(255, 255, 255, 0.02) 70%);
+  border: 1px solid color-mix(in srgb, var(--nz-accent) 30%, transparent);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.2s ease;
+  animation: nz-fade 0.4s ease;
+}
+.nz-card:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--nz-accent) 55%, transparent);
+}
+@keyframes nz-fade {
+  from { opacity: 0; transform: translateY(3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.nz-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--nz-accent) 20%, transparent);
+  color: var(--nz-accent);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.nz-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.nz-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.nz-sub {
+  font-size: 11.5px; color: var(--text-secondary); line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nz-temps { display: flex; align-items: center; gap: 5px; flex-shrink: 0; font-weight: 600; }
+.nz-in { font-size: 15px; color: var(--text-primary); }
+.nz-out { font-size: 15px; }
+.nz-arrow { font-size: 13px; color: var(--text-muted); }
+.nz-dots { display: flex; gap: 5px; justify-content: center; }
+.nz-dot {
+  width: 6px; height: 6px; border-radius: 50%; padding: 0;
+  border: none; background: var(--border-glass-light); cursor: pointer;
+  transition: background 0.2s ease, width 0.2s ease;
+}
+.nz-dot.active { background: var(--text-secondary); width: 16px; border-radius: 3px; }
 
 .plant-img {
   width: 48px;

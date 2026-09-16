@@ -96,11 +96,14 @@ export const spotifyPlaylists = [
   { name: 'Nostalgia Canaglia', uri: 'spotify:playlist:6Hr6dKFh9xQbFC1MpQR9FP', icon: 'mdi-emoticon-cool' },
 ];
 
-/** Devices available as Spotify playback targets (spotcast device_name). */
+/** Devices available as Spotify playback targets (spotcast device_name).
+ * These names MUST match the Spotify Connect device names exactly
+ * (media_player.spotify_martina source_list). */
 export const spotifyDevices = [
-  { name: 'Echo Camera', deviceName: 'Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
-  { name: 'Echo Salotto', deviceName: '3º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
-  { name: 'Echo Bagno', deviceName: '4º Echo Dot di Martina', icon: 'mdi-speaker-wireless' },
+  { name: 'Salotto', deviceName: 'Echo Dot Salotto', icon: 'mdi-speaker-wireless' },
+  { name: 'Camera', deviceName: 'Echo Dot Camer', icon: 'mdi-speaker-wireless' },
+  { name: 'Bagno', deviceName: 'Bagno Echo Dot', icon: 'mdi-speaker-wireless' },
+  { name: 'Ovunque', deviceName: 'Ovunque', icon: 'mdi-speaker-group' },
 ];
 
 export const locks = [

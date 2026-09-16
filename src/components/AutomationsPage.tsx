@@ -88,8 +88,58 @@ export function AutomationsPage({ entities, callHA }: Props) {
     }
   };
 
+  // Battery status: all battery sensors, worst first.
+  const batteries = useMemo(() => {
+    return Object.values(entities)
+      .filter((e) => e.attributes.device_class === 'battery' && e.entity_id.startsWith('sensor.'))
+      .map((e) => {
+        const level = parseFloat(e.state);
+        let name = (e.attributes.friendly_name as string) || e.entity_id;
+        name = name.replace(/\s*Batteria$/i, '').replace(/\s*Battery Level$/i, '').trim();
+        return { entity_id: e.entity_id, name, level: Number.isNaN(level) ? null : level };
+      })
+      .filter((b) => b.level != null)
+      .sort((a, b) => (a.level as number) - (b.level as number));
+  }, [entities]);
+
+  const batteryColor = (lvl: number) =>
+    lvl <= 15 ? '#ef4444' : lvl <= 30 ? '#f59e0b' : '#10b981';
+  const batteryIcon = (lvl: number) => {
+    if (lvl <= 10) return 'mdi-battery-alert-variant-outline';
+    if (lvl >= 95) return 'mdi-battery';
+    const step = Math.round(lvl / 10) * 10;
+    return `mdi-battery-${step}`;
+  };
+
   return (
     <div className="atp">
+      {/* ── Battery status band ── */}
+      {batteries.length > 0 && (
+        <div className="atp-batteries">
+          <span className="atp-stitle">BATTERIE</span>
+          <div className="atp-batt-grid">
+            {batteries.map((b) => (
+              <div key={b.entity_id} className={`atp-batt ${b.level! <= 15 ? 'crit' : b.level! <= 30 ? 'low' : ''}`}>
+                <span
+                  className={`mdi ${batteryIcon(b.level!)} atp-batt-icon`}
+                  style={{ color: batteryColor(b.level!) }}
+                />
+                <div className="atp-batt-info">
+                  <span className="atp-batt-name">{b.name}</span>
+                  <div className="atp-batt-bar">
+                    <div
+                      className="atp-batt-fill"
+                      style={{ width: `${b.level}%`, background: batteryColor(b.level!) }}
+                    />
+                  </div>
+                </div>
+                <span className="atp-batt-pct" style={{ color: batteryColor(b.level!) }}>{b.level}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="atp-cols">
         {/* ── LEFT: Activity log ── */}
         <div className="atp-log">
