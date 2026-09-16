@@ -32,11 +32,12 @@ interface Props {
   onStartBlank: () => void;
   onExportLayout: () => string;
   onImportLayout: (data: string | DashView[]) => void;
+  callHA?: (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 }
 
 type TestState = 'idle' | 'testing' | 'ok' | 'fail';
 
-export function SettingsModal({ onClose, entities, views, onResetLayout, onStartBlank, onExportLayout, onImportLayout }: Props) {
+export function SettingsModal({ onClose, entities, views, onResetLayout, onStartBlank, onExportLayout, onImportLayout, callHA }: Props) {
   const initial = getSettings();
   const { t, i18n } = useTranslation();
   const [haUrl, setHaUrl] = useState(initial.haUrl);
@@ -64,6 +65,18 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
   const [smartGrouping, setSmartGrouping] = useState(initial.smartGrouping);
   const [test, setTest] = useState<TestState>('idle');
   const [testMsg, setTestMsg] = useState('');
+
+  // Seasonal automations: live on/off toggles that call HA directly.
+  const CLIMA_NOTTE_ID = 'automation.clima_notte_condizionatore_camera_sleep';
+  const [climaNotteOn, setClimaNotteOn] = useState(
+    entities[CLIMA_NOTTE_ID]?.state === 'on',
+  );
+  const toggleClimaNotte = () => {
+    if (!callHA) return;
+    const next = !climaNotteOn;
+    setClimaNotteOn(next);
+    callHA('automation', next ? 'turn_on' : 'turn_off', undefined, { entity_id: CLIMA_NOTTE_ID });
+  };
   const [lang, setLang] = useState(() => localStorage.getItem('ha-dashboard-lang') ?? 'en');
 
   const pickLang = (l: string) => {
@@ -335,6 +348,32 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
               </button>
             </label>
           </section>
+
+          {/* Seasonal automations */}
+          {callHA && entities[CLIMA_NOTTE_ID] && (
+            <section className="settings-section">
+              <h4 className="settings-section-title">
+                <span className="mdi mdi-weather-partly-snowy-rainy" /> Automazioni stagionali
+              </h4>
+              <label className="ts-toggle-field">
+                <div className="ts-toggle-text">
+                  <span>Clima notte in camera</span>
+                  <small>
+                    Con Buonanotte/Riposo (21:00–04:00) accende il condizionatore camera in modalità
+                    notte (dry 25°) e lo spegne alle 07:00. Attivalo quando torna il caldo.
+                  </small>
+                </div>
+                <button
+                  className={`ts-switch ${climaNotteOn ? 'on' : ''}`}
+                  role="switch"
+                  aria-checked={climaNotteOn}
+                  onClick={toggleClimaNotte}
+                >
+                  <span className="ts-switch-knob" />
+                </button>
+              </label>
+            </section>
+          )}
 
           {/* Appearance */}
           <section className="settings-section">

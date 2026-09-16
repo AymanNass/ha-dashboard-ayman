@@ -430,6 +430,7 @@ export default function App() {
           onStartBlank={layout.startBlank}
           onExportLayout={layout.exportLayout}
           onImportLayout={layout.importLayout}
+          callHA={callHA}
         />
       )}
 
