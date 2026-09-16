@@ -68,11 +68,12 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
 
   // Seasonal automations: live on/off toggles that call HA directly.
   const CLIMA_NOTTE_ID = 'automation.clima_notte_condizionatore_camera_sleep';
+  const climaNotteAvailable = !!callHA && !!entities[CLIMA_NOTTE_ID];
   const [climaNotteOn, setClimaNotteOn] = useState(
     entities[CLIMA_NOTTE_ID]?.state === 'on',
   );
   const toggleClimaNotte = () => {
-    if (!callHA) return;
+    if (!callHA || !climaNotteAvailable) return;
     const next = !climaNotteOn;
     setClimaNotteOn(next);
     callHA('automation', next ? 'turn_on' : 'turn_off', undefined, { entity_id: CLIMA_NOTTE_ID });
@@ -350,30 +351,30 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
           </section>
 
           {/* Seasonal automations */}
-          {callHA && entities[CLIMA_NOTTE_ID] && (
-            <section className="settings-section">
-              <h4 className="settings-section-title">
-                <span className="mdi mdi-weather-partly-snowy-rainy" /> Automazioni stagionali
-              </h4>
-              <label className="ts-toggle-field">
-                <div className="ts-toggle-text">
-                  <span>Clima notte in camera</span>
-                  <small>
-                    Con Buonanotte/Riposo (21:00–04:00) accende il condizionatore camera in modalità
-                    notte (dry 25°) e lo spegne alle 07:00. Attivalo quando torna il caldo.
-                  </small>
-                </div>
-                <button
-                  className={`ts-switch ${climaNotteOn ? 'on' : ''}`}
-                  role="switch"
-                  aria-checked={climaNotteOn}
-                  onClick={toggleClimaNotte}
-                >
-                  <span className="ts-switch-knob" />
-                </button>
-              </label>
-            </section>
-          )}
+          <section className="settings-section">
+            <h4 className="settings-section-title">
+              <span className="mdi mdi-weather-partly-snowy-rainy" /> Automazioni stagionali
+            </h4>
+            <label className="ts-toggle-field">
+              <div className="ts-toggle-text">
+                <span>Clima notte in camera</span>
+                <small>
+                  Con Buonanotte/Riposo (21:00–04:00) accende il condizionatore camera in modalità
+                  notte (dry 25°) e lo spegne alle 07:00. Attivalo quando torna il caldo.
+                  {!climaNotteAvailable && ' — Non disponibile: connettiti a Home Assistant.'}
+                </small>
+              </div>
+              <button
+                className={`ts-switch ${climaNotteOn ? 'on' : ''}`}
+                role="switch"
+                aria-checked={climaNotteOn}
+                disabled={!climaNotteAvailable}
+                onClick={toggleClimaNotte}
+              >
+                <span className="ts-switch-knob" />
+              </button>
+            </label>
+          </section>
 
           {/* Appearance */}
           <section className="settings-section">
