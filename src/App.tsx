@@ -262,8 +262,9 @@ export default function App() {
   }, [view.scenes, entities]);
 
   return (
+    <>
+    <AmbientBackdrop entities={entities} />
     <div className={`app ${editing ? 'app-editing' : ''}`}>
-      <AmbientBackdrop entities={entities} />
       <Sidebar
         views={views}
         activeView={activeView}
@@ -538,6 +539,7 @@ export default function App() {
         </div>
       )}
     </div>
+    </>
   );
 }
 
