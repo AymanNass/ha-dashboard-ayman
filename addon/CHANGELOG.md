@@ -1,4 +1,14 @@
 # Changelog
+## 2.3.0
+
+**Musica, Control Center e piante**
+- **Pagina Musica**: griglia delle playlist Spotify con copertine, scelta dell'Echo su cui suonare e volume per stanza.
+- **Control Center a gruppi**: routine come scene dirette (Buonanotte, Riposo, Cinema, Buongiorno) e azioni raccolte in cluster — Spegni, Tapparelle, Trova iPhone.
+- **Promemoria allarme**: la sera "Allarme spento" con pulsante Inserisci, la mattina "Allarme inserito" con Disinserisci.
+- **Basilico**: il widget leggeva l'umidità dell'aria invece che del terreno. Ora legge il suolo, con avviso di annaffiare sotto il 50%.
+- **Robot**: ID stanze allineati alla mappa reale e pulsante "Torna alla base" quando resta fermo lontano dal dock.
+- **Tapparelle nell'header**: contate come aperte solo oltre il 60%.
+
 ## 2.2.0
 
 **Notifiche, sicurezza e batterie**
