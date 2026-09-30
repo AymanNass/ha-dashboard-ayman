@@ -27,6 +27,7 @@ import { ClimateView } from './ClimateView';
 import { RobotPageV2 } from './RobotPageV2';
 import { AutomationsPage } from './AutomationsPage';
 import { MediaPageV2 } from './MediaPageV2';
+import { MusicaPage } from './MusicaPage';
 import { CalendarPage } from './CalendarPage';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
@@ -46,7 +47,7 @@ import { RoborockPanel } from './RoborockPanel';
 import { PlantWidget } from './PlantWidget';
 import { TvWidget } from './TvWidget';
 import { RobotMiniCard } from './RobotMiniCard';
-import { spotifyPlaylists, spotifyDevices } from '../config';
+import { spotifyPlaylists, spotifyDevices, basilMoisture } from '../config';
 import { useTranslation } from 'react-i18next';
 
 /** Subscribe to the "compact sections" preference (live-updated from Settings).
@@ -317,6 +318,16 @@ export function DashboardView(props: Props) {
     );
   }
 
+  if (view.kind === 'musica') {
+    return (
+      <MusicaPage
+        entities={entities}
+        callHA={props.callHA}
+        onOpenDetail={props.onOpenDetail}
+      />
+    );
+  }
+
   if (view.kind === 'climate') {
     return (
       <ClimateView
@@ -490,7 +501,13 @@ export function DashboardView(props: Props) {
                   )}
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
-                      <PlantWidget entities={entities} />
+                      <PlantWidget
+                        entities={entities}
+                        plants={[
+                          { name: 'Strelitzia', moistureId: 'sensor.0xa4c1387ce7871bf9_soil_moisture', tempId: 'sensor.0xa4c1387ce7871bf9_temperature', icon: 'mdi-flower' },
+                          { name: 'Basilico', moistureId: basilMoisture.entity, tempId: 'sensor.0xa4c1381f439ee5f2_temperature', icon: 'mdi-sprout', thirstyBelow: basilMoisture.thirstyBelow, criticalBelow: basilMoisture.criticalBelow },
+                        ]}
+                      />
                       <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
                     </div>
                   )}

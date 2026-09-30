@@ -303,12 +303,12 @@ export default function App() {
           onOpenCalendar={() => setCalendarOpen(true)}
         />
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && (
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
           <ControlCenter callHA={callHA} />
         )}
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && (
-          <NotificationZone entities={entities} onOpenDetail={setDetailEntity} onNavigate={goToView} />
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
+          <NotificationZone entities={entities} callHA={callHA} onOpenDetail={setDetailEntity} onNavigate={goToView} />
         )}
 
         {/* GlanceStrip hidden — replaced by custom glance-bar in Header */}

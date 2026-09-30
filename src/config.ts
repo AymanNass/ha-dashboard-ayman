@@ -90,7 +90,7 @@ export const rooms: Room[] = [
 
 export const cameras: { entity_id: string; name: string }[] = [];
 
-/** Spotify playlists shown in the Media page picker. */
+/** Spotify playlists shown in the Media page picker (legacy). */
 export const spotifyPlaylists = [
   { name: 'My Ears Fav', uri: 'spotify:playlist:4aD5AzcM210BUZL9etOSHY', icon: 'mdi-heart' },
   { name: 'Nostalgia Canaglia', uri: 'spotify:playlist:6Hr6dKFh9xQbFC1MpQR9FP', icon: 'mdi-emoticon-cool' },
@@ -104,6 +104,53 @@ export const spotifyDevices = [
   { name: 'Camera', deviceName: 'Echo Dot Camer', icon: 'mdi-speaker-wireless' },
   { name: 'Bagno', deviceName: 'Bagno Echo Dot', icon: 'mdi-speaker-wireless' },
   { name: 'Ovunque', deviceName: 'Ovunque', icon: 'mdi-speaker-group' },
+];
+
+// ── Musica page (Spotify control center) ──────────────────────────────
+
+/** The Spotify integration player that receives select_source + play_media. */
+export const SPOTIFY_PLAYER = 'media_player.spotify_martina';
+
+/** A Spotify playlist shown in the Musica page grid. */
+export interface MusicPlaylist {
+  name: string;
+  uri: string;
+  /** Cover art URL (from Spotify oEmbed). */
+  image?: string;
+  /** Fallback mdi icon if no image. */
+  icon?: string;
+}
+
+/** Playlists shown in the Musica page grid. */
+export const musicPlaylists: MusicPlaylist[] = [
+  { name: "My ears' favs", uri: 'spotify:playlist:4aD5AzcM210BUZL9etOSHY', image: 'https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da84cc98e9c62335d1df4ca9dbbe', icon: 'mdi-heart' },
+  { name: 'Bathtub', uri: 'spotify:playlist:5V7k9UFqx9NIYIvW1AZtz6', image: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84933e874bcbe10985fcbe58b7', icon: 'mdi-bathtub' },
+  { name: 'Despaciti e quelle robe lì', uri: 'spotify:playlist:3R0n2BMlrxdGvM9GRjzNF4', image: 'https://mosaic.scdn.co/300/ab67616d00001e027d46593471038b38e40d59a7ab67616d00001e02a5971936e3b8d91f8b616b17ab67616d00001e02ef289e90cdbe56a19ada6b13ab67616d00001e02f634ce4f69fc4a7113d35217', icon: 'mdi-party-popper' },
+  { name: 'Nostalgia canaglia', uri: 'spotify:playlist:6Hr6dKFh9xQbFC1MpQR9FP', image: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da845d7a759796b12fafdc6f182a', icon: 'mdi-emoticon-cool' },
+  { name: '🇮🇹 90s-00s', uri: 'spotify:playlist:2Nljm6GiVdPef3phaTmKTC', image: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84d99c5e7d06d714edd0ba8d68', icon: 'mdi-cassette' },
+  { name: 'Car Trip', uri: 'spotify:playlist:00Hvk5bBNmgsX9X774SD9l', image: 'https://image-cdn-fa.spotifycdn.com/image/ab67706c0000da84ed95e1cc16af21027d7fd33c', icon: 'mdi-car' },
+  { name: 'This Is Fabri Fibra', uri: 'spotify:playlist:37i9dQZF1DZ06evO4qMzMQ', image: 'https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/thisisv3/7u710e44HW3K7A5eTnRqHC/it', icon: 'mdi-microphone' },
+  { name: 'This Is Kid Yugi', uri: 'spotify:playlist:37i9dQZF1DZ06evO0k90RQ', image: 'https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/thisisv3/0EUR8jz8L936AEbV2Spkca/it', icon: 'mdi-microphone' },
+  { name: 'This Is Nerissima Serpe', uri: 'spotify:playlist:37i9dQZF1DZ06evO00A48z', image: 'https://pickasso.spotifycdn.com/image/ab67c0de0000deef/dt/v1/img/thisisv3/08ppjXEpROUgrG1X0DEquB/it', icon: 'mdi-microphone' },
+];
+
+/** A playback target for the Musica page. */
+export interface MusicDevice {
+  /** Label shown in the UI. */
+  name: string;
+  /** Spotify Connect source name — MUST match media_player.spotify_martina source_list exactly. */
+  source: string;
+  /** Echo media_player entity used for per-room volume + now-playing fallback. */
+  entity_id: string;
+  icon: string;
+}
+
+/** Speakers available as Spotify playback targets in the Musica page. */
+export const musicDevices: MusicDevice[] = [
+  { name: 'Camera', source: 'Echo Dot Camer', entity_id: 'media_player.echo_dot_di_martina', icon: 'mdi-bed' },
+  { name: 'Salotto', source: 'Echo Dot Salotto', entity_id: 'media_player.3o_echo_dot_di_martina', icon: 'mdi-sofa' },
+  { name: 'Bagno', source: 'Bagno Echo Dot', entity_id: 'media_player.echo_dot_bagno', icon: 'mdi-shower' },
+  { name: 'Ovunque', source: 'Ovunque', entity_id: 'media_player.ovunque', icon: 'mdi-speaker-group' },
 ];
 
 export const locks = [
@@ -122,9 +169,28 @@ export const sensorWidgets = [
   { entity_id: 'sensor.umidita_camera', name: 'Umidità Camera', icon: 'mdi-water-percent', unit: '%' },
   { entity_id: 'sensor.0xa4c138304177ffff_temperature', name: 'Temp. Bagno', icon: 'mdi-thermometer', unit: '°C' },
   { entity_id: 'sensor.0xa4c138304177ffff_humidity', name: 'Umidità Bagno', icon: 'mdi-water-percent', unit: '%' },
-  { entity_id: 'sensor.0xa4c1387ce7871bf9_soil_moisture', name: 'Umidità Pianta', icon: 'mdi-flower', unit: '%' },
+  { entity_id: 'sensor.0xa4c1387ce7871bf9_soil_moisture', name: 'Umidità Strelitzia', icon: 'mdi-flower', unit: '%' },
+  { entity_id: 'sensor.0xa4c1381f439ee5f2_soil_moisture', name: 'Umidità Basilico', icon: 'mdi-sprout', unit: '%' },
   { entity_id: 'sensor.roborock_qv_35a_batteria', name: 'Roborock Batteria', icon: 'mdi-robot-vacuum', unit: '%' },
 ];
+
+/**
+ * Basilico — soglie di umidità del suolo (%).
+ *
+ * Unica fonte di verità per il widget piante e per la notifica "da annaffiare":
+ * tenerle in due posti le aveva già fatte divergere (notifica a 25, widget a 30),
+ * lasciando una fascia in cui il widget segnalava e la notifica taceva.
+ *
+ * Usa `sensor...._soil_moisture` (terreno) e NON `..._humidity`, che su questo
+ * sensore Tuya è l'umidità dell'aria.
+ */
+export const basilMoisture = {
+  entity: 'sensor.0xa4c1381f439ee5f2_soil_moisture',
+  /** Sotto questa: "Annaffia presto" (ambra) + notifica in home. */
+  thirstyBelow: 50,
+  /** Sotto questa: "Ha sete" (rosso). */
+  criticalBelow: 35,
+} as const;
 
 /**
  * Dashboard views
@@ -151,6 +217,7 @@ export const views: DashView[] = [
           { entity_id: 'sensor.temperatura_salotto', name: 'Temp', icon: 'mdi-thermometer' },
           { entity_id: 'sensor.umidita_salotto', name: 'Umidità', icon: 'mdi-water-percent' },
           { entity_id: 'light.luce_soggiorno', name: 'Muro salotto', icon: 'mdi-wall-sconce-flat' },
+          { entity_id: 'light.salotto_luce_tavolo', name: 'Luce tavolo', icon: 'mdi-table-furniture' },
           { entity_id: 'light.lampada_ciambella', name: 'Lampada ciambella', icon: 'mdi-circle-outline' },
           { entity_id: 'light.lampada_sala', name: 'Lampada sala', icon: 'mdi-desk-lamp' },
         ],
@@ -230,10 +297,10 @@ export const views: DashView[] = [
     ],
   },
   {
-    id: 'media',
-    name: 'Media',
+    id: 'musica',
+    name: 'Musica',
     icon: 'mdi-music',
-    kind: 'media-v2' as DashView['kind'],
+    kind: 'musica' as DashView['kind'],
     sections: [],
   },
   {

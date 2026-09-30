@@ -103,7 +103,14 @@ export function Header({
   const alarmEntity = entities['alarm_control_panel.casa'];
   const alarmState = alarmEntity?.state;
   const alarmArmed = alarmState?.startsWith('armed');
-  const coversOpen = Object.values(entities).filter(e => e.entity_id.startsWith('cover.') && e.state === 'open').length;
+  // Una tapparella conta come "aperta" solo se lo è per più del 60%.
+  // Se è chiusa fino al 60% (current_position <= 60) la consideriamo chiusa.
+  const coversOpen = Object.values(entities).filter(e => {
+    if (!e.entity_id.startsWith('cover.') || e.state !== 'open') return false;
+    const pos = e.attributes?.current_position;
+    if (pos != null && Number(pos) <= 60) return false;
+    return true;
+  }).length;
   const coversTotal = Object.values(entities).filter(e => e.entity_id.startsWith('cover.')).length;
   const tempSalotto = entities['sensor.temperatura_salotto']?.state;
   const humSalotto = entities['sensor.umidita_salotto']?.state;
@@ -120,8 +127,8 @@ export function Header({
       if (confirm('Vuoi disarmare l\'allarme?'))
         callHA('alarm_control_panel', 'alarm_disarm', undefined, { entity_id: 'alarm_control_panel.casa' });
     } else {
-      if (confirm('Vuoi armare l\'allarme?'))
-        callHA('alarm_control_panel', 'alarm_arm_away', undefined, { entity_id: 'alarm_control_panel.casa' });
+      if (confirm('Vuoi armare l\'allarme (casa)?'))
+        callHA('alarm_control_panel', 'alarm_arm_home', undefined, { entity_id: 'alarm_control_panel.casa' });
     }
   };
 

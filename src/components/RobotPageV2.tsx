@@ -10,15 +10,17 @@ interface Props {
   onOpenDetail: (entityId: string) => void;
 }
 
-// ── Room segment IDs (from Roborock integration) ──
+// ── Room segment IDs ──
+// Must match the robot's actual map segments. These are the same IDs used by
+// the HA scripts (script.pulisci_* and roborock_pulisci_stanze_selezionate).
 const ROOMS = [
   { id: 0, name: 'Tutte', icon: 'mdi-home' },
-  { id: 16, name: 'Soggiorno', icon: 'mdi-sofa' },
-  { id: 17, name: 'Cucina', icon: 'mdi-countertop' },
-  { id: 18, name: 'Bagno', icon: 'mdi-shower' },
-  { id: 19, name: 'Corridoio', icon: 'mdi-foot-print' },
-  { id: 20, name: 'Camera', icon: 'mdi-bed-king' },
-  { id: 21, name: 'Cameretta', icon: 'mdi-baby-face-outline' },
+  { id: 1, name: 'Soggiorno', icon: 'mdi-sofa' },
+  { id: 2, name: 'Cucina', icon: 'mdi-countertop' },
+  { id: 3, name: 'Bagno', icon: 'mdi-shower' },
+  { id: 4, name: 'Corridoio', icon: 'mdi-foot-print' },
+  { id: 5, name: 'Camera', icon: 'mdi-bed-king' },
+  { id: 6, name: 'Cameretta', icon: 'mdi-baby-face-outline' },
 ];
 
 type CleanMode = 'vac' | 'vac_and_mop' | 'mop';
@@ -52,6 +54,10 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
   const vacState = vac?.state ?? 'unavailable';
   const isCleaning = vacState === 'cleaning';
   const isPaused = vacState === 'paused';
+  // Robot is idle/stopped somewhere away from the dock (not docked, not charging,
+  // not returning). In that case offer a "go home" button on the start screen.
+  const awayFromDock =
+    !isCleaning && !isPaused && vacState !== 'docked' && vacState !== 'returning' && vacState !== 'unavailable';
 
   // Sensors
   const battery = parseFloat(entities['sensor.roborock_qv_35a_batteria']?.state ?? '0');
@@ -324,6 +330,13 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
               <button className="rv2-cta" onClick={startClean}>
                 <span className="mdi mdi-play" /> Avvia pulizia · {roomCount} {typeof roomCount === 'number' ? (roomCount === 1 ? 'stanza' : 'stanze') : 'le stanze'}
               </button>
+
+              {/* Robot stopped away from the dock → let it go home */}
+              {awayFromDock && (
+                <button className="rv2-ctrl-btn rv2-gohome" onClick={() => callHA('vacuum', 'return_to_base', undefined, { entity_id: 'vacuum.roborock_qv_35a' })}>
+                  <span className="mdi mdi-home-import-outline" /> Torna alla base
+                </button>
+              )}
             </>
           ) : (
             /* ── Cleaning in progress ── */

@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
+import { basilMoisture } from '../config';
+
+type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
 interface Props {
   entities: HassEntities;
+  callHA?: CallHA;
   onOpenDetail?: (entityId: string) => void;
   onNavigate?: (viewId: string) => void;
 }
@@ -18,6 +22,8 @@ interface Notice {
   onClick?: () => void;
   /** Optional right-side badge (e.g. temps for the window tip). */
   right?: React.ReactNode;
+  /** Optional inline action button (label + handler). */
+  action?: { label: string; run: () => void };
 }
 
 const OUTDOOR_ID = 'weather.forecast_casa';
@@ -44,8 +50,11 @@ function num(entities: HassEntities, id: string): number | null {
  * seasonal window-open tip, and rotates through them every few seconds when
  * there is more than one. Replaces the old single WindowSuggestion banner.
  */
-export function NotificationZone({ entities, onOpenDetail, onNavigate }: Props) {
+export function NotificationZone({ entities, callHA, onOpenDetail, onNavigate }: Props) {
   const notices: Notice[] = [];
+  const now = new Date();
+  const hh = now.getHours();
+  const mm = now.getMinutes();
 
   // ── Robot: dirty water tank full ──
   if (entities['binary_sensor.roborock_qv_35a_dock_dirty_water_box']?.state === 'on') {
@@ -132,13 +141,18 @@ export function NotificationZone({ entities, onOpenDetail, onNavigate }: Props) 
   }
 
   // ── Late-open shutters (after 22:30, tavolo/camera still open) ──
-  const hour = new Date().getHours();
-  const minute = new Date().getMinutes();
-  const isLate = hour >= 22 && (hour > 22 || minute >= 30);
+  const isLate = hh >= 22 && (hh > 22 || mm >= 30);
   const openLate = [
     { id: 'cover.tapparella_tavolo', name: 'Tavolo' },
     { id: 'cover.tapparella_camera', name: 'Camera' },
-  ].filter((c) => entities[c.id]?.state === 'open');
+  ].filter((c) => {
+    const e = entities[c.id];
+    if (e?.state !== 'open') return false;
+    // Chiusa fino al 60% (posizione <= 60) → considerata chiusa, niente avviso.
+    const pos = e.attributes?.current_position;
+    if (pos != null && Number(pos) <= 60) return false;
+    return true;
+  });
   if (isLate && openLate.length) {
     notices.push({
       id: 'shutters-late',
@@ -149,6 +163,95 @@ export function NotificationZone({ entities, onOpenDetail, onNavigate }: Props) 
       priority: 4,
       onClick: () => onOpenDetail?.(openLate[0].id),
     });
+  }
+
+  // ── Alarm: arm before sleep (from 23:30) ──
+  const alarm = entities['alarm_control_panel.casa'];
+  const alarmDisarmed = alarm?.state === 'disarmed';
+  const alarmArmed = alarm?.state?.startsWith('armed');
+  const afterBedtime = hh === 23 && mm >= 30;
+  if (afterBedtime && alarmDisarmed && callHA) {
+    notices.push({
+      id: 'arm-night',
+      icon: 'mdi-shield-moon',
+      accent: '#6366f1',
+      title: 'Allarme spento',
+      sub: 'È tardi e l’allarme è disinserito. Inseriscilo prima di dormire.',
+      priority: 7,
+      action: { label: 'Inserisci', run: () => callHA('alarm_control_panel', 'alarm_arm_home', undefined, { entity_id: 'alarm_control_panel.casa' }) },
+    });
+  }
+
+  // ── Alarm: disarm in the morning (06:00–11:00) ──
+  const morning = hh >= 6 && hh < 11;
+  if (morning && alarmArmed && callHA) {
+    notices.push({
+      id: 'disarm-morning',
+      icon: 'mdi-shield-off-outline',
+      accent: '#10b981',
+      title: 'Allarme inserito',
+      sub: 'Buongiorno! Vuoi disinserire l’allarme?',
+      priority: 7,
+      action: { label: 'Disinserisci', run: () => callHA('alarm_control_panel', 'alarm_disarm', undefined, { entity_id: 'alarm_control_panel.casa' }) },
+    });
+  }
+
+  // ── Strelitzia: only when the problem is low moisture (needs water) ──
+  const plant = entities['plant.strelitzia'];
+  if (plant?.state === 'problem') {
+    const problem = String(plant.attributes?.problem ?? '');
+    const moisture = plant.attributes?.moisture as number | undefined;
+    // Only surface a "give water" suggestion when soil moisture is LOW.
+    // "moisture high" (too wet), temperature issues, etc. are ignored here.
+    if (problem.includes('moisture low')) {
+      notices.push({
+        id: 'strelitzia',
+        icon: 'mdi-flower',
+        accent: '#22c55e',
+        title: 'Strelitzia · da annaffiare',
+        sub: `Terreno secco${moisture != null ? ` (${Math.round(moisture)}%)` : ''}. Dai acqua alla pianta.`,
+        priority: 3,
+        onClick: () => onOpenDetail?.('plant.strelitzia'),
+      });
+    }
+  }
+
+  // ── Basilico: needs water when soil moisture is low ──
+  // Soglia condivisa con il widget piante (vedi basilMoisture in config.ts).
+  const BASIL_MOISTURE = basilMoisture.entity;
+  const BASIL_DRY_BELOW = basilMoisture.thirstyBelow;
+  const basil = num(entities, BASIL_MOISTURE);
+  if (basil != null && basil > 0 && basil < BASIL_DRY_BELOW) {
+    notices.push({
+      id: 'basilico',
+      icon: 'mdi-sprout',
+      accent: '#22c55e',
+      title: 'Basilico · da annaffiare',
+      sub: `Umidità del terreno al ${Math.round(basil)}%. Dai acqua al basilico.`,
+      priority: 3,
+      onClick: () => onOpenDetail?.(BASIL_MOISTURE),
+    });
+  }
+
+  // ── Robot: idle for 3+ days ──
+  const lastClean = entities['sensor.roborock_qv_35a_fine_dell_ultima_pulizia']?.state;
+  if (lastClean) {
+    const t = new Date(lastClean).getTime();
+    if (!Number.isNaN(t)) {
+      const days = (now.getTime() - t) / 86400000;
+      const docked = entities['vacuum.roborock_qv_35a']?.state === 'docked';
+      if (days >= 3 && docked && callHA) {
+        notices.push({
+          id: 'robot-idle',
+          icon: 'mdi-robot-vacuum',
+          accent: '#06b6d4',
+          title: 'Robot fermo da giorni',
+          sub: `Ultima pulizia ${Math.floor(days)} giorni fa. Vuoi avviarlo?`,
+          priority: 4,
+          action: { label: 'Avvia', run: () => callHA('vacuum', 'start', undefined, { entity_id: 'vacuum.roborock_qv_35a' }) },
+        });
+      }
+    }
   }
 
   // ── Window-open tip (indoor vs outdoor temp) ──
@@ -192,52 +295,71 @@ export function NotificationZone({ entities, onOpenDetail, onNavigate }: Props) 
 
   notices.sort((a, b) => b.priority - a.priority);
 
-  const [idx, setIdx] = useState(0);
+  const PER_PAGE = 3;
+  const pageCount = Math.ceil(notices.length / PER_PAGE);
 
-  // Reset index if the list shrinks below the current position.
-  useEffect(() => {
-    if (idx >= notices.length) setIdx(0);
-  }, [notices.length, idx]);
+  const [page, setPage] = useState(0);
 
-  // Rotate through notices when there's more than one.
+  // Reset page if the list shrinks below the current position.
   useEffect(() => {
-    if (notices.length <= 1) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % notices.length), ROTATE_MS);
+    if (page >= pageCount) setPage(0);
+  }, [pageCount, page]);
+
+  // Rotate through pages when there's more than one page.
+  useEffect(() => {
+    if (pageCount <= 1) return;
+    const t = setInterval(() => setPage((p) => (p + 1) % pageCount), ROTATE_MS);
     return () => clearInterval(t);
-  }, [notices.length]);
+  }, [pageCount]);
 
   if (!notices.length) return null;
 
-  const active = notices[Math.min(idx, notices.length - 1)];
+  const start = Math.min(page, pageCount - 1) * PER_PAGE;
+  const visible = notices.slice(start, start + PER_PAGE);
 
   return (
     <div className="nz">
-      <div
-        key={active.id}
-        className="nz-card"
-        style={{ ['--nz-accent' as string]: active.accent }}
-        onClick={active.onClick}
-      >
-        <span className="nz-icon">
-          <span className={`mdi ${active.icon}`} />
-        </span>
-        <div className="nz-text">
-          <span className="nz-title">{active.title}</span>
-          <span className="nz-sub">{active.sub}</span>
-        </div>
-        {active.right}
+      <div className="nz-row">
+        {visible.map((n) => (
+          <div
+            key={n.id}
+            className="nz-card"
+            style={{ ['--nz-accent' as string]: n.accent }}
+            onClick={n.onClick}
+          >
+            <span className="nz-icon">
+              <span className={`mdi ${n.icon}`} />
+            </span>
+            <div className="nz-text">
+              <span className="nz-title">{n.title}</span>
+              <span className="nz-sub">{n.sub}</span>
+            </div>
+            {n.right}
+            {n.action && (
+              <button
+                className="nz-action"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  n.action!.run();
+                }}
+              >
+                {n.action.label}
+              </button>
+            )}
+          </div>
+        ))}
       </div>
 
-      {notices.length > 1 && (
+      {pageCount > 1 && (
         <div className="nz-dots">
-          {notices.map((n, i) => (
+          {Array.from({ length: pageCount }).map((_, i) => (
             <button
-              key={n.id}
-              className={`nz-dot ${i === idx ? 'active' : ''}`}
-              aria-label={n.title}
+              key={i}
+              className={`nz-dot ${i === page ? 'active' : ''}`}
+              aria-label={`Pagina ${i + 1}`}
               onClick={(e) => {
                 e.stopPropagation();
-                setIdx(i);
+                setPage(i);
               }}
             />
           ))}
