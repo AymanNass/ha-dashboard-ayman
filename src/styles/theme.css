@@ -622,6 +622,41 @@ body::after {
 .cc-hero:active { transform: scale(0.96); }
 .cc-hero-back { background: linear-gradient(135deg, #10b981, #059669); }
 .cc-hero-leave { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+/* Split hero: the wrapper carries the colour, the two buttons inside stay
+   transparent so they read as a single pill with a divider. */
+.cc-hero-split {
+  display: flex;
+  align-items: stretch;
+  flex: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cc-hero-split .cc-hero {
+  background: none;
+  border-radius: 0;
+}
+.cc-hero-extra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  flex: none;
+  padding: 0;
+  border: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(0, 0, 0, 0.14);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, transform 0.08s;
+}
+.cc-hero-extra .mdi { font-size: 18px; }
+.cc-hero-extra:hover { background: rgba(0, 0, 0, 0.28); }
+.cc-hero-extra:active { transform: scale(0.94); }
+.cc-hero-extra:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -3px;
+}
 
 /* Routine + quick-action buttons — compact, in one row */
 .cc-btn {

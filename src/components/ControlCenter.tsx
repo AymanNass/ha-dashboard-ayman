@@ -31,6 +31,19 @@ export function ControlCenter({ callHA }: Props) {
       callHA('automation', 'trigger', undefined, { entity_id: 'automation.pulsantiera_corridoio_tasto_2_i_m_leaving' });
   };
 
+  /**
+   * Variante di "Vado via" che forza la chiusura delle tapparelle.
+   * È l'equivalente della doppia pressione sul tasto 2 della pulsantiera:
+   * stessa automazione, così il comportamento resta definito in HA e non
+   * duplicato qui.
+   */
+  const vadoViaConTapparelle = () => {
+    if (confirm('Uscendo: spengo tutto e forzo la chiusura di tutte le tapparelle. Confermi?'))
+      callHA('automation', 'trigger', undefined, {
+        entity_id: 'automation.pulsantiera_corridoio_tasto_2_doppio_spegni_tutto_chiudi_tapparelle',
+      });
+  };
+
   // ── Routines (scenes) ──
   const routines: Routine[] = [
     { id: 'buonanotte', icon: 'mdi-weather-night', label: 'Buonanotte', color: '#8b5cf6', action: () => callHA('scene', 'turn_on', undefined, { entity_id: 'scene.buonanotte' }) },
@@ -79,10 +92,23 @@ export function ControlCenter({ callHA }: Props) {
         <span className="mdi mdi-home-import-outline" />
         <span>Sono tornato</span>
       </button>
-      <button className="cc-hero cc-hero-leave" onClick={vadoVia}>
-        <span className="mdi mdi-exit-run" />
-        <span>Vado via</span>
-      </button>
+      {/* Pulsante diviso: azione principale + variante "con tapparelle".
+          Due <button> affiancati, non annidati: un bottone non può contenerne
+          un altro, e servono comunque due bersagli distinti. */}
+      <div className="cc-hero-split cc-hero-leave">
+        <button className="cc-hero" onClick={vadoVia}>
+          <span className="mdi mdi-exit-run" />
+          <span>Vado via</span>
+        </button>
+        <button
+          className="cc-hero-extra"
+          onClick={vadoViaConTapparelle}
+          title="Vado via e forza la chiusura delle tapparelle"
+          aria-label="Vado via e forza la chiusura delle tapparelle"
+        >
+          <span className="mdi mdi-blinds" />
+        </button>
+      </div>
 
       <div className="cc-divider" />
 
