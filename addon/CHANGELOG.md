@@ -1,4 +1,11 @@
 # Changelog
+## 2.4.0
+
+**Piante: avviso di annaffiare al 50%**
+- **Soglie uguali per tutte le piante**: giallo "Annaffia presto" sotto il 50% di umidità del terreno, rosso "Ha sete" sotto il 35%. Prima la Strelitzia usava i valori di default del widget (30% e 20%) e diventava gialla troppo tardi.
+- **Notifica unificata**: l'avviso "da annaffiare" in home vale per tutte le piante con la stessa soglia del widget, al posto di quello che dipendeva dalla soglia interna di Home Assistant (20%) e arrivava in ritardo. Il testo riporta l'umidità misurata.
+- Elenco delle piante monitorate e soglie ora in un unico punto della configurazione, così widget e notifiche non possono più discordare.
+
 ## 2.3.0
 
 **Musica, Control Center e piante**
