@@ -200,12 +200,9 @@ export function NotificationZone({ entities, callHA, onOpenDetail, onNavigate }:
   // ── Piante: da annaffiare quando il terreno scende sotto la soglia ──
   // Stessa soglia e stessa lettura del widget piante (plantMoisture in config.ts),
   // così widget e notifica non possono dire cose diverse.
-  //
-  // I dati fermi vengono ignorati: una sonda che non riporta più resta
-  // inchiodata al suo ultimo valore, e su quello non si avvisa.
   for (const plant of plants) {
-    const { moisture, stale } = readMoisture(entities, plant.moistureId);
-    if (moisture == null || stale) continue;
+    const moisture = readMoisture(entities, plant.moistureId);
+    if (moisture == null) continue;
     if (moisture <= 0 || moisture >= plantMoisture.thirstyBelow) continue;
     const critical = moisture < plantMoisture.criticalBelow;
     notices.push({

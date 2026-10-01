@@ -186,16 +186,6 @@ export const plantMoisture = {
   thirstyBelow: 50,
   /** Sotto questa: rosso "Ha sete". */
   criticalBelow: 35,
-  /**
-   * Oltre queste ore senza aggiornamenti, il dato è trattato come vecchio:
-   * il widget lo mostra in grigio e la notifica non scatta, invece di fidarsi
-   * di un valore fermo.
-   *
-   * Soglia alta di proposito: HA aggiorna `last_updated` solo quando il valore
-   * CAMBIA, quindi una sonda sana ma stabile può restare piatta per qualche ora
-   * senza essere guasta.
-   */
-  staleAfterHours: 12,
 } as const;
 
 /**

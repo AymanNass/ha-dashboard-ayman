@@ -17,47 +17,26 @@ export interface PlantConfig {
 const COLOR_OK = '#10b981';
 const COLOR_THIRSTY = '#f59e0b';
 const COLOR_CRITICAL = '#ef4444';
-const COLOR_STALE = '#94a3b8';
+const COLOR_UNKNOWN = '#94a3b8';
 
 /**
- * Read a plant's moisture together with how old the reading is.
+ * Read a plant's soil moisture, or null when there is no usable reading.
  *
- * `last_updated` only moves when the value CHANGES, so a long gap means either
- * a genuinely flat sensor or one that stopped reporting. Past
- * `plantMoisture.staleAfterHours` we stop trusting it rather than painting a
- * frozen value as healthy.
+ * Non provare a dedurre "dato vecchio" dai timestamp: l'integrazione MQTT di HA
+ * scrive un nuovo stato solo quando il valore CAMBIA, quindi su una sonda sana
+ * ma stabile `last_updated` resta indietro di ore pur arrivando un messaggio
+ * ogni pochi secondi. Quando il dispositivo è davvero offline è Zigbee2MQTT a
+ * dirlo, e HA porta lo stato a `unavailable`, che qui diventa null.
  */
-export function readMoisture(entities: HassEntities, moistureId: string, now = Date.now()) {
-  const entity = entities[moistureId];
-  const raw = entity?.state;
-  const value =
-    raw != null && raw !== 'unknown' && raw !== 'unavailable' && raw !== ''
-      ? Number.parseInt(raw, 10)
-      : null;
-  const moisture = value != null && Number.isFinite(value) ? value : null;
-
-  let ageHours: number | null = null;
-  if (entity?.last_updated) {
-    const t = new Date(entity.last_updated).getTime();
-    if (!Number.isNaN(t)) ageHours = (now - t) / 3_600_000;
-  }
-  const stale = moisture == null || (ageHours != null && ageHours > plantMoisture.staleAfterHours);
-
-  return { moisture, ageHours, stale };
+export function readMoisture(entities: HassEntities, moistureId: string) {
+  const raw = entities[moistureId]?.state;
+  const usable = raw != null && raw !== 'unknown' && raw !== 'unavailable' && raw !== '';
+  const value = usable ? Number.parseInt(raw, 10) : null;
+  return value != null && Number.isFinite(value) ? value : null;
 }
 
-function plantStatus(
-  moisture: number | null,
-  stale: boolean,
-  ageHours: number | null,
-  thirsty: number,
-  critical: number,
-) {
-  if (moisture == null) return { statusText: 'Nessun dato', color: COLOR_STALE };
-  if (stale) {
-    const h = ageHours != null ? Math.round(ageHours) : null;
-    return { statusText: h != null ? `Dato fermo da ${h}h` : 'Dato fermo', color: COLOR_STALE };
-  }
+function plantStatus(moisture: number | null, thirsty: number, critical: number) {
+  if (moisture == null) return { statusText: 'Nessun dato', color: COLOR_UNKNOWN };
   if (moisture < critical) return { statusText: 'Ha sete', color: COLOR_CRITICAL };
   if (moisture < thirsty) return { statusText: 'Annaffia presto', color: COLOR_THIRSTY };
   return { statusText: 'Sta bene', color: COLOR_OK };
@@ -73,8 +52,8 @@ export function PlantWidget({ entities, plants }: { entities: HassEntities; plan
       {plants.map((plant) => {
         const thirsty = plant.thirstyBelow ?? plantMoisture.thirstyBelow;
         const critical = plant.criticalBelow ?? plantMoisture.criticalBelow;
-        const { moisture, ageHours, stale } = readMoisture(entities, plant.moistureId);
-        const { statusText, color } = plantStatus(moisture, stale, ageHours, thirsty, critical);
+        const moisture = readMoisture(entities, plant.moistureId);
+        const { statusText, color } = plantStatus(moisture, thirsty, critical);
 
         return (
           <div key={plant.name} className="plant-mini">
