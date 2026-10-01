@@ -1,4 +1,5 @@
 import type { HassEntities } from 'home-assistant-js-websocket';
+import { plantMoisture } from '../config';
 
 /** Configuration for a single plant shown in the widget. */
 export interface PlantConfig {
@@ -8,19 +9,58 @@ export interface PlantConfig {
   /** Image file under public/ (optional). Falls back to an icon. */
   image?: string;
   icon?: string;
-  /** Moisture thresholds (%) — below these the plant needs water. */
+  /** Moisture thresholds (%) — default to the shared ones in config. */
   thirstyBelow?: number;
   criticalBelow?: number;
 }
 
-function plantStatus(moisture: number | null, thirsty: number, critical: number) {
-  let statusText = 'Sta bene';
-  let color = '#10b981';
-  if (moisture != null) {
-    if (moisture < critical) { statusText = 'Ha sete'; color = '#ef4444'; }
-    else if (moisture < thirsty) { statusText = 'Annaffia presto'; color = '#f59e0b'; }
+const COLOR_OK = '#10b981';
+const COLOR_THIRSTY = '#f59e0b';
+const COLOR_CRITICAL = '#ef4444';
+const COLOR_STALE = '#94a3b8';
+
+/**
+ * Read a plant's moisture together with how old the reading is.
+ *
+ * `last_updated` only moves when the value CHANGES, so a long gap means either
+ * a genuinely flat sensor or one that stopped reporting. Past
+ * `plantMoisture.staleAfterHours` we stop trusting it rather than painting a
+ * frozen value as healthy.
+ */
+export function readMoisture(entities: HassEntities, moistureId: string, now = Date.now()) {
+  const entity = entities[moistureId];
+  const raw = entity?.state;
+  const value =
+    raw != null && raw !== 'unknown' && raw !== 'unavailable' && raw !== ''
+      ? Number.parseInt(raw, 10)
+      : null;
+  const moisture = value != null && Number.isFinite(value) ? value : null;
+
+  let ageHours: number | null = null;
+  if (entity?.last_updated) {
+    const t = new Date(entity.last_updated).getTime();
+    if (!Number.isNaN(t)) ageHours = (now - t) / 3_600_000;
   }
-  return { statusText, color };
+  const stale = moisture == null || (ageHours != null && ageHours > plantMoisture.staleAfterHours);
+
+  return { moisture, ageHours, stale };
+}
+
+function plantStatus(
+  moisture: number | null,
+  stale: boolean,
+  ageHours: number | null,
+  thirsty: number,
+  critical: number,
+) {
+  if (moisture == null) return { statusText: 'Nessun dato', color: COLOR_STALE };
+  if (stale) {
+    const h = ageHours != null ? Math.round(ageHours) : null;
+    return { statusText: h != null ? `Dato fermo da ${h}h` : 'Dato fermo', color: COLOR_STALE };
+  }
+  if (moisture < critical) return { statusText: 'Ha sete', color: COLOR_CRITICAL };
+  if (moisture < thirsty) return { statusText: 'Annaffia presto', color: COLOR_THIRSTY };
+  return { statusText: 'Sta bene', color: COLOR_OK };
 }
 
 /**
@@ -31,11 +71,10 @@ export function PlantWidget({ entities, plants }: { entities: HassEntities; plan
   return (
     <div className="plants-cluster">
       {plants.map((plant) => {
-        const thirsty = plant.thirstyBelow ?? 30;
-        const critical = plant.criticalBelow ?? 20;
-        const raw = entities[plant.moistureId]?.state;
-        const moisture = raw != null && raw !== 'unknown' && raw !== 'unavailable' ? parseInt(raw) : null;
-        const { statusText, color } = plantStatus(moisture, thirsty, critical);
+        const thirsty = plant.thirstyBelow ?? plantMoisture.thirstyBelow;
+        const critical = plant.criticalBelow ?? plantMoisture.criticalBelow;
+        const { moisture, ageHours, stale } = readMoisture(entities, plant.moistureId);
+        const { statusText, color } = plantStatus(moisture, stale, ageHours, thirsty, critical);
 
         return (
           <div key={plant.name} className="plant-mini">

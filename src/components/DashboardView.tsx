@@ -47,7 +47,7 @@ import { RoborockPanel } from './RoborockPanel';
 import { PlantWidget } from './PlantWidget';
 import { TvWidget } from './TvWidget';
 import { RobotMiniCard } from './RobotMiniCard';
-import { spotifyPlaylists, spotifyDevices, basilMoisture } from '../config';
+import { spotifyPlaylists, spotifyDevices, plants as plantSensors } from '../config';
 import { useTranslation } from 'react-i18next';
 
 /** Subscribe to the "compact sections" preference (live-updated from Settings).
@@ -501,13 +501,7 @@ export function DashboardView(props: Props) {
                   )}
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
-                      <PlantWidget
-                        entities={entities}
-                        plants={[
-                          { name: 'Strelitzia', moistureId: 'sensor.0xa4c1387ce7871bf9_soil_moisture', tempId: 'sensor.0xa4c1387ce7871bf9_temperature', icon: 'mdi-flower' },
-                          { name: 'Basilico', moistureId: basilMoisture.entity, tempId: 'sensor.0xa4c1381f439ee5f2_temperature', icon: 'mdi-sprout', thirstyBelow: basilMoisture.thirstyBelow, criticalBelow: basilMoisture.criticalBelow },
-                        ]}
-                      />
+                      <PlantWidget entities={entities} plants={plantSensors} />
                       <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
                     </div>
                   )}

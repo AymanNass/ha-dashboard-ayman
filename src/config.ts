@@ -175,22 +175,58 @@ export const sensorWidgets = [
 ];
 
 /**
- * Basilico — soglie di umidità del suolo (%).
+ * Piante — soglie di umidità del suolo (%), identiche per tutte.
  *
  * Unica fonte di verità per il widget piante e per la notifica "da annaffiare":
  * tenerle in due posti le aveva già fatte divergere (notifica a 25, widget a 30),
  * lasciando una fascia in cui il widget segnalava e la notifica taceva.
- *
- * Usa `sensor...._soil_moisture` (terreno) e NON `..._humidity`, che su questo
- * sensore Tuya è l'umidità dell'aria.
  */
-export const basilMoisture = {
-  entity: 'sensor.0xa4c1381f439ee5f2_soil_moisture',
-  /** Sotto questa: "Annaffia presto" (ambra) + notifica in home. */
+export const plantMoisture = {
+  /** Sotto questa: giallo "Annaffia presto" + notifica in home. */
   thirstyBelow: 50,
-  /** Sotto questa: "Ha sete" (rosso). */
+  /** Sotto questa: rosso "Ha sete". */
   criticalBelow: 35,
+  /**
+   * Oltre queste ore senza aggiornamenti, il dato è trattato come vecchio:
+   * il widget lo mostra in grigio e la notifica non scatta, invece di fidarsi
+   * di un valore fermo.
+   *
+   * Soglia alta di proposito: HA aggiorna `last_updated` solo quando il valore
+   * CAMBIA, quindi una sonda sana ma stabile può restare piatta per qualche ora
+   * senza essere guasta.
+   */
+  staleAfterHours: 12,
 } as const;
+
+/**
+ * Piante monitorate nel widget del soggiorno e nelle notifiche.
+ *
+ * Usare sempre `..._soil_moisture` (terreno) e NON `..._humidity`, che su questi
+ * sensori Tuya è l'umidità dell'aria.
+ */
+export interface PlantSensor {
+  name: string;
+  moistureId: string;
+  tempId?: string;
+  icon?: string;
+  /** File immagine sotto public/ (opzionale), al posto dell'icona. */
+  image?: string;
+}
+
+export const plants: PlantSensor[] = [
+  {
+    name: 'Strelitzia',
+    moistureId: 'sensor.0xa4c1387ce7871bf9_soil_moisture',
+    tempId: 'sensor.0xa4c1387ce7871bf9_temperature',
+    icon: 'mdi-flower',
+  },
+  {
+    name: 'Basilico',
+    moistureId: 'sensor.0xa4c1381f439ee5f2_soil_moisture',
+    tempId: 'sensor.0xa4c1381f439ee5f2_temperature',
+    icon: 'mdi-sprout',
+  },
+];
 
 /**
  * Dashboard views

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
-import { basilMoisture } from '../config';
+import { plantMoisture, plants } from '../config';
+import { readMoisture } from './PlantWidget';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -196,40 +197,25 @@ export function NotificationZone({ entities, callHA, onOpenDetail, onNavigate }:
     });
   }
 
-  // ── Strelitzia: only when the problem is low moisture (needs water) ──
-  const plant = entities['plant.strelitzia'];
-  if (plant?.state === 'problem') {
-    const problem = String(plant.attributes?.problem ?? '');
-    const moisture = plant.attributes?.moisture as number | undefined;
-    // Only surface a "give water" suggestion when soil moisture is LOW.
-    // "moisture high" (too wet), temperature issues, etc. are ignored here.
-    if (problem.includes('moisture low')) {
-      notices.push({
-        id: 'strelitzia',
-        icon: 'mdi-flower',
-        accent: '#22c55e',
-        title: 'Strelitzia · da annaffiare',
-        sub: `Terreno secco${moisture != null ? ` (${Math.round(moisture)}%)` : ''}. Dai acqua alla pianta.`,
-        priority: 3,
-        onClick: () => onOpenDetail?.('plant.strelitzia'),
-      });
-    }
-  }
-
-  // ── Basilico: needs water when soil moisture is low ──
-  // Soglia condivisa con il widget piante (vedi basilMoisture in config.ts).
-  const BASIL_MOISTURE = basilMoisture.entity;
-  const BASIL_DRY_BELOW = basilMoisture.thirstyBelow;
-  const basil = num(entities, BASIL_MOISTURE);
-  if (basil != null && basil > 0 && basil < BASIL_DRY_BELOW) {
+  // ── Piante: da annaffiare quando il terreno scende sotto la soglia ──
+  // Stessa soglia e stessa lettura del widget piante (plantMoisture in config.ts),
+  // così widget e notifica non possono dire cose diverse.
+  //
+  // I dati fermi vengono ignorati: una sonda che non riporta più resta
+  // inchiodata al suo ultimo valore, e su quello non si avvisa.
+  for (const plant of plants) {
+    const { moisture, stale } = readMoisture(entities, plant.moistureId);
+    if (moisture == null || stale) continue;
+    if (moisture <= 0 || moisture >= plantMoisture.thirstyBelow) continue;
+    const critical = moisture < plantMoisture.criticalBelow;
     notices.push({
-      id: 'basilico',
-      icon: 'mdi-sprout',
-      accent: '#22c55e',
-      title: 'Basilico · da annaffiare',
-      sub: `Umidità del terreno al ${Math.round(basil)}%. Dai acqua al basilico.`,
-      priority: 3,
-      onClick: () => onOpenDetail?.(BASIL_MOISTURE),
+      id: `plant-${plant.name.toLowerCase()}`,
+      icon: plant.icon || 'mdi-sprout',
+      accent: critical ? '#ef4444' : '#22c55e',
+      title: `${plant.name} · da annaffiare`,
+      sub: `Umidità del terreno al ${Math.round(moisture)}%. Dai acqua alla pianta.`,
+      priority: critical ? 4 : 3,
+      onClick: () => onOpenDetail?.(plant.moistureId),
     });
   }
 
