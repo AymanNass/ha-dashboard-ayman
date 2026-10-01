@@ -19,11 +19,14 @@ interface Cluster {
 }
 
 export function ControlCenter({ callHA }: Props) {
-  // ── Hero: I'm Back / I'm Leaving (trigger the real HA automations) ──
-  const imBack = () =>
+  // ── Hero: Sono tornato / Vado via ──
+  // Lanciano le stesse automazioni dei tasti 1 e 2 della pulsantiera del
+  // corridoio, così pulsantiera fisica e dashboard fanno esattamente la
+  // stessa cosa e c'è un solo posto in cui cambiare il comportamento.
+  const sonoTornato = () =>
     callHA('automation', 'trigger', undefined, { entity_id: 'automation.pulsantiera_corridoio_tasto_1_i_m_back' });
 
-  const imLeaving = () => {
+  const vadoVia = () => {
     if (confirm('Uscendo: spengo tutto e chiudo le tapparelle. Confermi?'))
       callHA('automation', 'trigger', undefined, { entity_id: 'automation.pulsantiera_corridoio_tasto_2_i_m_leaving' });
   };
@@ -72,13 +75,13 @@ export function ControlCenter({ callHA }: Props) {
   return (
     <div className="cc">
       {/* Hero routines */}
-      <button className="cc-hero cc-hero-back" onClick={imBack}>
+      <button className="cc-hero cc-hero-back" onClick={sonoTornato}>
         <span className="mdi mdi-home-import-outline" />
-        <span>I'm Back</span>
+        <span>Sono tornato</span>
       </button>
-      <button className="cc-hero cc-hero-leave" onClick={imLeaving}>
+      <button className="cc-hero cc-hero-leave" onClick={vadoVia}>
         <span className="mdi mdi-exit-run" />
-        <span>I'm Leaving</span>
+        <span>Vado via</span>
       </button>
 
       <div className="cc-divider" />
