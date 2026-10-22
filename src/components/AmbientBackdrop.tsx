@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 import { getSettings } from '../settings';
 import { resolveWeatherId } from '../lib/weather';
+import { isLiteMode } from '../lib/perfMode';
 
 interface Props {
   entities: HassEntities;
@@ -105,7 +106,13 @@ export function AmbientBackdrop({ entities }: Props) {
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-  const showPrecip = effects && kind !== 'none' && (!reduced || forced);
+  // Lite mode (weak tablet / ?lite) drops the per-particle precipitation layer
+  // entirely — dozens of animated nodes are one of the heaviest things on a
+  // low-end GPU. An explicit URL preview (?precip/?storm) still forces it so the
+  // effect can be demoed on any device.
+  const lite = isLiteMode() && !forced;
+
+  const showPrecip = effects && !lite && kind !== 'none' && (!reduced || forced);
   const showLightning = showPrecip && storm;
 
   // A handful of drops/flakes is enough to read as "weather" without cost.

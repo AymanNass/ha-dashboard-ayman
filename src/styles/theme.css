@@ -10739,3 +10739,107 @@ button.noc-port:hover { transform: translateY(-1px); }
 }
 .nz-action:hover { filter: brightness(1.1); }
 .nz-action:active { transform: scale(0.94); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFORMANCE / "LITE" MODE  (html[data-perf="lite"])
+   Set by src/lib/perfMode.ts on weak tablets (e.g. Lenovo M10 Plus / Helio
+   G80) or via ?lite in the URL. Strips the GPU-heavy effects that make low-end
+   WebViews stutter — backdrop blur, 3D pointer tilt, big soft shadows and the
+   weather particle layer — while keeping the layout, colors and borders.
+
+   Bonus fix: on devices that can't render backdrop-filter, blurred "glass"
+   surfaces collapse to fully transparent and their tiles look borderless. By
+   replacing blur with a solid-ish translucent fill here, the light/switch tiles
+   get their visible panel + border back.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 ─ Kill every backdrop blur. It's the single most expensive effect and the
+      main cause of the "no borders" look when the GPU can't composite it. */
+html[data-perf='lite'] *,
+html[data-perf='lite'] *::before,
+html[data-perf='lite'] *::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 2 ─ Give the formerly-blurred glass surfaces an opaque-enough fill so they
+      read as real panels (visible background + border) without compositing. */
+html[data-perf='lite'] .tile {
+  background: rgba(30, 33, 48, 0.72);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+html[data-perf='lite'] .tile.on {
+  background: rgba(255, 160, 60, 0.14);
+  border-color: rgba(255, 160, 60, 0.3);
+}
+html[data-perf='lite'] .sidebar {
+  background: rgba(16, 18, 30, 0.96);
+}
+html[data-perf='lite'] .detail-panel,
+html[data-perf='lite'] .noc-fly {
+  background: rgba(20, 22, 34, 0.98);
+}
+html[data-perf='lite'] .glance-stat,
+html[data-perf='lite'] .glance-toggle,
+html[data-perf='lite'] .room-nav-pill,
+html[data-perf='lite'] .noc-banner,
+html[data-perf='lite'] .onboarding-card,
+html[data-perf='lite'] .ts-modal {
+  background: rgba(26, 29, 42, 0.92);
+}
+
+/* Light theme keeps its own bright glass fills instead of the dark ones above. */
+html[data-perf='lite'][data-theme='light'] .tile {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.1);
+}
+html[data-perf='lite'][data-theme='light'] .sidebar,
+html[data-perf='lite'][data-theme='light'] .detail-panel {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* 3 ─ Flatten the 3D tilt: no perspective transforms, no moving glare layer,
+      no preserve-3d (each is extra per-frame compositing on touch panels where
+      tilt doesn't even apply). */
+html[data-perf='lite'] .tile-tilt {
+  transform: none !important;
+  transform-style: flat !important;
+}
+html[data-perf='lite'] .tile-glare {
+  display: none !important;
+}
+
+/* 4 ─ Drop the large soft shadows; keep a cheap 1px hairline for depth. */
+html[data-perf='lite'] .tile,
+html[data-perf='lite'] .tile:hover,
+html[data-perf='lite'] .tile-tilt:hover,
+html[data-perf='lite'] .glass-card,
+html[data-perf='lite'] .detail-panel,
+html[data-perf='lite'] .noc-fly {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* 5 ─ Lighter hover/active feedback: a quick color/opacity change instead of a
+      transform that forces a repaint of the whole tile. */
+html[data-perf='lite'] .tile:hover:not(.tile-tilt),
+html[data-perf='lite'] .tile-tilt:hover {
+  transform: none !important;
+}
+html[data-perf='lite'] .tile:active:not(.tile-tilt),
+html[data-perf='lite'] .tile-tilt:active {
+  transform: scale(0.98) !important;
+}
+
+/* 6 ─ Belt-and-braces: the particle layers are not rendered in lite mode (see
+      AmbientBackdrop.tsx), but hide them defensively in case one slips through. */
+html[data-perf='lite'] .ambient-weather,
+html[data-perf='lite'] .ambient-lightning {
+  display: none !important;
+}
+
+/* 7 ─ Trim entrance animation stagger so a page of tiles paints in one go
+      rather than rippling in (cheaper first paint on a slow CPU). */
+html[data-perf='lite'] .tile-enter {
+  animation-duration: 0.2s;
+  animation-delay: 0s !important;
+}

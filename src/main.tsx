@@ -5,8 +5,10 @@ import './i18n';
 import { applyTheme, getSettings, hydrateConnectionFromServer, hydrateSettingsFromServer } from './settings';
 import { refreshConnection } from './config';
 import { installHaptics } from './lib/haptics';
+import { applyPerfMode } from './lib/perfMode';
 import './styles/theme.css';
 
+applyPerfMode();
 applyTheme();
 installHaptics();
 

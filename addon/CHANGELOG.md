@@ -1,4 +1,12 @@
 # Changelog
+## 2.5.0
+
+**Modalità performance per tablet deboli**
+- **Lite mode automatica**: su dispositivi poco potenti (poca RAM o tablet touch con pochi core, tipo Lenovo M10 Plus / Helio G80) la dashboard disattiva da sola gli effetti più pesanti per la GPU, mantenendo layout, colori e bordi.
+- **Niente più sfocature costose**: in lite mode vengono rimossi tutti i `backdrop-filter: blur()`. Questo risolve anche i bordi invisibili delle tile luci/interruttori sui tablet che non riescono a comporre la sfocatura.
+- **Meno animazioni**: disattivati il tilt 3D, il riflesso che segue il cursore, le ombre morbide pesanti e le particelle meteo (pioggia/neve). Hover e animazione d'entrata alleggeriti.
+- **Controllo manuale via URL**: `?lite` forza la modalità leggera, `?full` (o `?lite=0`) forza quella completa — utile per i pannelli a muro in kiosk.
+
 ## 2.4.0
 
 **Piante: avviso di annaffiare al 50%**
