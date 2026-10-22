@@ -1,4 +1,12 @@
 # Changelog
+## 2.5.1
+
+**Home più snella e lite mode più leggera**
+- **Grafici clima fuori dalla home**: i tile del condizionatore non mostrano più la curva di temperatura in home; il grafico resta nella pagina Clima dedicata. Meno ingombro e una chiamata storico in meno per ogni tile.
+- **Roborock semplificato**: il riquadro in home mostra solo lo stato/posizione (es. "In base", "Sta pulendo"), senza più la batteria. L'icona si colora di verde solo mentre pulisce davvero, neutra in ogni altro stato. Il tap porta alla pagina del robot come prima.
+- **TV LG rimossa dalla home**.
+- **Lite mode, altri tagli solo grafici**: fermo lo sfondo animato, spente le animazioni in loop (glow luci, pulse clima/allarme, equalizzatore, spinner robot/ventola), cambio pagina istantaneo, flyout più rapido, tolto lo sheen decorativo delle tile. Nessuna modifica alla logica o ai dati.
+
 ## 2.5.0
 
 **Modalità performance per tablet deboli**

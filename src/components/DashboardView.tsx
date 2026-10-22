@@ -45,7 +45,6 @@ import { SecurityBar } from './SecurityBar';
 import { SpotifyPlaylist } from './SpotifyPlaylist';
 import { RoborockPanel } from './RoborockPanel';
 import { PlantWidget } from './PlantWidget';
-import { TvWidget } from './TvWidget';
 import { RobotMiniCard } from './RobotMiniCard';
 import { spotifyPlaylists, spotifyDevices, plants as plantSensors } from '../config';
 import { useTranslation } from 'react-i18next';
@@ -502,7 +501,6 @@ export function DashboardView(props: Props) {
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
                       <PlantWidget entities={entities} plants={plantSensors} />
-                      <TvWidget entities={entities} callHA={props.callHA} onOpenDetail={props.onOpenDetail} />
                     </div>
                   )}
                 </CollapsibleColumn>

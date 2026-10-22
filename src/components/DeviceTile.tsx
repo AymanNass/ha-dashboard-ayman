@@ -288,10 +288,10 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   // background behind the tile content. Skipped for the big server-tab graph
   // tile and when no history fetcher is available. Refreshed on a slow timer
   // rather than on every state change to keep history calls light.
-  const sparkAttr =
-    domain === 'climate' && typeof entity.attributes.current_temperature === 'number'
-      ? 'current_temperature'
-      : undefined;
+  // Climate tiles no longer draw a temperature sparkline on the dashboard — the
+  // trend lives on the dedicated "Clima" page (ClimateView). Keeping them off
+  // the home grid declutters it and drops the per-tile history fetch + SVG draw.
+  const sparkAttr = undefined;
   const sparkEligible =
     !graph &&
     !!getHistory &&

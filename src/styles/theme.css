@@ -10843,3 +10843,81 @@ html[data-perf='lite'] .tile-enter {
   animation-duration: 0.2s;
   animation-delay: 0s !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFORMANCE / "LITE" MODE — EXTRA GRAPHICS TRIMS
+   Pure visual cost-cutting (no data/logic changes). Everything below only
+   affects html[data-perf="lite"], so full-power devices are untouched.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 8 ─ Stop the always-on animated ambient gradient behind the whole UI. It
+      runs a 30s infinite transform on a huge full-viewport layer — constant
+      GPU work even when nothing else moves. Keep the gradient, drop the motion
+      (and the saturate filter, which forces an extra pass). */
+html[data-perf='lite'] body::before {
+  animation: none !important;
+  filter: none !important;
+}
+
+/* 9 ─ Kill every looping/decorative animation. These repeat forever and keep
+      the compositor busy: light glow, climate pulse/fan-spin, security pulse,
+      media equalizer, robot/vacuum spinners, plant pulse, scene ring, ambient
+      drift, sensor pulse. One-shot entrance animations are handled in #10. */
+html[data-perf='lite'] .tile.on .tile-icon,
+html[data-perf='lite'] .tile.climate-active::before,
+html[data-perf='lite'] .tile.climate-fan_only .tile-icon,
+html[data-perf='lite'] .tile.sec-triggered,
+html[data-perf='lite'] .tile-eq span,
+html[data-perf='lite'] .robot-mini-icon.cleaning,
+html[data-perf='lite'] .tvw-power.spin,
+html[data-perf='lite'] .rv-dot.pulse,
+html[data-perf='lite'] .plant-widget.plant-critical,
+html[data-perf='lite'] .scene-active-ring,
+html[data-perf='lite'] .sensor-alert-icon,
+html[data-perf='lite'] .security-chip.pending {
+  animation: none !important;
+}
+/* Keep the climate tint visible once its pulse is stopped. */
+html[data-perf='lite'] .tile.climate-active::before {
+  opacity: 0.5;
+}
+/* Equalizer bars settle to a static mid height instead of frozen at min. */
+html[data-perf='lite'] .tile-eq span {
+  height: 9px;
+}
+
+/* 10 ─ Make page navigation instant: no cross-fade/slide view-transition. The
+       root-snapshot slide is one of the heaviest single moments on a slow GPU
+       (it animates a full-screen bitmap). Content still swaps, just without the
+       motion. */
+html[data-perf='lite'].vt-nav-next::view-transition-old(root),
+html[data-perf='lite'].vt-nav-next::view-transition-new(root),
+html[data-perf='lite'].vt-nav-prev::view-transition-old(root),
+html[data-perf='lite'].vt-nav-prev::view-transition-new(root) {
+  animation: none !important;
+}
+
+/* 11 ─ Shorten the flyout/detail-panel spring + its staggered card rise to a
+       quick fade so opening a tile feels instant rather than animating many
+       layers. */
+html[data-perf='lite'] .detail-panel.open,
+html[data-perf='lite'] .detail-panel.open > *,
+html[data-perf='lite'] .noc-fly {
+  animation-duration: 0.18s !important;
+  animation-delay: 0s !important;
+}
+
+/* 12 ─ One-shot entrance (already trimmed in #7) — belt-and-braces: never let
+       the artwork/camera zoom-in animations run in lite mode. */
+html[data-perf='lite'] .tile-artwork,
+html[data-perf='lite'] .media-artwork img,
+html[data-perf='lite'] .tile-cam img {
+  animation: none !important;
+}
+
+/* 13 ─ Drop the decorative top-edge sheen pseudo-element on tiles. It's a
+       gradient layer painted on every single tile for a highlight most people
+       never notice — cheap each, but it adds up across a full grid. */
+html[data-perf='lite'] .tile::before {
+  display: none !important;
+}
