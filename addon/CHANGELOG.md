@@ -1,4 +1,11 @@
 # Changelog
+## 2.5.4
+
+**Tapparelle più comode su schermo piccolo**
+- **Via lo slider verticale** dalle card tapparella: era difficile da usare su schermi piccoli. Al suo posto due pulsanti rapidi apri (▲) / chiudi (▼), un tocco e parte; si disattivano quando la tapparella è già tutta aperta o chiusa.
+- **Percentuale precisa dal pannello**: toccando la card si apre il dettaglio con Apri / Stop / Chiudi e uno slider grande e comodo per scegliere la posizione esatta.
+- Resta la grafica del "telo" che scende per vedere a colpo d'occhio quanto è aperta.
+
 ## 2.5.3
 
 **Risposta immediata al tocco**

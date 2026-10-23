@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 
 interface CoverDef {
@@ -16,40 +15,58 @@ interface Props {
 function CoverCard({ entity_id, name, entities, callHA, onOpenDetail }: CoverDef & { entities: HassEntities; callHA: Props['callHA']; onOpenDetail: Props['onOpenDetail'] }) {
   const entity = entities[entity_id];
   const position = (entity?.attributes.current_position as number) ?? (entity?.state === 'open' ? 100 : 0);
-  const [local, setLocal] = useState<number | null>(null);
-  const display = local ?? position;
+  const display = position;
   // Shutter covers from top: 100% open = 0% covered, 0% open = 100% covered
   const shutterPct = 100 - display;
 
+  const stateLabel = display === 100 ? 'Aperta' : display === 0 ? 'Chiusa' : `${display}%`;
+
+  // Quick actions stop propagation so they don't also open the detail flyout.
+  const open = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    callHA('cover', 'open_cover', undefined, { entity_id });
+  };
+  const close = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    callHA('cover', 'close_cover', undefined, { entity_id });
+  };
+
+  // Tapping the card body opens the detail flyout, which has Open/Stop/Close
+  // plus a large, comfortable position slider for picking an exact percentage —
+  // far easier on a small screen than a tiny slider embedded in the card.
   return (
     <div className="cv-card" onClick={() => onOpenDetail(entity_id)}>
       {/* Shutter: green block from top with slat lines */}
       <div className="cv-shutter" style={{ height: `${shutterPct}%` }}>
-        {/* Horizontal slat lines */}
         <div className="cv-slats" />
       </div>
 
       {/* Content overlay */}
       <div className="cv-info">
         <span className="cv-name">{name.replace('Tapparella ', '')}</span>
-        <span className="cv-pct">{display === 100 ? 'Aperta' : display === 0 ? 'Chiusa' : `${display}%`}</span>
+        <span className="cv-pct">{stateLabel}</span>
       </div>
 
-      {/* Vertical slider on the right */}
-      <div className="cv-vslider-track" onClick={(e) => e.stopPropagation()}>
-        <input
-          type="range"
-          className="cv-vslider"
-          min={0}
-          max={100}
-          value={display}
-          onChange={(e) => setLocal(parseInt(e.target.value))}
-          onPointerUp={(e) => {
-            const v = parseInt((e.target as HTMLInputElement).value);
-            setLocal(null);
-            callHA('cover', 'set_cover_position', { position: v }, { entity_id });
-          }}
-        />
+      {/* Quick open / close buttons (one tap). For the exact %, tap the card. */}
+      <div className="cv-quick">
+        <button
+          className="cv-quick-btn"
+          onClick={open}
+          disabled={display === 100}
+          aria-label="Apri tapparella"
+          title="Apri"
+        >
+          <span className="mdi mdi-chevron-up" />
+        </button>
+        <button
+          className="cv-quick-btn"
+          onClick={close}
+          disabled={display === 0}
+          aria-label="Chiudi tapparella"
+          title="Chiudi"
+        >
+          <span className="mdi mdi-chevron-down" />
+        </button>
       </div>
     </div>
   );

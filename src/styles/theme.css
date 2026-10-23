@@ -11047,3 +11047,49 @@ html[data-perf='lite'] .tile.on .tile-icon {
 html[data-perf='lite'] .tile.on.live-light .tile-icon.warm {
   color: rgb(var(--light-rgb)) !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COVER CARD — quick open/close buttons (replaces the fiddly vertical slider)
+   Two stacked chevron buttons on the right of each shutter card: one tap to
+   open, one to close. For an exact percentage, tapping the card body opens the
+   detail flyout (Open/Stop/Close + a large position slider). Much easier on a
+   small touch screen than dragging a tiny slider.
+   ══════════════════════════════════════════════════════════════════════════ */
+.cv-quick {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  flex: none;
+  padding: 6px 6px 6px 0;
+}
+.cv-quick-btn {
+  width: 34px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s ease;
+}
+.cv-quick-btn .mdi { font-size: 20px; line-height: 1; }
+.cv-quick-btn:hover:not(:disabled) { background: rgba(255, 255, 255, 0.16); }
+.cv-quick-btn:active:not(:disabled) { transform: scale(0.94); }
+.cv-quick-btn:disabled { opacity: 0.3; cursor: default; }
+
+[data-theme='light'] .cv-quick-btn {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.05);
+  color: #1e293b;
+}
+
+/* In lite mode: no press transition (instant feedback), keep the tiny scale. */
+html[data-perf='lite'] .cv-quick-btn { transition: none !important; }
