@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 import { entityIcon, entitySummary, isActiveState, resolveArtwork } from '../lib/entityInfo';
 import { useArtworkColor } from '../hooks/useArtworkColor';
+import { isLiteMode } from '../lib/perfMode';
 import { runViewTransition, viewTransitionsAvailable } from '../lib/viewTransition';
 import { useTilt } from '../hooks/useTilt';
 import { useCameraFeed } from '../hooks/useCameraFeed';
@@ -175,7 +176,7 @@ function vacuumMapUrl(entities: HassEntities | undefined, base: string): string 
   return `${HA_URL}/api/camera_proxy/camera.${base}_map?token=${token}`;
 }
 
-export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpenTakeover, span, tall, graph, getHistory, cameraUrl, icon, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex, sectionColor }: Props) {
+function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTakeover, span, tall, graph, getHistory, cameraUrl, icon, slideDim, reverseSlider, mediaArtwork, artworkEntity, entities, enterIndex, sectionColor }: Props) {
   const { t } = useTranslation();
   const id = entity.entity_id;
   const domain = id.split('.')[0];
@@ -233,7 +234,9 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   // useCameraFeed owns the refresh loop, pausing on failed frames, hidden tabs,
   // sleep/wake gaps, and socket drops so we never spam HA with a rotated-out
   // token (each such request is logged as "invalid authentication" by http.ban).
-  const { src: liveCamUrl, onLoad: onCamLoad, onError: onCamError } = useCameraFeed(cameraUrl, 2000);
+  // Lite mode: refresh camera thumbnails less often (every 6s vs 2s) to cut the
+  // per-camera image decode + state churn on weak devices.
+  const { src: liveCamUrl, onLoad: onCamLoad, onError: onCamError } = useCameraFeed(cameraUrl, isLiteMode() ? 6000 : 2000);
 
   // Now-playing artwork background for media tiles (on by default; opt out via
   // `mediaArtwork: false`). Resolves the configured entity's own picture, an
@@ -294,6 +297,7 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
   const sparkAttr = undefined;
   const sparkEligible =
     !graph &&
+    !isLiteMode() && // lite: no per-tile history fetch, no interval, no SVG draw
     !!getHistory &&
     (sparkAttr != null ||
       (domain === 'sensor' && Number.isFinite(parseFloat(entity.state))));
@@ -713,3 +717,54 @@ export function DeviceTile({ entity, name, callHA, onToggle, onOpenDetail, onOpe
     </div>
   );
 }
+
+/**
+ * Memoized tile. The dashboard passes a fresh `entities` map on every Home
+ * Assistant state update, which would otherwise re-render every tile on every
+ * event. This comparator re-renders a tile only when something that actually
+ * affects IT changed:
+ *   • its own `entity` object (state/attributes) — the common case,
+ *   • any of its own presentation/config props,
+ *   • and, only for media/vacuum tiles (which read the whole `entities` map for
+ *     companion artwork / map camera), a change in the `entities` reference.
+ * Lights, switches, covers and sensors ignore unrelated churn in the map, so a
+ * single sensor update no longer repaints the whole grid.
+ */
+export const DeviceTile = memo(DeviceTileImpl, (prev, next) => {
+  // Re-render if this tile's own entity changed (reference compare — the HA
+  // client replaces the changed entity's object, keeping others stable).
+  if (prev.entity !== next.entity) return false;
+
+  // Compare the simple own-props that affect rendering.
+  if (
+    prev.name !== next.name ||
+    prev.callHA !== next.callHA ||
+    prev.onToggle !== next.onToggle ||
+    prev.onOpenDetail !== next.onOpenDetail ||
+    prev.onOpenTakeover !== next.onOpenTakeover ||
+    prev.span !== next.span ||
+    prev.tall !== next.tall ||
+    prev.graph !== next.graph ||
+    prev.getHistory !== next.getHistory ||
+    prev.cameraUrl !== next.cameraUrl ||
+    prev.icon !== next.icon ||
+    prev.slideDim !== next.slideDim ||
+    prev.reverseSlider !== next.reverseSlider ||
+    prev.mediaArtwork !== next.mediaArtwork ||
+    prev.artworkEntity !== next.artworkEntity ||
+    prev.enterIndex !== next.enterIndex ||
+    prev.sectionColor !== next.sectionColor
+  ) {
+    return false;
+  }
+
+  // Media and vacuum tiles read the whole entities map (artwork / map camera),
+  // so they must follow the map reference. Other domains don't, so they can
+  // ignore it — this is what spares the grid from full repaints.
+  const domain = next.entity.entity_id.split('.')[0];
+  if (domain === 'media_player' || domain === 'vacuum') {
+    if (prev.entities !== next.entities) return false;
+  }
+
+  return true; // props equal → skip re-render
+});

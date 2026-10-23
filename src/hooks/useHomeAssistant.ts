@@ -9,6 +9,7 @@ import {
   type Connection,
 } from 'home-assistant-js-websocket';
 import { HA_URL, HA_TOKEN } from '../config';
+import { isLiteMode } from '../lib/perfMode';
 
 // Module-level mirror of the WebSocket connection state, so leaf hooks (e.g.
 // useCameraFeed) can gate work on connectivity without prop-drilling. Changes
@@ -117,6 +118,17 @@ export function useHomeAssistant() {
   const [error, setError] = useState<string | null>(null);
   const connRef = useRef<Connection | null>(null);
 
+  // ── Batched entity updates ──
+  // home-assistant-js-websocket calls our subscriber on EVERY state_changed
+  // event, handing a fresh entities object each time. In a busy home that's
+  // many times per second, and since the object reference changes, it re-renders
+  // the whole dashboard each time — the dominant cost on a weak tablet. Instead
+  // of setting state per event, we stash the latest snapshot in a ref and flush
+  // to React once per animation frame (or every 500 ms in lite mode), collapsing
+  // a burst of events into a single render.
+  const pendingEntities = useRef<HassEntities | null>(null);
+  const flushHandle = useRef<number | null>(null);
+
   useEffect(() => {
     if (!HA_TOKEN) {
       console.error('[Glance] No token! HA_URL:', HA_URL, 'HA_TOKEN:', HA_TOKEN ? '(present)' : '(empty)');
@@ -151,8 +163,23 @@ export function useHomeAssistant() {
           broadcastConnected(true);
         });
 
+        const lite = isLiteMode();
         subscribeEntities(conn, (ents) => {
-          if (!cancelled) setEntities(ents);
+          if (cancelled) return;
+          // Keep only the newest snapshot; flush at most once per frame (or per
+          // 500 ms in lite mode) so a burst of state_changed events becomes one
+          // render instead of dozens.
+          pendingEntities.current = ents;
+          if (flushHandle.current != null) return;
+          const flush = () => {
+            flushHandle.current = null;
+            const next = pendingEntities.current;
+            pendingEntities.current = null;
+            if (next && !cancelled) setEntities(next);
+          };
+          flushHandle.current = lite
+            ? window.setTimeout(flush, 500)
+            : window.requestAnimationFrame(flush);
         });
 
         subscribeConfig(conn, (config) => {
@@ -173,6 +200,13 @@ export function useHomeAssistant() {
 
     return () => {
       cancelled = true;
+      if (flushHandle.current != null) {
+        // The handle is either a rAF id or a timeout id depending on mode;
+        // cancel both kinds to be safe.
+        cancelAnimationFrame(flushHandle.current);
+        clearTimeout(flushHandle.current);
+        flushHandle.current = null;
+      }
       connRef.current?.close();
     };
   }, []);

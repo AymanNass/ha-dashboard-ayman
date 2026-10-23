@@ -1,4 +1,14 @@
 # Changelog
+## 2.5.2
+
+**Lite mode: meno lavoro per la CPU del tablet**
+- **Aggiornamenti raggruppati**: gli eventi di stato da Home Assistant vengono raccolti e applicati una volta per frame (ogni 500ms in lite mode) invece di ridisegnare tutta la dashboard a ogni singolo cambio di sensore. È l'intervento con più impatto sul lag.
+- **Tile memoizzate**: una tile si ridisegna solo quando cambia davvero la sua entità, non più tutte insieme a ogni evento.
+- **Accensione istantanea**: premendo una luce cambia solo l'icona (acceso/spento), senza sfumature, aloni o gradienti. Pam pam.
+- **Niente grafici in lite**: saltate le sparkline per-tile (niente timer e chiamate storico ripetute).
+- **Meno lavoro per frame**: tilt 3D e view-transition disattivati in lite mode (eliminano i "forced reflow" rilevati col profiler), refresh telecamere più lento (6s).
+- **Tapparelle**: riquadro visibile anche da aperte e movimento istantaneo dello slider.
+
 ## 2.5.1
 
 **Home più snella e lite mode più leggera**

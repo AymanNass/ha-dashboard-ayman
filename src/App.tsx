@@ -214,9 +214,16 @@ export default function App() {
     return map;
   }, [views]);
 
+  // Keep a ref of the latest entities so toggleEntity can read current state
+  // without listing `entities` as a dependency — otherwise the callback is
+  // recreated on every state update, which breaks tile memoization and makes
+  // every tile re-render. The ref keeps the callback stable for the app's life.
+  const entitiesRef = useRef(entities);
+  entitiesRef.current = entities;
+
   const toggleEntity = useCallback(async (entityId: string) => {
     const domain = entityId.split('.')[0];
-    const entity = entities[entityId];
+    const entity = entitiesRef.current[entityId];
     if (!entity) return;
 
     // Vacation mode requires confirmation
@@ -244,7 +251,13 @@ export default function App() {
     } else {
       await callHA('homeassistant', 'toggle', undefined, { entity_id: entityId });
     }
-  }, [entities, callHA]);
+  }, [callHA]);
+
+  // Stable handlers passed down to every tile — kept out of the render body so
+  // they don't create a new reference each render (which would defeat the
+  // React.memo on DeviceTile and re-render the whole grid on every HA update).
+  const openCalendar = useCallback(() => setCalendarOpen(true), []);
+  const requestEdit = useCallback(() => setEditing(true), []);
 
   const view = views.find((v) => v.id === activeView) ?? views[0];
   // Resolve the view's scene list in its configured order. Scenes that aren't in
@@ -385,13 +398,13 @@ export default function App() {
             onOpenDetail={setDetailEntity}
             onOpenTakeover={takeoverEnabled ? setTakeoverEntity : undefined}
             calendarEvents={calendarEvents}
-            onOpenCalendar={() => setCalendarOpen(true)}
+            onOpenCalendar={openCalendar}
             callHA={callHA}
             getHistory={getHistory}
             getCalendarEvents={getCalendarEvents}
             editing={editing}
             layout={layout}
-            onRequestEdit={() => setEditing(true)}
+            onRequestEdit={requestEdit}
             onNavigate={goToView}
             searchMusic={searchMusic}
             playMusic={playMusic}

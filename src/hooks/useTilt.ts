@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { isLiteMode } from '../lib/perfMode';
 
 /**
  * Pointer-tracking 3D tilt for "layered parallax glass" tiles (issue #11).
@@ -19,6 +20,13 @@ import { useCallback, useEffect, useRef } from 'react';
 export function useTilt(max = 10) {
   const elRef = useRef<HTMLElement | null>(null);
   const frame = useRef<number | null>(null);
+
+  // In performance ("lite") mode, skip the tilt entirely: return a no-op ref so
+  // no per-tile pointer listeners are attached and no getBoundingClientRect /
+  // style writes ever run. Tilt is a mouse-only flourish anyway, irrelevant on
+  // the touch wall-tablets that need lite mode. This is called unconditionally
+  // (hook order is stable) because isLiteMode() is fixed for the page lifetime.
+  const lite = isLiteMode();
 
   const enabled = useRef(true);
   useEffect(() => {
@@ -75,6 +83,8 @@ export function useTilt(max = 10) {
 
   const ref = useCallback(
     (node: HTMLElement | null) => {
+      // Lite mode: attach nothing. No listeners, no geometry reads, no thrash.
+      if (lite) return;
       if (elRef.current) {
         elRef.current.removeEventListener('pointermove', onMove);
         elRef.current.removeEventListener('pointerleave', onLeave);
@@ -87,7 +97,7 @@ export function useTilt(max = 10) {
         node.addEventListener('pointercancel', onLeave);
       }
     },
-    [onMove, onLeave],
+    [onMove, onLeave, lite],
   );
 
   useEffect(() => {

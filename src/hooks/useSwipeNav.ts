@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { isLiteMode } from '../lib/perfMode';
 
 interface Options {
   /** Fire to move to the next page (swipe left) or previous (swipe right). */
@@ -16,6 +17,12 @@ interface Options {
  *  start on a carousel (scenes row, camera strip) should scroll it, not flip
  *  the page. */
 function inHorizontalScroller(el: Element | null, stop: Element): boolean {
+  // Lite mode: skip the ancestor walk. getComputedStyle + scrollWidth/clientWidth
+  // on every node up the chain forces a synchronous style+layout flush right
+  // inside touchstart — a direct INP hit on a slow device. We accept that a
+  // swipe starting on a horizontal carousel may flip the page instead of
+  // scrolling it; negligible on a wall tablet.
+  if (isLiteMode()) return false;
   let node: Element | null = el;
   while (node && node !== stop) {
     if (node instanceof HTMLElement) {

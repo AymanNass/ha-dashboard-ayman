@@ -1,7 +1,13 @@
 import { flushSync } from 'react-dom';
+import { isLiteMode } from './perfMode';
 
 /** Whether shared-element View Transitions should be used right now. */
 export function viewTransitionsAvailable(): boolean {
+  // Lite mode: never use View Transitions. The API requires a synchronous
+  // flushSync commit plus before/after layout snapshots — a forced synchronous
+  // layout on every flyout open, which is exactly the "forced reflow" jank the
+  // profiler flagged on the weak tablet. Fall through to the instant update.
+  if (isLiteMode()) return false;
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   return typeof document.startViewTransition === 'function' && !reduced;
 }

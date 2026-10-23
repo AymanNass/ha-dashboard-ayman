@@ -10921,3 +10921,130 @@ html[data-perf='lite'] .tile-cam img {
 html[data-perf='lite'] .tile::before {
   display: none !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFORMANCE / "LITE" MODE — INSTANT STATE CHANGES (no transition jank)
+   On a slow GPU the tile's state-change transitions (e.g. a light turning on
+   animates background + box-shadow over 0.28–0.6s) play back stuttery/"scatti".
+   In lite mode we make the on/off change INSTANT: the tile flips look with no
+   interpolation, which is what actually removes the jank on tap. Press feedback
+   (the quick scale on :active) is kept because it's cheap and feels responsive.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html[data-perf='lite'] .tile,
+html[data-perf='lite'] .tile.on,
+html[data-perf='lite'] .tile.live-light,
+html[data-perf='lite'] .tile.on.live-light,
+html[data-perf='lite'] .tile.art-tinted,
+html[data-perf='lite'] .tile-icon,
+html[data-perf='lite'] .tile.climate-active,
+html[data-perf='lite'] .tile.sec-secure,
+html[data-perf='lite'] .tile.sec-open {
+  transition: none !important;
+}
+
+/* Keep only the tiny press-down feedback (cheap transform, feels responsive). */
+html[data-perf='lite'] .tile:active:not(.tile-tilt),
+html[data-perf='lite'] .tile-tilt:active {
+  transition: transform 0.06s ease !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFORMANCE / "LITE" MODE — COVERS + GLOBAL ZERO-ANIMATION
+   Final, aggressive pass: give cover cards a visible panel, make the shutter
+   move instantly (the 0.35s height animation is what lags while dragging), and
+   kill EVERY remaining transition/animation app-wide so any tap/change applies
+   immediately with no interpolation on a slow GPU.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 1 ─ Cover cards: visible panel + border (the faint glass fill vanishes
+      without blur, so an OPEN shutter looked like no card at all). */
+html[data-perf='lite'] .cv-card {
+  background: rgba(30, 33, 48, 0.72);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+html[data-perf='lite'][data-theme='light'] .cv-card {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+/* Shutter moves instantly (no height animation → no drag jank). */
+html[data-perf='lite'] .cv-shutter {
+  transition: none !important;
+  opacity: 0.85;
+}
+/* Drop the shutter's slat texture + the slider thumb glow (extra paint cost). */
+html[data-perf='lite'] .cv-slats {
+  display: none !important;
+}
+html[data-perf='lite'] .cv-vslider::-webkit-slider-thumb,
+html[data-perf='lite'] .cv-vslider::-moz-range-thumb {
+  box-shadow: none !important;
+  transition: none !important;
+}
+
+/* 2 ─ GLOBAL kill switch: no transitions, no animations, anywhere, in lite
+      mode. Tap → state applies immediately. This is deliberately broad — the
+      owner asked for "nessuna animazione, clicco e si accende immediato".
+      Press feedback is restored right after for responsiveness. */
+html[data-perf='lite'] *,
+html[data-perf='lite'] *::before,
+html[data-perf='lite'] *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Keep a tiny press-down cue (cheap transform) so taps still feel responsive. */
+html[data-perf='lite'] .tile:active:not(.tile-tilt),
+html[data-perf='lite'] .tile-tilt:active,
+html[data-perf='lite'] button:active {
+  transform: scale(0.98);
+}
+
+/* Restore the dim-slider fill tracking the drag in real time — it must follow
+   the finger, so it needs its (cheap, width-only) transition back. */
+html[data-perf='lite'] .tile-dim-fill {
+  transition: width 0.08s linear !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PERFORMANCE / "LITE" MODE — INSTANT ON/OFF, ICON-ONLY
+   When a light turns on in lite mode, nothing should fade or fill: the tile
+   keeps the exact same panel, and ONLY the icon changes color (lit = warm,
+   off = muted). No gradient glow, no background tint, no transition. "Pam pam."
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* On-state tiles keep the same neutral panel as off-state — no colored fill,
+   no gradient, no tint. Overrides the earlier lite .tile.on background so the
+   only thing that reads as "on" is the icon. */
+html[data-perf='lite'] .tile.on,
+html[data-perf='lite'] .tile.on.live-light,
+html[data-perf='lite'] .tile.has-section-color.on {
+  background: rgba(30, 33, 48, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+}
+html[data-perf='lite'][data-theme='light'] .tile.on,
+html[data-perf='lite'][data-theme='light'] .tile.on.live-light,
+html[data-perf='lite'][data-theme='light'] .tile.has-section-color.on {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(15, 23, 42, 0.1) !important;
+}
+
+/* The ::before gradient sheen/fill on active tiles — gone, so no colored wash. */
+html[data-perf='lite'] .tile.on::before,
+html[data-perf='lite'] .tile.on.live-light::before,
+html[data-perf='lite'] .tile.has-section-color.on::before {
+  display: none !important;
+}
+
+/* Icon is the ONLY on/off signal: warm when on, muted when off — and it flips
+   instantly (no color transition). live-light uses the bulb's real color. */
+html[data-perf='lite'] .tile.on .tile-icon {
+  color: #ffb347 !important;
+  background: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+html[data-perf='lite'] .tile.on.live-light .tile-icon.warm {
+  color: rgb(var(--light-rgb)) !important;
+}
