@@ -9,7 +9,6 @@ import {
   type Connection,
 } from 'home-assistant-js-websocket';
 import { HA_URL, HA_TOKEN } from '../config';
-import { isLiteMode } from '../lib/perfMode';
 
 // Module-level mirror of the WebSocket connection state, so leaf hooks (e.g.
 // useCameraFeed) can gate work on connectivity without prop-drilling. Changes
@@ -163,12 +162,13 @@ export function useHomeAssistant() {
           broadcastConnected(true);
         });
 
-        const lite = isLiteMode();
         subscribeEntities(conn, (ents) => {
           if (cancelled) return;
-          // Keep only the newest snapshot; flush at most once per frame (or per
-          // 500 ms in lite mode) so a burst of state_changed events becomes one
-          // render instead of dozens.
+          // Keep only the newest snapshot and flush once per animation frame.
+          // This still collapses a burst of state_changed events into one render
+          // (coalescing within the same frame) WITHOUT adding perceptible delay —
+          // a rAF fires within ~16 ms, so a tapped light's new state shows up
+          // right away. (A longer timer here was adding ~0.5 s of lag.)
           pendingEntities.current = ents;
           if (flushHandle.current != null) return;
           const flush = () => {
@@ -177,9 +177,7 @@ export function useHomeAssistant() {
             pendingEntities.current = null;
             if (next && !cancelled) setEntities(next);
           };
-          flushHandle.current = lite
-            ? window.setTimeout(flush, 500)
-            : window.requestAnimationFrame(flush);
+          flushHandle.current = window.requestAnimationFrame(flush);
         });
 
         subscribeConfig(conn, (config) => {

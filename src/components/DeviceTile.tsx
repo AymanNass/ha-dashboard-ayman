@@ -375,10 +375,26 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
     dragRef.current = { startX: e.clientX, startY: e.clientY, width: rect.width, left: rect.left, moved: false };
     if (slideEnabled) e.currentTarget.setPointerCapture(e.pointerId);
     heldRef.current = false;
+    // ── Instant optimistic flip on touch ──
+    // Flip the on/off look the MOMENT the finger lands, not on the later click
+    // and not after Home Assistant round-trips its new state — this is what makes
+    // the icon feel instantaneous. Limited to pure on/off tiles (lights,
+    // switches, input_boolean, fan): media opens a takeover and locks/covers
+    // behave differently, so they keep their existing click behavior. A drag
+    // (dim) or press-and-hold (flyout) cancels it below; the real HA state — or
+    // the 2.2s fallback timeout — clears the override.
+    const instantToggle = ['light', 'switch', 'input_boolean', 'fan'].includes(domain);
+    if (instantToggle) {
+      setOptimistic(!effectiveActive);
+      if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
+      optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+    }
     clearHold();
     holdTimer.current = window.setTimeout(() => {
       heldRef.current = true;
       suppressClick.current = true; // the click that follows release shouldn't toggle
+      // Opening the flyout wasn't a toggle — undo the optimistic flip.
+      setOptimistic(null);
       onOpenDetail(id);
     }, HOLD_MS);
   };
@@ -391,6 +407,8 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
       if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
         d.moved = true;
         clearHold(); // any movement cancels the pending hold
+        // A drag isn't a toggle — undo the optimistic flip we did on pointerdown.
+        setOptimistic(null);
       }
     }
     if (d.moved && slideEnabled) {
@@ -599,9 +617,8 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
           // TV tiles: click always opens the remote-control flyout.
           openDetail(id);
         } else if (tappable) {
-          setOptimistic(!effectiveActive);
-          if (optimisticTimer.current != null) window.clearTimeout(optimisticTimer.current);
-          optimisticTimer.current = window.setTimeout(() => setOptimistic(null), 2200);
+          // The optimistic icon flip already happened on pointerdown; just run
+          // the actual toggle here.
           onToggle(id);
         } else if (activatable) {
           // Momentary: fire the action, no optimistic on/off flip.

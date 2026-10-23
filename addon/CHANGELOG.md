@@ -1,4 +1,11 @@
 # Changelog
+## 2.5.3
+
+**Risposta immediata al tocco**
+- **Tolto il ritardo di mezzo secondo**: in 2.5.2 gli aggiornamenti di stato in lite mode erano raggruppati con un timer da 500ms, che ritardava il cambio visivo a ogni tocco. Ora il raggruppamento usa un frame (~16ms): resta il vantaggio di non ridisegnare tutto a ogni evento, ma senza ritardo percepibile.
+- **Accensione istantanea sul tocco**: l'icona di luci/interruttori/ventole cambia nell'istante in cui appoggi il dito (optimistic flip su pointerdown), senza aspettare la conferma di Home Assistant. Un trascinamento (dimmer) o una pressione lunga (dettaglio) annullano il flip.
+- **Sfondo tile acceso neutro in lite**: rimossa una regola residua che coloriva di giallo lo sfondo della tile accesa; in lite mode cambia solo l'icona.
+
 ## 2.5.2
 
 **Lite mode: meno lavoro per la CPU del tablet**

@@ -10768,10 +10768,9 @@ html[data-perf='lite'] .tile {
   background: rgba(30, 33, 48, 0.72);
   border-color: rgba(255, 255, 255, 0.14);
 }
-html[data-perf='lite'] .tile.on {
-  background: rgba(255, 160, 60, 0.14);
-  border-color: rgba(255, 160, 60, 0.3);
-}
+/* NOTE: the on-state background is intentionally NOT colored here — see the
+   "INSTANT ON/OFF, ICON-ONLY" block near the end of this file, which keeps the
+   on-tile panel neutral so ONLY the icon signals on/off. */
 html[data-perf='lite'] .sidebar {
   background: rgba(16, 18, 30, 0.96);
 }
