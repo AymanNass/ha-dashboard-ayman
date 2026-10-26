@@ -19,21 +19,29 @@ function CoverCard({ entity_id, name, entities, callHA, onOpenDetail }: CoverDef
   // Shutter covers from top: 100% open = 0% covered, 0% open = 100% covered
   const shutterPct = 100 - display;
 
-  const stateLabel = display === 100 ? 'Aperta' : display === 0 ? 'Chiusa' : `${display}%`;
+  // Home Assistant reports `opening` / `closing` while the motor is running.
+  const moving = entity?.state === 'opening' || entity?.state === 'closing';
 
-  // Quick actions stop propagation so they don't also open the detail flyout.
-  const open = (e: React.MouseEvent) => {
+  const stateLabel = entity?.state === 'opening'
+    ? 'In apertura…'
+    : entity?.state === 'closing'
+      ? 'In chiusura…'
+      : display === 100 ? 'Aperta' : display === 0 ? 'Chiusa' : `${display}%`;
+
+  // Live remote-style control: while moving, EITHER button stops it; when
+  // stopped, the up button opens and the down button closes. stopPropagation so
+  // the tap doesn't also open the detail flyout.
+  const pressUp = (e: React.MouseEvent) => {
     e.stopPropagation();
-    callHA('cover', 'open_cover', undefined, { entity_id });
+    callHA('cover', moving ? 'stop_cover' : 'open_cover', undefined, { entity_id });
   };
-  const close = (e: React.MouseEvent) => {
+  const pressDown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    callHA('cover', 'close_cover', undefined, { entity_id });
+    callHA('cover', moving ? 'stop_cover' : 'close_cover', undefined, { entity_id });
   };
 
   // Tapping the card body opens the detail flyout, which has Open/Stop/Close
-  // plus a large, comfortable position slider for picking an exact percentage —
-  // far easier on a small screen than a tiny slider embedded in the card.
+  // plus a large, comfortable position slider for picking an exact percentage.
   return (
     <div className="cv-card" onClick={() => onOpenDetail(entity_id)}>
       {/* Shutter: green block from top with slat lines */}
@@ -47,25 +55,27 @@ function CoverCard({ entity_id, name, entities, callHA, onOpenDetail }: CoverDef
         <span className="cv-pct">{stateLabel}</span>
       </div>
 
-      {/* Quick open / close buttons (one tap). For the exact %, tap the card. */}
+      {/* Live buttons: while moving either one stops; when stopped, up opens /
+          down closes. A button is only disabled when stopped AND already at the
+          end it would drive toward. For an exact %, tap the card. */}
       <div className="cv-quick">
         <button
-          className="cv-quick-btn"
-          onClick={open}
-          disabled={display === 100}
-          aria-label="Apri tapparella"
-          title="Apri"
+          className={`cv-quick-btn ${moving ? 'is-moving' : ''}`}
+          onClick={pressUp}
+          disabled={!moving && display === 100}
+          aria-label={moving ? 'Ferma tapparella' : 'Apri tapparella'}
+          title={moving ? 'Ferma' : 'Apri'}
         >
-          <span className="mdi mdi-chevron-up" />
+          <span className={`mdi ${moving ? 'mdi-stop' : 'mdi-chevron-up'}`} />
         </button>
         <button
-          className="cv-quick-btn"
-          onClick={close}
-          disabled={display === 0}
-          aria-label="Chiudi tapparella"
-          title="Chiudi"
+          className={`cv-quick-btn ${moving ? 'is-moving' : ''}`}
+          onClick={pressDown}
+          disabled={!moving && display === 0}
+          aria-label={moving ? 'Ferma tapparella' : 'Chiudi tapparella'}
+          title={moving ? 'Ferma' : 'Chiudi'}
         >
-          <span className="mdi mdi-chevron-down" />
+          <span className={`mdi ${moving ? 'mdi-stop' : 'mdi-chevron-down'}`} />
         </button>
       </div>
     </div>

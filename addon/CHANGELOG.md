@@ -1,4 +1,12 @@
 # Changelog
+## 2.5.5
+
+**Tapparelle: pulsanti live come un telecomando**
+- Tapparella ferma: ▲ apre, ▼ chiude.
+- Mentre si muove: entrambi i pulsanti diventano uno stop (icona ■, arancione) e un tocco ferma il movimento. Es. mentre scende, un altro tocco su ▼ la ferma.
+- La scritta mostra "In apertura…" / "In chiusura…" durante il movimento.
+- Il tocco sulla card apre sempre il dettaglio con lo slider per la percentuale precisa.
+
 ## 2.5.4
 
 **Tapparelle più comode su schermo piccolo**

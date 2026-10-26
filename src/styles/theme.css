@@ -11091,5 +11091,14 @@ html[data-perf='lite'] .tile.on.live-light .tile-icon.warm {
   color: #1e293b;
 }
 
+/* While the cover is moving, the buttons act as "stop" — tint them so it's
+   obvious a tap will halt the motor. */
+.cv-quick-btn.is-moving {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.18);
+  color: #f59e0b;
+}
+.cv-quick-btn.is-moving:hover { background: rgba(245, 158, 11, 0.28); }
+
 /* In lite mode: no press transition (instant feedback), keep the tiny scale. */
 html[data-perf='lite'] .cv-quick-btn { transition: none !important; }
