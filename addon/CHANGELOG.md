@@ -1,4 +1,10 @@
 # Changelog
+## 2.5.7
+
+**Musica: cambio zona al volo e modalità leggera di default**
+- **Cambio zona live**: premendo una zona (Salotto, Camera, Bagno, Ovunque) mentre la musica suona, la riproduzione si sposta subito su quella zona.
+- **Modalità leggera (lite) come predefinita**: l'interfaccia ottimizzata — niente effetti pesanti, accensione istantanea, nuovo look luci/tapparelle — è ora attiva per tutti i dispositivi di default. Chi vuole gli effetti grafici completi può aggiungere `?full` all'URL.
+
 ## 2.5.6
 
 **Nuovo look luci e tapparelle più pulite**

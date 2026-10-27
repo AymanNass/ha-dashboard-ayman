@@ -102,6 +102,24 @@ export function MusicaPage({ entities, callHA, onOpenDetail }: Props) {
     setTimeout(() => refresh(SPOTIFY_PLAYER), 500);
   };
 
+  /** Tap a zone button: select it, and if something is already playing, MOVE
+   *  playback to that zone right away (select_source on the live Spotify
+   *  player). If nothing is playing, just remember the choice for the next
+   *  playlist. "Salotto" → suona in salotto; "Ovunque" → tutti. */
+  const pickDevice = async (d: MusicDevice) => {
+    setDevice(d);
+    if (!isActive) return; // nothing playing yet — just set the target
+    setBusy(`dev:${d.source}`);
+    try {
+      await callHA('media_player', 'select_source', { source: d.source }, { entity_id: SPOTIFY_PLAYER });
+      for (const ms of [800, 2000]) setTimeout(() => refresh(SPOTIFY_PLAYER), ms);
+    } catch {
+      // ignore — state will reflect reality
+    } finally {
+      setTimeout(() => setBusy(null), 1000);
+    }
+  };
+
   const commitVolume = (pct: number) =>
     callHA('media_player', 'volume_set', { volume_level: pct / 100 }, { entity_id: volEntity });
 
@@ -227,8 +245,9 @@ export function MusicaPage({ entities, callHA, onOpenDetail }: Props) {
           return (
             <button
               key={d.source}
-              className={`music-dev ${device.source === d.source ? 'active' : ''} ${playingHere ? 'live' : ''}`}
-              onClick={() => setDevice(d)}
+              className={`music-dev ${device.source === d.source ? 'active' : ''} ${playingHere ? 'live' : ''} ${busy === `dev:${d.source}` ? 'busy' : ''}`}
+              onClick={() => pickDevice(d)}
+              disabled={busy !== null}
             >
               <span className={`mdi ${d.icon}`} />
               <span>{d.name}</span>
