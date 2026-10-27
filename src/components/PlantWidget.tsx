@@ -46,9 +46,31 @@ function plantStatus(moisture: number | null, thirsty: number, critical: number)
  * Compact plants widget: one small row per plant (icon/photo + moisture + status),
  * grouped together so they take little horizontal space.
  */
+/** Rank a plant's severity so the widget's overall accent reflects the worst
+ *  plant: 0 = ok/unknown, 1 = thirsty (annaffia presto), 2 = critical (ha sete). */
+function severity(moisture: number | null, thirsty: number, critical: number): number {
+  if (moisture == null) return 0;
+  if (moisture < critical) return 2;
+  if (moisture < thirsty) return 1;
+  return 0;
+}
+
 export function PlantWidget({ entities, plants }: { entities: HassEntities; plants: PlantConfig[] }) {
+  // Overall accent = the worst plant's state. All ok → green; any "annaffia
+  // presto" → yellow; any "ha sete" → red.
+  const worst = plants.reduce((max, plant) => {
+    const thirsty = plant.thirstyBelow ?? plantMoisture.thirstyBelow;
+    const critical = plant.criticalBelow ?? plantMoisture.criticalBelow;
+    const s = severity(readMoisture(entities, plant.moistureId), thirsty, critical);
+    return Math.max(max, s);
+  }, 0);
+  const accent = worst === 2 ? COLOR_CRITICAL : worst === 1 ? COLOR_THIRSTY : COLOR_OK;
+
   return (
-    <div className="plants-cluster">
+    <div
+      className="plants-cluster"
+      style={{ '--plants-accent': accent } as React.CSSProperties}
+    >
       {plants.map((plant) => {
         const thirsty = plant.thirstyBelow ?? plantMoisture.thirstyBelow;
         const critical = plant.criticalBelow ?? plantMoisture.criticalBelow;

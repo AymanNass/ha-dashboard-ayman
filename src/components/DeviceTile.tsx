@@ -596,7 +596,7 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
     <div
       ref={tiltRef as React.Ref<HTMLDivElement>}
       data-domain={domain}
-      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''} ${sectionColor ? 'has-section-color' : ''}`}
+      className={`tile tile-enter tile-tilt ${on ? 'on' : ''} ${liveLight ? 'live-light' : ''} ${dimmable ? 'is-dimmable' : ''} ${span ? 'span' : ''} ${tall ? 'tall' : ''} ${cameraUrl ? 'has-cam' : ''} ${artworkUrl ? 'has-artwork' : ''} ${artTint ? 'art-tinted' : ''} ${secClass} ${slideEnabled ? 'slide-dim' : ''} ${climateActive ? `climate-active climate-${entity.state}` : ''} ${sectionColor ? 'has-section-color' : ''}`}
       style={{
         ...(slideEnabled
           ? {

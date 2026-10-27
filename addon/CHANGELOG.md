@@ -1,4 +1,13 @@
 # Changelog
+## 2.5.6
+
+**Nuovo look luci e tapparelle più pulite**
+- **Luci (lite mode)**: niente più sfondo arancione. Icona azzurrina da spenta, gialla da accesa, con una riga-accento gialla a sinistra quando è on. Niente transizioni → cambio istantaneo.
+- **Lampade regolabili**: oltre alla riga laterale, uno sfondo giallo trasparente che si riempie in base alla luminosità (e segue il trascinamento).
+- **Comodini (Ayman/Martina)**: stesso stile delle altre luci — icona azzurra/gialla e riga-accento sul lato della lampada accesa.
+- **Widget piante**: riga laterale che riflette lo stato peggiore — verde (tutte ok), gialla (una da annaffiare presto), rossa (una assetata).
+- **Tapparelle**: premendo apri/chiudi, solo quel pulsante diventa "stop" (non entrambi), e un altro tocco ferma il movimento. Niente più scritta che sballava il layout. Lasciata andare, la tapparella completa la corsa e si ferma da sola.
+
 ## 2.5.5
 
 **Tapparelle: pulsanti live come un telecomando**

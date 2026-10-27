@@ -6735,6 +6735,9 @@ html.vt-active .detail-panel.open > * {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
+  /* Left accent edge reflecting the worst plant: green (ok) / yellow (annaffia
+     presto) / red (ha sete). Same straight-edge style as the light tiles. */
+  box-shadow: inset 3px 0 0 0 var(--plants-accent, transparent);
 }
 .plant-mini {
   display: flex;
@@ -10999,10 +11002,63 @@ html[data-perf='lite'] button:active {
   transform: scale(0.98);
 }
 
-/* Restore the dim-slider fill tracking the drag in real time — it must follow
-   the finger, so it needs its (cheap, width-only) transition back. */
-html[data-perf='lite'] .tile-dim-fill {
+/* Dim-slider fill in lite mode: instead of flooding the whole tile with an
+   orange wash (which looked bad and clashed with the clean accent-edge look),
+   shrink it to a thin brightness bar pinned to the BOTTOM of the tile. It still
+   tracks the drag in real time (width follows the finger) and shows the current
+   level, but no full-tile color pool. */
+/* Brightness fill ONLY on truly dimmable lights (class is-dimmable, e.g.
+   "Lampada sala") — NOT on every on light. A translucent YELLOW fill from the
+   left whose width = the brightness level, over the neutral panel. Grows and
+   shrinks with the drag in real time. The left accent edge (box-shadow above)
+   stays on top of it. */
+html[data-perf='lite'] .tile:not(.is-dimmable) .tile-dim-fill {
+  display: none !important;
+}
+html[data-perf='lite'] .tile.is-dimmable .tile-dim-fill {
+  display: block !important;
+  inset: 0 auto 0 0 !important;          /* full height, anchored left */
+  width: var(--dim, 100%) !important;    /* = brightness level */
+  border-radius: 12px 0 0 12px !important;
+  background: rgba(250, 204, 21, 0.22) !important; /* translucent yellow */
+  box-shadow: none !important;
   transition: width 0.08s linear !important;
+}
+/* Dimmable lights keep the left accent edge when on (same as every other light)
+   AND show the bottom brightness bar — two complementary indicators. The left
+   accent edge comes from the shared .tile.on box-shadow rule above. */
+
+/* No legibility scrim/text-shadow needed anymore (no wash behind the text). */
+html[data-perf='lite'] .tile.slide-dim .tile-info {
+  text-shadow: none !important;
+}
+
+/* ── Split "bedside lamps" tile (e.g. Ayman / Martina) in lite mode ──
+   Same language as normal light tiles: the lamp icon is azzurrino when off and
+   yellow when on, and an on lamp gets a straight yellow accent edge on its side
+   of the tile. */
+html[data-perf='lite'] .split-tile .bed-lamp-icon {
+  color: #7fb4e6 !important;   /* azzurrino when off */
+  opacity: 1 !important;
+  transition: none !important;
+}
+html[data-perf='lite'] .split-tile .bed-lamp.is-on .bed-lamp-icon {
+  color: #facc15 !important;   /* yellow when on */
+}
+html[data-perf='lite'] .split-tile .bed-lamp.is-on .bed-lamp-name {
+  color: #f8fafc !important;
+}
+/* Full-height accent edge on the whole split tile, on the side of whichever
+   lamp is on — same look as a normal light tile's left edge. Uses :has() to key
+   off the lit lamp. Both on → edges on both sides. */
+html[data-perf='lite'] .split-tile:has(.bed-lamp-left.is-on) {
+  box-shadow: inset 3px 0 0 0 #facc15 !important;
+}
+html[data-perf='lite'] .split-tile:has(.bed-lamp-right.is-on) {
+  box-shadow: inset -3px 0 0 0 #facc15 !important;
+}
+html[data-perf='lite'] .split-tile:has(.bed-lamp-left.is-on):has(.bed-lamp-right.is-on) {
+  box-shadow: inset 3px 0 0 0 #facc15, inset -3px 0 0 0 #facc15 !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -11012,21 +11068,25 @@ html[data-perf='lite'] .tile-dim-fill {
    off = muted). No gradient glow, no background tint, no transition. "Pam pam."
    ══════════════════════════════════════════════════════════════════════════ */
 
-/* On-state tiles keep the same neutral panel as off-state — no colored fill,
-   no gradient, no tint. Overrides the earlier lite .tile.on background so the
-   only thing that reads as "on" is the icon. */
+/* "On" look in lite mode — modern ACCENT style, not a colored background wash.
+   The panel stays the same neutral card as when off (no orange pool, no
+   gradient, no blur → nothing expensive to composite, so it flips instantly on
+   a slow tablet). What signals "on" is a crisp colored LEFT BORDER + a lit
+   icon. Clean, modern, and cheap. */
 html[data-perf='lite'] .tile.on,
 html[data-perf='lite'] .tile.on.live-light,
 html[data-perf='lite'] .tile.has-section-color.on {
+  --accent-on: 250, 204, 21; /* a nice bright yellow for the "on" accent */
   background: rgba(30, 33, 48, 0.72) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  /* The left accent edge (the version you preferred). */
+  box-shadow: inset 3px 0 0 0 rgba(var(--accent-on), 1) !important;
 }
 html[data-perf='lite'][data-theme='light'] .tile.on,
 html[data-perf='lite'][data-theme='light'] .tile.on.live-light,
 html[data-perf='lite'][data-theme='light'] .tile.has-section-color.on {
-  background: rgba(255, 255, 255, 0.9) !important;
-  border-color: rgba(15, 23, 42, 0.1) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
 }
 
 /* The ::before gradient sheen/fill on active tiles — gone, so no colored wash. */
@@ -11036,17 +11096,27 @@ html[data-perf='lite'] .tile.has-section-color.on::before {
   display: none !important;
 }
 
-/* Icon is the ONLY on/off signal: warm when on, muted when off — and it flips
-   instantly (no color transition). live-light uses the bulb's real color. */
-html[data-perf='lite'] .tile.on .tile-icon {
-  color: #ffb347 !important;
+/* Icon color is the main on/off signal in lite mode:
+   OFF → light blue (calm, "standby"), ON → bright yellow. Flipped instantly
+   (no transition, no glow animation). */
+html[data-perf='lite'] .tile .tile-icon {
+  color: #7fb4e6 !important;         /* azzurrino when off */
   background: none !important;
   transition: none !important;
   animation: none !important;
 }
-html[data-perf='lite'] .tile.on.live-light .tile-icon.warm {
-  color: rgb(var(--light-rgb)) !important;
+html[data-perf='lite'] .tile.on .tile-icon {
+  color: rgb(var(--accent-on)) !important;  /* yellow when on */
 }
+/* Name goes bright white when on, for a touch more contrast. */
+html[data-perf='lite'] .tile.on .tile-name,
+html[data-perf='lite'] .tile.on .tile-top .tile-name {
+  color: #f8fafc !important;
+}
+
+/* Remove the bottom brightness bar look — the dim fill should NOT paint when a
+   dimmable light is simply on (only while the user is actively dragging it).
+   See the drag-only rule further down. */
 
 /* ══════════════════════════════════════════════════════════════════════════
    COVER CARD — quick open/close buttons (replaces the fiddly vertical slider)
