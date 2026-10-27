@@ -1,4 +1,12 @@
 # Changelog
+## 2.6.1
+
+**Rifiniture layout mobile**
+- Disattivato lo swipe sinistra/destra che cambiava pagina per sbaglio su telefono (si naviga dalla barra in basso).
+- Header compatto: niente saluto né orologio, solo gli avatar Ayman/Martina (colore = a casa/fuori) e il meteo.
+- Routine "Sono tornato" e "Vado via" spostate in fondo alla pagina.
+- Corretta la sovrapposizione degli avatar con il meteo.
+
 ## 2.6.0
 
 **Layout mobile per telefono (?mobile)**

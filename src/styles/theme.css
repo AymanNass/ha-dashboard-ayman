@@ -11200,7 +11200,14 @@ html[data-mobile] .main-content {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
   padding: 12px 12px calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+  /* Flex column so we can reorder: routines (Control Center) go to the BOTTOM. */
+  display: flex !important;
+  flex-direction: column !important;
 }
+/* Keep the natural top-to-bottom order for everything except the routines bar,
+   which is pushed to the end. (Direct children of main-content.) */
+html[data-mobile] .main-content > * { order: 0 !important; }
+html[data-mobile] .main-content > .cc { order: 10 !important; margin-top: 12px !important; }
 
 /* ── Tiles: native-app style cards, NOT the tablet's compact rows. Big, airy,
    icon-forward. 2-up grid with fixed, generous row height so nothing overlaps.
@@ -11420,14 +11427,36 @@ html[data-mobile] .robot-mini-go { width: 36px !important; height: 36px !importa
 /* ── Header: compact. The giant greeting block is the biggest space-waster on
    a phone — shrink the greeting, keep weather/people usable. ── */
 html[data-mobile] .home-top { gap: 10px !important; margin-bottom: 12px !important; }
-html[data-mobile] .hdr-greeting { min-width: 0 !important; }
-html[data-mobile] .hdr-hello {
-  font-size: 17px !important;
-  line-height: 1.2 !important;
-  display: -webkit-box !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
-  overflow: hidden !important;
+/* Mobile header: drop the long greeting AND the time. */
+html[data-mobile] .hdr-greeting { display: none !important; }
+
+/* Row 1 holds only the weather now (greeting hidden). */
+html[data-mobile] .hdr-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+/* Presence (Ayman/Martina) stays in its own row in normal flow — NO absolute
+   positioning (that caused the overlap). Icon-only avatars, left-aligned,
+   placed before the status cards so they read first. */
+html[data-mobile] .hdr-cards-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+html[data-mobile] .hdr-presence {
+  order: -1 !important;               /* avatars before the status cards */
+  gap: 8px !important;
+  flex: none !important;
+}
+html[data-mobile] .presence-info { display: none !important; }
+html[data-mobile] .presence-item { gap: 0 !important; }
+html[data-mobile] .presence-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  font-size: 15px !important;
 }
 
 /* Control Center (routines/quick actions) already scrolls horizontally; just

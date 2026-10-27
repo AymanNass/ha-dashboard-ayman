@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { isLiteMode } from '../lib/perfMode';
+import { isLiteMode, isMobileLayout } from '../lib/perfMode';
 
 interface Options {
   /** Fire to move to the next page (swipe left) or previous (swipe right). */
@@ -56,6 +56,11 @@ export function useSwipeNav(
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Mobile layout uses the bottom nav for paging; swipe-to-change-page gets
+    // in the way of normal vertical scrolling and fires by accident, so it's
+    // disabled there.
+    if (isMobileLayout()) return;
 
     const mq = window.matchMedia(query);
     let startX = 0;
