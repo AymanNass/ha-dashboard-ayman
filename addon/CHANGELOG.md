@@ -1,4 +1,13 @@
 # Changelog
+## 2.6.0
+
+**Layout mobile per telefono (?mobile)**
+- **Nuova modalità mobile** attivabile con `?mobile` nell'URL (es. `http://IP:3000/?mobile`), pensata per iPhone/telefoni. Isolata: non cambia nulla per tablet e desktop.
+- **Barra di navigazione in basso** stile app, con una voce per pagina. Calendario, Automazioni e Impostazioni raccolte sotto un unico pulsante "Altro".
+- **Tile in stile app**: card grandi, icona in evidenza, nome e stato leggibili, niente testi sovrapposti.
+- **Componenti adattati**: pagina Robot a colonna singola ordinata; comodini Ayman/Martina compatti in un solo slot; Roborock accanto a Luce cameretta; widget piante ridotto a sole icone colorate per stato.
+- **Zona notifiche** mobile: una card alla volta ad altezza fissa, niente più salti di layout.
+
 ## 2.5.7
 
 **Musica: cambio zona al volo e modalità leggera di default**

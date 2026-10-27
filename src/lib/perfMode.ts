@@ -37,8 +37,24 @@ export function applyPerfMode(): void {
   const forcedOff =
     params?.has('full') || params?.get('lite') === '0' || params?.get('lite') === 'false';
 
-  const lite = !forcedOff;
+  // Mobile layout (phone): opt-in ONLY via ?mobile. Fully isolated — nothing
+  // changes for anyone who doesn't pass it. Mobile implies lite (no heavy
+  // effects on a phone). The CSS keys off html[data-mobile].
+  const mobile = params?.has('mobile') && params.get('mobile') !== '0' && params.get('mobile') !== 'false';
+
+  const lite = !forcedOff || mobile;
 
   if (lite) document.documentElement.setAttribute('data-perf', 'lite');
   else document.documentElement.removeAttribute('data-perf');
+
+  if (mobile) document.documentElement.setAttribute('data-mobile', 'on');
+  else document.documentElement.removeAttribute('data-mobile');
+}
+
+/** Whether the phone (mobile) layout is active. */
+export function isMobileLayout(): boolean {
+  return (
+    typeof document !== 'undefined' &&
+    document.documentElement.getAttribute('data-mobile') === 'on'
+  );
 }

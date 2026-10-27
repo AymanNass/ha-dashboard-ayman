@@ -11172,3 +11172,416 @@ html[data-perf='lite'] .tile.on .tile-top .tile-name {
 
 /* In lite mode: no press transition (instant feedback), keep the tiny scale. */
 html[data-perf='lite'] .cv-quick-btn { transition: none !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE LAYOUT  (html[data-mobile="on"])  — opt-in via ?mobile only.
+   Fully isolated: every rule is scoped to html[data-mobile], so nothing here
+   affects the tablet/desktop experience. Phone-shaped layout with an iOS-style
+   bottom navigation bar. Implies lite mode (set together in perfMode.ts).
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Hide the side rail — navigation moves to the bottom bar. */
+html[data-mobile] .sidebar { display: none !important; }
+/* Page dots redundant with the bottom nav. */
+html[data-mobile] .page-dots { display: none !important; }
+
+/* App shell: keep the original model where .main-content is the scroll area
+   (full height, scrolls internally). We only widen it (sidebar gone) and add
+   bottom padding so the fixed nav never covers the last content. Do NOT switch
+   to body scroll here — that broke scrolling. */
+html[data-mobile] .app {
+  display: block !important;
+  height: 100vh !important;
+  width: 100vw !important;
+}
+html[data-mobile] .main-content {
+  width: 100% !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 12px 12px calc(84px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* ── Tiles: native-app style cards, NOT the tablet's compact rows. Big, airy,
+   icon-forward. 2-up grid with fixed, generous row height so nothing overlaps.
+   This deliberately breaks from the desktop tile look for a proper phone feel. */
+html[data-mobile] .tile-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-auto-rows: 96px !important;
+  gap: 12px !important;
+}
+html[data-mobile] .tile {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 14px !important;
+  border-radius: 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+html[data-mobile] .tile.span { grid-column: 1 / -1 !important; }
+html[data-mobile] .tile.tall { grid-row: span 2 !important; }
+
+/* The tile's name lives in .tile-top (icon + name). On mobile we stack it:
+   big icon on its own line, then the name below — like a native app tile. */
+html[data-mobile] .tile-top {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
+}
+html[data-mobile] .tile-icon {
+  font-size: 30px !important;          /* big, app-like */
+  width: auto !important;
+  height: auto !important;
+}
+html[data-mobile] .tile-top .tile-name {
+  flex: none !important;
+  font-size: 14px !important;
+  font-weight: 650 !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;      /* allow 2 lines for longer names */
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Status line pinned at the bottom. */
+html[data-mobile] .tile-info {
+  margin-top: 4px !important;
+  flex: none !important;
+}
+html[data-mobile] .tile-sub {
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* The action buttons that sit in .tile-top (climate off, TV power, ⋯) stay
+   top-right, not stacked under the icon. */
+html[data-mobile] .tile-top .tile-climate-off,
+html[data-mobile] .tile-top .tile-tv-power,
+html[data-mobile] .tile-top .tile-more {
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+}
+
+/* Multi-column rows stack vertically on a phone. */
+html[data-mobile] .row-columns,
+html[data-mobile] .row-columns.multi {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+}
+
+/* Section spacing: clear separation, readable titles. */
+html[data-mobile] .view-row { margin-bottom: 18px !important; }
+html[data-mobile] .row-title { font-size: 13px !important; margin-bottom: 8px !important; }
+
+/* ── Notification zone on mobile: ONE card at a time, full width, FIXED height.
+   On the phone the 3-up row (and the way it dropped to 1) made the whole top of
+   the page jump around as notices rotated. Here we show a single card with a
+   fixed min-height, so the layout never shifts no matter how many notices are
+   active — the rotation just swaps the content in place. ── */
+html[data-mobile] .nz-row {
+  display: block !important;
+  min-height: 64px !important;
+}
+/* Show only the first (highest-priority) card; keep the rest for rotation. */
+html[data-mobile] .nz-row .nz-card { display: none !important; }
+html[data-mobile] .nz-row .nz-card:first-child {
+  display: flex !important;
+  height: auto !important;
+  min-height: 64px !important;
+}
+
+/* Cover cards: 2-up, taller so the shutter + buttons fit without clipping. */
+html[data-mobile] .cv-cards {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+}
+html[data-mobile] .cv-card { max-height: none !important; min-height: 90px !important; }
+
+/* ── Split "bedside lamps" tile (Ayman / Martina) ──
+   Compact: fits in a SINGLE grid slot. We drop the decorative center "bed"
+   shape and keep just the two lamp buttons side by side, so it reads as one
+   small tile like the others. */
+html[data-mobile] .split-tile,
+html[data-mobile] .split-tile.span {
+  grid-column: auto !important;      /* single slot even though config marks it 2x1 */
+  grid-row: auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  min-height: 0 !important;
+  padding: 10px 8px !important;
+}
+/* Hide the center bed graphic + its label to save room in one slot. */
+html[data-mobile] .split-tile .bed-center { display: none !important; }
+/* Two compact lamp buttons. */
+html[data-mobile] .split-tile .bed-lamp {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+html[data-mobile] .split-tile .bed-lamp-icon { font-size: 22px !important; }
+html[data-mobile] .split-tile .bed-lamp-name {
+  font-size: 10px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+/* Plants widget on mobile: ICONS ONLY. No names, no percentages, no status
+   text — just the plant icons in a row, colored by state (green ok / yellow
+   water-soon / red thirsty). Compact, app-like. */
+html[data-mobile] .soggiorno-widgets { margin-top: 12px !important; }
+html[data-mobile] .plants-cluster {
+  width: 100% !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+}
+/* Each plant becomes just its icon. */
+html[data-mobile] .plant-mini {
+  flex: none !important;
+  gap: 0 !important;
+}
+html[data-mobile] .plant-mini-info,
+html[data-mobile] .plant-mini-pct { display: none !important; }
+html[data-mobile] .plant-mini-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+}
+html[data-mobile] .plant-mini-icon .mdi { font-size: 22px !important; }
+
+/* ── Cameretta row (tiles + Roborock mini card) ──
+   Lay the room's tiles AND the Roborock card in the same 2-column grid so
+   Roborock sits next to "Luce cameretta" in a single slot, not full width. */
+html[data-mobile] .cameretta-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  grid-auto-rows: 96px !important;
+  gap: 12px !important;
+  align-items: stretch !important;
+}
+/* Dissolve the inner tile-grid so its tiles join the parent grid directly. */
+html[data-mobile] .cameretta-row .tile-grid {
+  display: contents !important;
+}
+/* Roborock as a compact single-slot card. Structured layout (not "floating"):
+   icon top-left, name/state below it, and the play button pinned to the
+   bottom-right corner so it has a fixed, sensible place. */
+html[data-mobile] .cameretta-row .robot-mini {
+  position: relative !important;
+  flex: none !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 14px !important;
+  border-radius: 18px !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+}
+html[data-mobile] .cameretta-row .robot-mini-left {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+}
+html[data-mobile] .robot-mini-icon { font-size: 28px !important; }
+html[data-mobile] .robot-mini-name { font-size: 13px !important; }
+html[data-mobile] .robot-mini-state { font-size: 11px !important; }
+/* Play button pinned to the bottom-right of the card. */
+html[data-mobile] .cameretta-row .robot-mini-right {
+  position: absolute !important;
+  right: 12px !important;
+  bottom: 12px !important;
+  margin: 0 !important;
+}
+html[data-mobile] .robot-mini-go { width: 36px !important; height: 36px !important; flex: none !important; }
+
+/* ── Header: compact. The giant greeting block is the biggest space-waster on
+   a phone — shrink the greeting, keep weather/people usable. ── */
+html[data-mobile] .home-top { gap: 10px !important; margin-bottom: 12px !important; }
+html[data-mobile] .hdr-greeting { min-width: 0 !important; }
+html[data-mobile] .hdr-hello {
+  font-size: 17px !important;
+  line-height: 1.2 !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Control Center (routines/quick actions) already scrolls horizontally; just
+   make sure it doesn't wrap and clip on a phone. */
+html[data-mobile] .cc {
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+}
+/* Scene pills strip scrolls horizontally too. */
+html[data-mobile] .scene-pills {
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+  justify-content: flex-start !important;
+}
+html[data-mobile] .scene-pills::-webkit-scrollbar { display: none !important; }
+
+/* ── Bottom navigation bar ── */
+html[data-mobile] .bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  background: rgba(16, 18, 30, 0.96);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html[data-mobile] .bottom-nav-scroll {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 8px 8px;
+  /* Equal-width buttons that fill the bar when few, and scroll when many. */
+}
+html[data-mobile] .bottom-nav-scroll::-webkit-scrollbar { display: none; }
+html[data-mobile] .bottom-nav-btn {
+  flex: 1 1 0;
+  min-width: 64px;       /* never smaller than this → when too many, the bar scrolls */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-mobile] .bottom-nav-btn .mdi { font-size: 24px; line-height: 1; }
+html[data-mobile] .bottom-nav-btn.active {
+  color: var(--accent-orange);
+  background: rgba(var(--accent-rgb), 0.14);
+}
+html[data-mobile] .bottom-nav-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+/* Light theme variant for the bar. */
+html[data-mobile][data-theme='light'] .bottom-nav {
+  background: rgba(255, 255, 255, 0.98);
+  border-top-color: rgba(15, 23, 42, 0.1);
+}
+
+/* "Altro" popup sheet (Calendario / Automazioni / Impostazioni). */
+html[data-mobile] .bottom-more-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(0, 0, 0, 0.4);
+}
+html[data-mobile] .bottom-more-sheet {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  z-index: 56;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 16px;
+  background: rgba(22, 24, 36, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+html[data-mobile][data-theme='light'] .bottom-more-sheet {
+  background: rgba(255, 255, 255, 0.99);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+html[data-mobile] .bottom-more-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-mobile] .bottom-more-item .mdi { font-size: 22px; color: var(--text-secondary); }
+html[data-mobile] .bottom-more-item:active { background: rgba(255, 255, 255, 0.08); }
+
+/* Keep flyouts/detail panels clear of the bottom bar. */
+html[data-mobile] .detail-panel {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+/* ── Robot page (RobotPageV2): the 3-column desktop layout is unreadable on a
+   phone. Stack everything into a single column, in a sensible order, and let
+   the inner controls (presets, rooms, stats, segmented buttons) flow. ── */
+html[data-mobile] .rv2-cols {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+/* Center (the cleaning controls + start button) first, status and dock after. */
+html[data-mobile] .rv2-center { order: 1 !important; }
+html[data-mobile] .rv2-left   { order: 2 !important; }
+html[data-mobile] .rv2-right  { order: 3 !important; }
+html[data-mobile] .rv2-section,
+html[data-mobile] .rv2-center { width: 100% !important; }
+
+/* Preset buttons + segmented controls: comfortable touch size. */
+html[data-mobile] .rv2-preset-row { flex-wrap: wrap !important; }
+html[data-mobile] .rv2-preset { flex: 1 0 40% !important; padding: 12px !important; }
+html[data-mobile] .rv2-seg-btn { padding: 12px 10px !important; font-size: 13px !important; }
+html[data-mobile] .rv2-cta { padding: 16px !important; font-size: 16px !important; }
+
+/* Room chips: wrap, big enough to tap. */
+html[data-mobile] .rv2-rooms { gap: 8px !important; }
+html[data-mobile] .rv2-room-btn { padding: 10px 12px !important; font-size: 13px !important; }
+
+/* Stats row stays 3-up but a touch larger. */
+html[data-mobile] .rv2-stat-val { font-size: 16px !important; }
+
+/* Map gets more height so it's actually visible. */
+html[data-mobile] .rv2-map { min-height: 200px !important; }

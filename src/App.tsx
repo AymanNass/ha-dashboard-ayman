@@ -22,6 +22,8 @@ import { CalendarFlyout } from './components/CalendarFlyout';
 import { activeCalendarIds, parseEventsResponse, type CalendarEvent, type CalendarServiceResponse } from './lib/calendar';
 import { PagesManager } from './components/PagesManager';
 import { PageDots } from './components/PageDots';
+import { BottomNav } from './components/BottomNav';
+import { isMobileLayout } from './lib/perfMode';
 import { Onboarding } from './components/Onboarding';
 import { viewRows } from './lib/layout';
 import { effectiveSize, sizeToSpan } from './lib/tileSize';
@@ -414,6 +416,15 @@ export default function App() {
       </main>
 
       <PageDots views={views} activeView={activeView} onJump={goToView} />
+
+      {isMobileLayout() && (
+        <BottomNav
+          views={views}
+          activeView={activeView}
+          onNavigate={goToView}
+          onOpenSettings={() => setShowSettings(true)}
+        />
+      )}
 
       <DetailPanel
         entityId={detailEntity}
