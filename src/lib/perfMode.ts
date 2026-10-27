@@ -37,10 +37,28 @@ export function applyPerfMode(): void {
   const forcedOff =
     params?.has('full') || params?.get('lite') === '0' || params?.get('lite') === 'false';
 
-  // Mobile layout (phone): opt-in ONLY via ?mobile. Fully isolated — nothing
-  // changes for anyone who doesn't pass it. Mobile implies lite (no heavy
-  // effects on a phone). The CSS keys off html[data-mobile].
-  const mobile = params?.has('mobile') && params.get('mobile') !== '0' && params.get('mobile') !== 'false';
+  // Mobile layout (phone): AUTO-detected for phones, so "Add to Home Screen" on
+  // an iPhone just works without any query. Explicit override wins either way:
+  //   ?mobile        → force phone layout
+  //   ?mobile=0      → force it off
+  // IMPORTANT: tablets (iPad, Lenovo M10, etc.) must NOT get the phone layout —
+  // they stay on the normal lite dashboard. We tell phone from tablet by
+  // combining a touch pointer with a NARROW screen: phones are coarse-pointer
+  // AND small; tablets are coarse-pointer but wide, so they're excluded.
+  const urlMobileOn = params?.has('mobile') && params.get('mobile') !== '0' && params.get('mobile') !== 'false';
+  const urlMobileOff = params?.get('mobile') === '0' || params?.get('mobile') === 'false';
+
+  const isPhone = (() => {
+    if (typeof window === 'undefined') return false;
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches === true;
+    // Shortest viewport side < 500px → a phone, not a tablet. Uses the smaller
+    // dimension so it holds in both portrait and landscape.
+    const shortSide = Math.min(window.innerWidth || 9999, window.innerHeight || 9999);
+    const narrow = shortSide < 500;
+    return coarse && narrow;
+  })();
+
+  const mobile = !urlMobileOff && (urlMobileOn || isPhone);
 
   const lite = !forcedOff || mobile;
 

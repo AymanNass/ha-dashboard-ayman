@@ -1,4 +1,11 @@
 # Changelog
+## 2.6.2
+
+**Layout mobile automatico sui telefoni**
+- La versione mobile ora si attiva **da sola sui telefoni** (schermo stretto + touch), così "Aggiungi a Home" su iPhone funziona senza bisogno di `?mobile` nell'URL.
+- **I tablet restano in lite** (iPad, Lenovo M10, ecc.): non passano alla versione telefono, perché hanno schermo largo.
+- Override manuale sempre possibile: `?mobile` forza la versione telefono, `?mobile=0` la disattiva.
+
 ## 2.6.1
 
 **Rifiniture layout mobile**
