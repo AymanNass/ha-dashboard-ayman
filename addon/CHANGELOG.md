@@ -1,4 +1,11 @@
 # Changelog
+## 2.6.9
+
+**Fine del blocco su "Connecting…" a freddo**
+- Risolta la causa vera del blocco permanente su "Connecting…" quando si apre l'app dopo averla chiusa del tutto (o al primo caricamento del sito). Il "warm-up" introdotto prima apriva un canale di prova che, a telefono/rete "freddi", poteva restare appeso per sempre senza mai far partire la connessione vera: era proprio questo a lasciare la dashboard su "Connecting…" finché non si premeva "Test connection" a mano.
+- Ora la connessione ha un timeout reale: se il primo tentativo resta appeso, scade in pochi secondi e riprova da solo (con attese crescenti), senza bisogno di aprire le impostazioni e premere "Test connection".
+- Tornando sull'app (sblocco/riapertura) un eventuale tentativo in attesa viene anticipato subito, evitando doppie riconnessioni in parallelo.
+
 ## 2.6.8
 
 **Connessione pronta all'avvio (warm-up automatico)**

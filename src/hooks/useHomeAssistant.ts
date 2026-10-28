@@ -154,6 +154,25 @@ export function useHomeAssistant() {
 
     let cancelled = false;
     let watchdog: number | null = null;
+    let retryTimer: number | null = null;
+    // Grows on repeated failures so we don't hammer a down server, resets on
+    // success. Starts short so a stuck cold-start attempt retries quickly.
+    let retryDelay = 800;
+
+    // A cold-start WebSocket on mobile can open a half-dead socket that never
+    // resolves nor rejects — createConnection() then awaits forever. Race it
+    // against a timeout so a stuck attempt turns into a real rejection we can
+    // catch and retry, instead of hanging on "connecting" indefinitely. This is
+    // the core of what the manual "Test connection" was papering over.
+    const CONNECT_TIMEOUT_MS = 5000;
+    function connectWithTimeout(auth: ReturnType<typeof createLongLivedTokenAuth>): Promise<Connection> {
+      return Promise.race([
+        createConnection({ auth }),
+        new Promise<Connection>((_, reject) =>
+          setTimeout(() => reject(new Error('timeout: connessione appesa')), CONNECT_TIMEOUT_MS),
+        ),
+      ]);
+    }
 
     // Abort a stuck attempt and try again from scratch. Some first attempts
     // (especially on mobile Safari) open a half-dead socket that neither
@@ -187,7 +206,7 @@ export function useHomeAssistant() {
       setAttempts((n) => n + 1);
       try {
         const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
-        const conn = await createConnection({ auth });
+        const conn = await connectWithTimeout(auth);
 
         if (cancelled) {
           conn.close();
@@ -197,6 +216,7 @@ export function useHomeAssistant() {
         }
         connectingRef.current = false;
         clearWatchdog();
+        retryDelay = 800; // connected — reset backoff
 
         connRef.current = conn;
         setConnected(true);
@@ -240,34 +260,42 @@ export function useHomeAssistant() {
         console.error('[Glance] Connection failed:', err);
         connectingRef.current = false;
         clearWatchdog();
-        if (!cancelled) {
-          const detail = buildConnectionError(err, HA_URL);
+        if (cancelled) return;
+
+        const detail = buildConnectionError(err, HA_URL);
+        setConnected(false);
+        broadcastConnected(false);
+
+        // An invalid/expired token (HA WS error code 2) will never succeed on
+        // retry — surface it and stop. Everything else (timeout, network, a
+        // half-dead cold-start socket) is transient: schedule an automatic
+        // retry with a short, growing backoff instead of sitting on "error".
+        // This is what replaces the fragile open-and-close "warm-up": a stuck
+        // first attempt now times out and retries on its own.
+        if (err === 2) {
           setError(detail);
-          setConnected(false);
           setPhase('error');
-          broadcastConnected(false);
+          return;
         }
+
+        setError(detail);
+        setPhase('reconnecting');
+        if (retryTimer != null) clearTimeout(retryTimer);
+        retryTimer = window.setTimeout(() => {
+          retryTimer = null;
+          if (!cancelled) connect();
+        }, retryDelay);
+        retryDelay = Math.min(retryDelay * 2, 10000);
       }
     }
 
-    // ── Warm-up before the real connection ──
-    // The user found that pressing "Test connection" (which opens a socket and
-    // immediately closes it) reliably makes the following real connection
-    // connect instantly. We reproduce that automatically: open a throwaway
-    // connection, close it, THEN connect for real. Sequential (await) so the two
-    // never race. If the warm-up itself fails we just proceed to connect() — the
-    // watchdog still covers a stuck attempt.
-    async function warmUpThenConnect() {
-      try {
-        const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
-        const probe = await createConnection({ auth });
-        probe.close();
-      } catch {
-        /* ignore — the real connect() below will surface any real error */
-      }
-      if (!cancelled) connect();
-    }
-    warmUpThenConnect();
+    // Connect straight away. The previous "warm-up" (open a throwaway socket,
+    // close it, then connect) tried to imitate the manual "Test connection",
+    // but its own createConnection() had no timeout: at a cold start on mobile
+    // it could hang forever and connect() would never run — the real cause of
+    // the permanent "Connecting…". connect() now times out a stuck attempt
+    // (connectWithTimeout) and retries on its own, so the warm-up is gone.
+    connect();
 
     // ── Fast reconnect when the page comes back to the foreground ──
     // On mobile (especially iOS), the OS suspends the WebSocket while the tab is
@@ -288,7 +316,12 @@ export function useHomeAssistant() {
         setAttempts((n) => n + 1);
         try { conn.reconnect(); } catch { /* ignore */ }
       } else {
-        // No connection object yet (initial attempt failed) — start fresh.
+        // No connection object yet (initial attempt failed, or a backoff retry
+        // is pending). Cancel any scheduled retry and connect NOW — coming back
+        // to the foreground is the best moment to try, and this avoids two
+        // parallel retry paths racing.
+        if (retryTimer != null) { clearTimeout(retryTimer); retryTimer = null; }
+        retryDelay = 800;
         connect();
       }
     };
@@ -314,6 +347,7 @@ export function useHomeAssistant() {
     return () => {
       cancelled = true;
       clearWatchdog();
+      if (retryTimer != null) { clearTimeout(retryTimer); retryTimer = null; }
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', kick);
       window.removeEventListener('online', kick);
