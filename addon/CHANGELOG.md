@@ -1,4 +1,9 @@
 # Changelog
+## 2.6.6
+
+**Numero di versione nelle Impostazioni**
+- In fondo alle Impostazioni della dashboard ora compare la versione installata (es. "Versione 2.6.6"), così è facile verificare che l'add-on si sia aggiornato davvero.
+
 ## 2.6.5
 
 **Connessione più stabile e stato visibile**

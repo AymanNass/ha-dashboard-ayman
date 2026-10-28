@@ -11739,3 +11739,12 @@ html[data-mobile] .rv2-stat-val { font-size: 16px !important; }
 
 /* Map gets more height so it's actually visible. */
 html[data-mobile] .rv2-map { min-height: 200px !important; }
+
+/* Version label at the bottom of Settings (confirms the add-on updated). */
+.settings-version {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  padding: 10px 0 4px;
+}

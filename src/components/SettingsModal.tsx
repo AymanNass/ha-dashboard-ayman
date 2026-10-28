@@ -812,6 +812,9 @@ export function SettingsModal({ onClose, entities, views, onResetLayout, onStart
               <span className="mdi mdi-open-in-new bmb-ext" />
             </a>
           </section>
+
+          {/* App version — handy to confirm the add-on actually updated. */}
+          <div className="settings-version">Versione {__APP_VERSION__}</div>
         </div>
 
         <div className="ts-footer">
