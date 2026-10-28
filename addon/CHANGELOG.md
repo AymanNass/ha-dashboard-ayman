@@ -1,4 +1,10 @@
 # Changelog
+## 2.6.11
+
+**Risolta l'attesa di ~10 secondi alla prima apertura**
+- Trovata la vera causa dello schermo fermo all'apertura a freddo (mentre un doppio refresh caricava all'istante): prima di disegnare la dashboard, all'avvio venivano fatte due richieste al server per le preferenze/connessione condivise, e queste richieste non avevano un limite di tempo. Se a freddo una di esse restava appesa, la dashboard non compariva finché non scattava il timeout di rete del telefono (~10 secondi). Al refresh la richiesta era già "calda" e tornava subito, perciò sembrava istantaneo.
+- Ora quelle richieste di avvio hanno un timeout breve (3 secondi) e, in ogni caso, la dashboard viene disegnata comunque entro pochi istanti: le preferenze condivise sono opzionali e non bloccano più l'interfaccia. Niente più attesa su schermo fermo alla prima apertura.
+
 ## 2.6.10
 
 **Connessione a freddo: un solo tentativo, con pazienza**

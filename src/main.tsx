@@ -54,4 +54,13 @@ if (!getSettings().haToken) {
     }),
   );
 }
-Promise.allSettled(boot).finally(render);
+
+// Render as soon as the (timeout-bounded) boot fetches settle — but never let
+// them hold the screen hostage. A hard cap guarantees the dashboard paints even
+// if a boot fetch somehow outlives its own timeout; the shared prefs are
+// optional and can still apply once they arrive. render() is idempotent
+// (createRoot), so whichever fires first wins and the other is a no-op.
+let rendered = false;
+const renderOnce = () => { if (!rendered) { rendered = true; render(); } };
+Promise.allSettled(boot).finally(renderOnce);
+setTimeout(renderOnce, 3500);

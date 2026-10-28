@@ -249,6 +249,22 @@ export function getHaToken(): string {
 // (served under /api/hassio_ingress/<token>/) as well as at the root.
 const CONNECTION_ENDPOINT = `${import.meta.env.BASE_URL}connection`.replace(/\/\/+/g, '/');
 
+// These server fetches run at BOOT, before the first render (see main.tsx:
+// Promise.allSettled(boot).finally(render)). A plain fetch() has no timeout, so
+// if a request hangs on a cold start the whole dashboard sits on a blank screen
+// until the browser's own network timeout fires (~10 s on mobile) — this was the
+// real cause of "first open takes 10 s, a quick refresh is instant". The shared
+// settings/connection are optional niceties; never let them hold up the UI.
+async function fetchWithTimeout(url: string, ms = 3000): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 interface ServerConnection {
   haUrl: string;
   haToken: string;
@@ -257,7 +273,7 @@ interface ServerConnection {
 /** Read the shared connection from the server, or null if none is stored. */
 export async function fetchServerConnection(): Promise<ServerConnection | null> {
   try {
-    const res = await fetch(CONNECTION_ENDPOINT);
+    const res = await fetchWithTimeout(CONNECTION_ENDPOINT);
     if (!res.ok || res.status === 204) return null;
     const data = (await res.json()) as Partial<ServerConnection>;
     // Require BOTH a URL and a token — an incomplete entry would make a device
@@ -376,7 +392,7 @@ export async function pushSettingsToServer(): Promise<void> {
 export async function hydrateSettingsFromServer(): Promise<boolean> {
   if (!getSettings().syncSettings) return false;
   try {
-    const res = await fetch(SETTINGS_ENDPOINT);
+    const res = await fetchWithTimeout(SETTINGS_ENDPOINT);
     if (!res.ok || res.status === 204) return false;
     const data = (await res.json()) as Record<string, unknown>;
     if (!data || typeof data !== 'object') return false;
