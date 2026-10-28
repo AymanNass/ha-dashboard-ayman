@@ -1,4 +1,12 @@
 # Changelog
+## 2.6.10
+
+**Connessione a freddo: un solo tentativo, con pazienza**
+- Diagnosticata (via Web Inspector sul telefono) la vera causa dell'attesa su telefono: a "freddo" il primo collegamento a Home Assistant su quel dispositivo impiega ~5-6 secondi (giro di rete iniziale lento), del tutto valido. Il timeout di 5 secondi introdotto prima tagliava quel tentativo proprio sul più bello e ne apriva un altro, e il "watchdog" a 7 secondi faceva lo stesso: si creavano così più connessioni che si disturbavano a vicenda (si vedevano 2 socket morti prima di uno buono).
+- Ora la dashboard **aspetta con pazienza** il primo collegamento (timeout alzato a 20 secondi) e mantiene **un solo tentativo alla volta**: niente più connessioni multiple che si accavallano. Rimosso il "watchdog" ridondante.
+- Se il collegamento resta davvero appeso, scade e riprova da solo; un errore vero (es. token non valido) viene mostrato subito, mentre un rallentamento passeggero non fa più comparire il messaggio d'errore.
+- Nota: su un refresh "a caldo" la connessione resta istantanea come prima; questa modifica riguarda solo l'apertura a freddo.
+
 ## 2.6.9
 
 **Fine del blocco su "Connecting…" a freddo**

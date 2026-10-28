@@ -153,18 +153,30 @@ export function useHomeAssistant() {
     }
 
     let cancelled = false;
-    let watchdog: number | null = null;
     let retryTimer: number | null = null;
     // Grows on repeated failures so we don't hammer a down server, resets on
     // success. Starts short so a stuck cold-start attempt retries quickly.
     let retryDelay = 800;
+    // Consecutive failed attempts. A cold-start timeout that the next retry
+    // fixes is normal, not something to alarm the user about — so we keep the
+    // red error banner hidden until several attempts in a row have failed,
+    // which means a real, persistent problem.
+    let failStreak = 0;
+    const ERROR_AFTER_FAILS = 4;
 
     // A cold-start WebSocket on mobile can open a half-dead socket that never
     // resolves nor rejects — createConnection() then awaits forever. Race it
-    // against a timeout so a stuck attempt turns into a real rejection we can
-    // catch and retry, instead of hanging on "connecting" indefinitely. This is
-    // the core of what the manual "Test connection" was papering over.
-    const CONNECT_TIMEOUT_MS = 5000;
+    // against a timeout so a *genuinely* stuck attempt turns into a real
+    // rejection we can retry, instead of hanging on "connecting" forever.
+    //
+    // This timeout must be WELL ABOVE the real first-auth time. On a slow phone
+    // the very first socket (cold DNS/TCP/TLS + HA auth handshake) legitimately
+    // takes ~5-6 s; a 5 s timeout was cutting that valid-but-slow attempt and
+    // firing a retry, which opened a SECOND socket while the first was still
+    // authenticating — the two then stepped on each other (we saw 2 dead WS of
+    // ~6 s before a 3rd connected). Being patient (and keeping connectingRef
+    // held for the whole attempt) means one socket completes on the first try.
+    const CONNECT_TIMEOUT_MS = 20000;
     function connectWithTimeout(auth: ReturnType<typeof createLongLivedTokenAuth>): Promise<Connection> {
       return Promise.race([
         createConnection({ auth }),
@@ -174,33 +186,17 @@ export function useHomeAssistant() {
       ]);
     }
 
-    // Abort a stuck attempt and try again from scratch. Some first attempts
-    // (especially on mobile Safari) open a half-dead socket that neither
-    // succeeds nor errors — it just hangs on "connecting" forever. The user
-    // found that hitting "Test connection" (which opens+closes a fresh socket)
-    // always unblocks it; this watchdog does that automatically.
-    const armWatchdog = () => {
-      if (watchdog != null) clearTimeout(watchdog);
-      watchdog = window.setTimeout(() => {
-        if (cancelled) return;
-        console.warn('[Glance] Connect watchdog: attempt stuck, retrying fresh');
-        try { connRef.current?.close(); } catch { /* ignore */ }
-        connRef.current = null;
-        connectingRef.current = false;
-        setPhase('reconnecting');
-        connect();
-      }, 7000);
-    };
-    const clearWatchdog = () => {
-      if (watchdog != null) { clearTimeout(watchdog); watchdog = null; }
-    };
+    // NB: a separate 7 s "watchdog" used to live here and abort a stuck attempt.
+    // It's been removed: it fired BEFORE the 20 s connect timeout and killed the
+    // slow-but-valid first auth, opening a competing socket — the very cause of
+    // the multiple dead WebSockets. connectWithTimeout + the catch/retry below
+    // now handle a genuinely stuck socket as a single, coherent mechanism.
 
     async function connect() {
       // Only one attempt at a time — prevents the initial connect and the
       // focus/visibility kick from racing on page load.
       if (connectingRef.current || connRef.current) return;
       connectingRef.current = true;
-      armWatchdog();
       console.log('[Glance] Connecting to', HA_URL, '...');
       setPhase((p) => (p === 'idle' ? 'connecting' : p));
       setAttempts((n) => n + 1);
@@ -211,12 +207,11 @@ export function useHomeAssistant() {
         if (cancelled) {
           conn.close();
           connectingRef.current = false;
-          clearWatchdog();
           return;
         }
         connectingRef.current = false;
-        clearWatchdog();
         retryDelay = 800; // connected — reset backoff
+        failStreak = 0;
 
         connRef.current = conn;
         setConnected(true);
@@ -259,27 +254,30 @@ export function useHomeAssistant() {
       } catch (err) {
         console.error('[Glance] Connection failed:', err);
         connectingRef.current = false;
-        clearWatchdog();
         if (cancelled) return;
 
         const detail = buildConnectionError(err, HA_URL);
         setConnected(false);
         broadcastConnected(false);
+        failStreak += 1;
 
         // An invalid/expired token (HA WS error code 2) will never succeed on
-        // retry — surface it and stop. Everything else (timeout, network, a
-        // half-dead cold-start socket) is transient: schedule an automatic
-        // retry with a short, growing backoff instead of sitting on "error".
-        // This is what replaces the fragile open-and-close "warm-up": a stuck
-        // first attempt now times out and retries on its own.
+        // retry — surface it immediately and stop. Everything else (timeout,
+        // network, a half-dead cold-start socket) is transient: schedule an
+        // automatic retry with a short, growing backoff instead of sitting on
+        // "error". This is what replaces the fragile open-and-close "warm-up":
+        // a stuck first attempt now times out and retries on its own.
         if (err === 2) {
           setError(detail);
           setPhase('error');
           return;
         }
 
-        setError(detail);
+        // Don't alarm the user over a transient cold-start timeout the next
+        // retry will fix. Show "Riconnessione…" and only reveal the red error
+        // banner once several attempts in a row have failed (a real problem).
         setPhase('reconnecting');
+        setError(failStreak >= ERROR_AFTER_FAILS ? detail : null);
         if (retryTimer != null) clearTimeout(retryTimer);
         retryTimer = window.setTimeout(() => {
           retryTimer = null;
@@ -346,7 +344,6 @@ export function useHomeAssistant() {
 
     return () => {
       cancelled = true;
-      clearWatchdog();
       if (retryTimer != null) { clearTimeout(retryTimer); retryTimer = null; }
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', kick);
