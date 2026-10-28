@@ -128,11 +128,6 @@ export function useHomeAssistant() {
   const [phase, setPhase] = useState<ConnPhase>('idle');
   const [attempts, setAttempts] = useState(0);
   const connRef = useRef<Connection | null>(null);
-  // Guard: only ONE connection attempt in flight at a time. Without this, the
-  // initial connect() and the focus/visibility "kick" that fires on page load
-  // raced each other — producing the regular "refresh works / refresh stuck"
-  // alternation.
-  const connectingRef = useRef(false);
 
   // ── Batched entity updates ──
   // home-assistant-js-websocket calls our subscriber on EVERY state_changed
@@ -152,31 +147,39 @@ export function useHomeAssistant() {
       return;
     }
 
-    let cancelled = false;
-    let retryTimer: number | null = null;
-    // Grows on repeated failures so we don't hammer a down server, resets on
-    // success. Starts short so a stuck cold-start attempt retries quickly.
-    let retryDelay = 800;
-    // Consecutive failed attempts. A cold-start timeout that the next retry
-    // fixes is normal, not something to alarm the user about — so we keep the
-    // red error banner hidden until several attempts in a row have failed,
-    // which means a real, persistent problem.
-    let failStreak = 0;
-    const ERROR_AFTER_FAILS = 4;
-
-    // A cold-start WebSocket on mobile can open a half-dead socket that never
-    // resolves nor rejects — createConnection() then awaits forever. Race it
-    // against a timeout so a *genuinely* stuck attempt turns into a real
-    // rejection we can retry, instead of hanging on "connecting" forever.
+    // ── Connection manager (rewritten from scratch) ───────────────────────
     //
-    // This timeout must be WELL ABOVE the real first-auth time. On a slow phone
-    // the very first socket (cold DNS/TCP/TLS + HA auth handshake) legitimately
-    // takes ~5-6 s; a 5 s timeout was cutting that valid-but-slow attempt and
-    // firing a retry, which opened a SECOND socket while the first was still
-    // authenticating — the two then stepped on each other (we saw 2 dead WS of
-    // ~6 s before a 3rd connected). Being patient (and keeping connectingRef
-    // held for the whole attempt) means one socket completes on the first try.
-    const CONNECT_TIMEOUT_MS = 20000;
+    // Design in one sentence: keep trying to open ONE socket; if we still
+    // aren't connected after a short grace period, do automatically what the
+    // user already does by hand — reload the page once — because a reload
+    // always connects. No warm-up, no watchdog, no competing sockets.
+    //
+    // History that led here: a plain createConnection() can hang forever on a
+    // cold mobile socket; past fixes (warm-up probe, 7 s watchdog, short
+    // timeouts) each opened extra sockets that raced and made it worse. This
+    // version runs a single attempt at a time and leans on the one thing proven
+    // to work on this device — a fresh page load.
+    let cancelled = false;
+    // One attempt at a time. A plain local (not a useRef) so React StrictMode's
+    // mount→unmount→mount in dev starts each mount with a clean guard; a ref
+    // would survive the first (cancelled) mount still set to true and block the
+    // second mount's connect() forever — "stuck on Connecting".
+    let connecting = false;
+    let retryTimer: number | null = null;
+    let reloadTimer: number | null = null;
+    let retryDelay = 800; // backoff between in-page retries, reset on success
+
+    // Per-attempt timeout. Generous (15 s) so a slow-but-valid first auth on a
+    // weak phone completes instead of being cut; a genuinely dead socket still
+    // rejects here instead of hanging forever.
+    const CONNECT_TIMEOUT_MS = 15000;
+    // If we're not connected within this window after (re)load, reload once.
+    const RELOAD_AFTER_MS = 8000;
+    // sessionStorage key: marks that THIS page instance already auto-reloaded,
+    // so we reload at most once per cold start and never loop. Cleared as soon
+    // as we connect successfully, so a future cold start can use it again.
+    const RELOADED_KEY = 'glance:auto-reloaded';
+
     function connectWithTimeout(auth: ReturnType<typeof createLongLivedTokenAuth>): Promise<Connection> {
       return Promise.race([
         createConnection({ auth }),
@@ -186,17 +189,24 @@ export function useHomeAssistant() {
       ]);
     }
 
-    // NB: a separate 7 s "watchdog" used to live here and abort a stuck attempt.
-    // It's been removed: it fired BEFORE the 20 s connect timeout and killed the
-    // slow-but-valid first auth, opening a competing socket — the very cause of
-    // the multiple dead WebSockets. connectWithTimeout + the catch/retry below
-    // now handle a genuinely stuck socket as a single, coherent mechanism.
+    // The automatic "refresh that always works". Reload exactly once per cold
+    // start: if marking in sessionStorage fails we simply don't reload (safer
+    // than risking a loop). Never reloads for a bad token (pointless).
+    // Disabled in dev: Vite's HMR + StrictMode double-mount would make an
+    // auto-reload confusing while developing; it only matters in production.
+    const autoReloadOnce = () => {
+      if (cancelled || connRef.current || !import.meta.env.PROD) return;
+      let already = false;
+      try { already = sessionStorage.getItem(RELOADED_KEY) === '1'; } catch { already = true; }
+      if (already) return;
+      try { sessionStorage.setItem(RELOADED_KEY, '1'); } catch { return; }
+      console.warn('[Glance] Still not connected — auto-reloading once.');
+      window.location.reload();
+    };
 
     async function connect() {
-      // Only one attempt at a time — prevents the initial connect and the
-      // focus/visibility kick from racing on page load.
-      if (connectingRef.current || connRef.current) return;
-      connectingRef.current = true;
+      if (connecting || connRef.current) return; // one at a time
+      connecting = true;
       console.log('[Glance] Connecting to', HA_URL, '...');
       setPhase((p) => (p === 'idle' ? 'connecting' : p));
       setAttempts((n) => n + 1);
@@ -204,14 +214,13 @@ export function useHomeAssistant() {
         const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
         const conn = await connectWithTimeout(auth);
 
-        if (cancelled) {
-          conn.close();
-          connectingRef.current = false;
-          return;
-        }
-        connectingRef.current = false;
-        retryDelay = 800; // connected — reset backoff
-        failStreak = 0;
+        if (cancelled) { conn.close(); connecting = false; return; }
+
+        // Connected. Clear timers + the one-shot reload guard.
+        connecting = false;
+        retryDelay = 800;
+        if (reloadTimer != null) { clearTimeout(reloadTimer); reloadTimer = null; }
+        try { sessionStorage.removeItem(RELOADED_KEY); } catch { /* ignore */ }
 
         connRef.current = conn;
         setConnected(true);
@@ -232,11 +241,7 @@ export function useHomeAssistant() {
 
         subscribeEntities(conn, (ents) => {
           if (cancelled) return;
-          // Keep only the newest snapshot and flush once per animation frame.
-          // This still collapses a burst of state_changed events into one render
-          // (coalescing within the same frame) WITHOUT adding perceptible delay —
-          // a rAF fires within ~16 ms, so a tapped light's new state shows up
-          // right away. (A longer timer here was adding ~0.5 s of lag.)
+          // Coalesce a burst of state_changed events into one render per frame.
           pendingEntities.current = ents;
           if (flushHandle.current != null) return;
           const flush = () => {
@@ -253,71 +258,54 @@ export function useHomeAssistant() {
         });
       } catch (err) {
         console.error('[Glance] Connection failed:', err);
-        connectingRef.current = false;
+        connecting = false;
         if (cancelled) return;
 
         const detail = buildConnectionError(err, HA_URL);
         setConnected(false);
         broadcastConnected(false);
-        failStreak += 1;
 
-        // An invalid/expired token (HA WS error code 2) will never succeed on
-        // retry — surface it immediately and stop. Everything else (timeout,
-        // network, a half-dead cold-start socket) is transient: schedule an
-        // automatic retry with a short, growing backoff instead of sitting on
-        // "error". This is what replaces the fragile open-and-close "warm-up":
-        // a stuck first attempt now times out and retries on its own.
+        // Bad/expired token (HA WS error code 2) never succeeds on retry and a
+        // reload wouldn't help — show it and stop.
         if (err === 2) {
           setError(detail);
           setPhase('error');
+          if (reloadTimer != null) { clearTimeout(reloadTimer); reloadTimer = null; }
           return;
         }
 
-        // Don't alarm the user over a transient cold-start timeout the next
-        // retry will fix. Show "Riconnessione…" and only reveal the red error
-        // banner once several attempts in a row have failed (a real problem).
+        // Transient: keep the UI calm ("Riconnessione…") and retry in-page with
+        // a growing backoff. The RELOAD_AFTER_MS timer (armed below) is the
+        // backstop if these in-page retries don't land in time.
         setPhase('reconnecting');
-        setError(failStreak >= ERROR_AFTER_FAILS ? detail : null);
+        setError(null);
         if (retryTimer != null) clearTimeout(retryTimer);
         retryTimer = window.setTimeout(() => {
           retryTimer = null;
           if (!cancelled) connect();
         }, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 10000);
+        retryDelay = Math.min(retryDelay * 2, 5000);
       }
     }
 
-    // Connect straight away. The previous "warm-up" (open a throwaway socket,
-    // close it, then connect) tried to imitate the manual "Test connection",
-    // but its own createConnection() had no timeout: at a cold start on mobile
-    // it could hang forever and connect() would never run — the real cause of
-    // the permanent "Connecting…". connect() now times out a stuck attempt
-    // (connectWithTimeout) and retries on its own, so the warm-up is gone.
+    // Arm the one-shot auto-reload backstop for this page load. If we haven't
+    // connected within the grace window, reload once — the move that reliably
+    // works on the problem phone.
+    reloadTimer = window.setTimeout(autoReloadOnce, RELOAD_AFTER_MS);
+
     connect();
 
-    // ── Fast reconnect when the page comes back to the foreground ──
-    // On mobile (especially iOS), the OS suspends the WebSocket while the tab is
-    // backgrounded or the phone is locked. On return the page would otherwise
-    // sit on "connecting" until the library's slow backoff retried. Here we
-    // nudge an immediate reconnect the moment the page becomes visible / focused
-    // again if we're not currently connected — this is what was leaving one
-    // phone stuck on "connecting…" after reopening.
+    // Nudge a reconnect when the page returns to the foreground (iOS suspends
+    // the socket while backgrounded/locked). Only when idle — never disturb an
+    // attempt in flight.
     const kick = () => {
-      if (cancelled || document.hidden) return;
-      // Never interfere with an attempt that's already running (this was the
-      // race behind the "refresh works / refresh stuck" alternation).
-      if (connectingRef.current) return;
+      if (cancelled || document.hidden || connecting) return;
       const conn = connRef.current;
       if (conn) {
-        // Force the existing connection to retry now instead of waiting.
         setPhase((p) => (p === 'connected' ? p : 'reconnecting'));
         setAttempts((n) => n + 1);
         try { conn.reconnect(); } catch { /* ignore */ }
       } else {
-        // No connection object yet (initial attempt failed, or a backoff retry
-        // is pending). Cancel any scheduled retry and connect NOW — coming back
-        // to the foreground is the best moment to try, and this avoids two
-        // parallel retry paths racing.
         if (retryTimer != null) { clearTimeout(retryTimer); retryTimer = null; }
         retryDelay = 800;
         connect();
@@ -326,11 +314,8 @@ export function useHomeAssistant() {
     const onNetDown = () => { if (!cancelled) setPhase('waiting-network'); };
     window.addEventListener('offline', onNetDown);
 
-    // Close the WebSocket cleanly BEFORE the page goes away (refresh/navigation).
-    // Otherwise Home Assistant still sees the old session for a few seconds and
-    // makes the next connection wait — which is exactly why a quick second
-    // refresh took a few seconds to reconnect. Closing on pagehide frees the
-    // session immediately so the fresh load connects right away.
+    // Close the socket cleanly before the page goes away so HA frees the old
+    // session immediately and the next load connects right away.
     const onPageHide = () => {
       try { connRef.current?.close(); } catch { /* ignore */ }
       connRef.current = null;
@@ -345,6 +330,7 @@ export function useHomeAssistant() {
     return () => {
       cancelled = true;
       if (retryTimer != null) { clearTimeout(retryTimer); retryTimer = null; }
+      if (reloadTimer != null) { clearTimeout(reloadTimer); reloadTimer = null; }
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', kick);
       window.removeEventListener('online', kick);
@@ -352,8 +338,6 @@ export function useHomeAssistant() {
       window.removeEventListener('pagehide', onPageHide);
       window.removeEventListener('beforeunload', onPageHide);
       if (flushHandle.current != null) {
-        // The handle is either a rAF id or a timeout id depending on mode;
-        // cancel both kinds to be safe.
         cancelAnimationFrame(flushHandle.current);
         clearTimeout(flushHandle.current);
         flushHandle.current = null;

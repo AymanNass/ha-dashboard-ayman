@@ -1,4 +1,11 @@
 # Changelog
+## 2.6.12
+
+**Collegamento a Home Assistant riscritto da zero**
+- Riscritta completamente la logica di connessione, eliminando i vari meccanismi accumulati nel tempo (warm-up, watchdog, timeout contrastanti) che a volte si disturbavano tra loro.
+- Nuovo approccio semplice e robusto: un solo tentativo di connessione alla volta, con un'attesa generosa per non interrompere un collegamento lento ma valido. Se dopo pochi secondi la dashboard non si è ancora connessa, **si ricarica automaticamente una volta** — cioè fa da sola quel refresh manuale che risolveva sempre. Una protezione evita qualsiasi ciclo di ricaricamenti.
+- Niente più blocco permanente su "Connecting…": nel caso peggiore si vede un breve ricaricamento e poi la dashboard compare.
+
 ## 2.6.11
 
 **Risolta l'attesa di ~10 secondi alla prima apertura**
