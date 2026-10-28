@@ -111,11 +111,28 @@ function buildConnectionError(err: unknown, url: string): string {
   return parts.join(' — ');
 }
 
+/** Human-readable connection phase, surfaced in the status bar for visibility
+ *  and debugging of the intermittent "connecting" issue. */
+export type ConnPhase =
+  | 'idle'
+  | 'connecting'   // first attempt in progress
+  | 'connected'
+  | 'reconnecting' // dropped, trying again (e.g. after returning to foreground)
+  | 'waiting-network'
+  | 'error';
+
 export function useHomeAssistant() {
   const [entities, setEntities] = useState<HassEntities>({});
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<ConnPhase>('idle');
+  const [attempts, setAttempts] = useState(0);
   const connRef = useRef<Connection | null>(null);
+  // Guard: only ONE connection attempt in flight at a time. Without this, the
+  // initial connect() and the focus/visibility "kick" that fires on page load
+  // raced each other — producing the regular "refresh works / refresh stuck"
+  // alternation.
+  const connectingRef = useRef(false);
 
   // ── Batched entity updates ──
   // home-assistant-js-websocket calls our subscriber on EVERY state_changed
@@ -138,27 +155,38 @@ export function useHomeAssistant() {
     let cancelled = false;
 
     async function connect() {
+      // Only one attempt at a time — prevents the initial connect and the
+      // focus/visibility kick from racing on page load.
+      if (connectingRef.current || connRef.current) return;
+      connectingRef.current = true;
       console.log('[Glance] Connecting to', HA_URL, '...');
+      setPhase((p) => (p === 'idle' ? 'connecting' : p));
+      setAttempts((n) => n + 1);
       try {
         const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
         const conn = await createConnection({ auth });
 
         if (cancelled) {
           conn.close();
+          connectingRef.current = false;
           return;
         }
+        connectingRef.current = false;
 
         connRef.current = conn;
         setConnected(true);
+        setPhase('connected');
         broadcastConnected(true);
         setError(null);
 
         conn.addEventListener('disconnected', () => {
           setConnected(false);
+          setPhase('reconnecting');
           broadcastConnected(false);
         });
         conn.addEventListener('ready', () => {
           setConnected(true);
+          setPhase('connected');
           broadcastConnected(true);
         });
 
@@ -185,10 +213,12 @@ export function useHomeAssistant() {
         });
       } catch (err) {
         console.error('[Glance] Connection failed:', err);
+        connectingRef.current = false;
         if (!cancelled) {
           const detail = buildConnectionError(err, HA_URL);
           setError(detail);
           setConnected(false);
+          setPhase('error');
           broadcastConnected(false);
         }
       }
@@ -205,15 +235,22 @@ export function useHomeAssistant() {
     // phone stuck on "connecting…" after reopening.
     const kick = () => {
       if (cancelled || document.hidden) return;
+      // Never interfere with an attempt that's already running (this was the
+      // race behind the "refresh works / refresh stuck" alternation).
+      if (connectingRef.current) return;
       const conn = connRef.current;
       if (conn) {
         // Force the existing connection to retry now instead of waiting.
+        setPhase((p) => (p === 'connected' ? p : 'reconnecting'));
+        setAttempts((n) => n + 1);
         try { conn.reconnect(); } catch { /* ignore */ }
       } else {
         // No connection object yet (initial attempt failed) — start fresh.
         connect();
       }
     };
+    const onNetDown = () => { if (!cancelled) setPhase('waiting-network'); };
+    window.addEventListener('offline', onNetDown);
     const onVisible = () => { if (!document.hidden) kick(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', kick);
@@ -224,6 +261,7 @@ export function useHomeAssistant() {
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', kick);
       window.removeEventListener('online', kick);
+      window.removeEventListener('offline', onNetDown);
       if (flushHandle.current != null) {
         // The handle is either a rAF id or a timeout id depending on mode;
         // cancel both kinds to be safe.
@@ -403,5 +441,5 @@ export function useHomeAssistant() {
     return maPlayerIds.current;
   }, []);
 
-  return { entities, connected, error, callHA, getState, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers };
+  return { entities, connected, error, phase, attempts, callHA, getState, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers };
 }

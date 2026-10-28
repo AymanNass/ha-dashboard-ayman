@@ -1,4 +1,10 @@
 # Changelog
+## 2.6.5
+
+**Connessione più stabile e stato visibile**
+- **Risolta l'alternanza "refresh funziona / refresh bloccato"**: all'avvio partivano due tentativi di connessione in parallelo (quello iniziale e la riconnessione su focus) che si disturbavano a vicenda. Ora è garantito un solo tentativo alla volta.
+- **Barra di stato più chiara**: in fase di connessione mostra cosa sta facendo ("Connessione…", "Riconnessione… (tentativo N)", "In attesa della rete"), così si capisce se è un problema di rete o d'altro.
+
 ## 2.6.4
 
 **Luci a preset su mobile e riconnessione più rapida**

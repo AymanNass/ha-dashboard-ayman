@@ -34,7 +34,7 @@ import type { RoomEntity, DashView } from './types';
 
 export default function App() {
   const { t } = useTranslation();
-  const { entities, connected, error, callHA, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
+  const { entities, connected, error, phase, attempts, callHA, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
   const layout = useLayout();
   const { views } = layout;
   const [activeView, setActiveView] = useState<string>('main');
@@ -586,7 +586,12 @@ export default function App() {
       )}
       {!connected && !error && !needsOnboarding && (
         <div className="connection-bar connecting">
-          <span className="mdi mdi-loading mdi-spin" /> {t('connecting')}
+          <span className="mdi mdi-loading mdi-spin" />{' '}
+          {phase === 'reconnecting'
+            ? `Riconnessione a Home Assistant…${attempts > 1 ? ` (tentativo ${attempts})` : ''}`
+            : phase === 'waiting-network'
+              ? 'In attesa della rete…'
+              : `${t('connecting')}${attempts > 1 ? ` (tentativo ${attempts})` : ''}`}
         </div>
       )}
     </div>
