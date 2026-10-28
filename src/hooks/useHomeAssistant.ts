@@ -250,7 +250,24 @@ export function useHomeAssistant() {
       }
     }
 
-    connect();
+    // ── Warm-up before the real connection ──
+    // The user found that pressing "Test connection" (which opens a socket and
+    // immediately closes it) reliably makes the following real connection
+    // connect instantly. We reproduce that automatically: open a throwaway
+    // connection, close it, THEN connect for real. Sequential (await) so the two
+    // never race. If the warm-up itself fails we just proceed to connect() — the
+    // watchdog still covers a stuck attempt.
+    async function warmUpThenConnect() {
+      try {
+        const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN);
+        const probe = await createConnection({ auth });
+        probe.close();
+      } catch {
+        /* ignore — the real connect() below will surface any real error */
+      }
+      if (!cancelled) connect();
+    }
+    warmUpThenConnect();
 
     // ── Fast reconnect when the page comes back to the foreground ──
     // On mobile (especially iOS), the OS suspends the WebSocket while the tab is
@@ -277,6 +294,18 @@ export function useHomeAssistant() {
     };
     const onNetDown = () => { if (!cancelled) setPhase('waiting-network'); };
     window.addEventListener('offline', onNetDown);
+
+    // Close the WebSocket cleanly BEFORE the page goes away (refresh/navigation).
+    // Otherwise Home Assistant still sees the old session for a few seconds and
+    // makes the next connection wait — which is exactly why a quick second
+    // refresh took a few seconds to reconnect. Closing on pagehide frees the
+    // session immediately so the fresh load connects right away.
+    const onPageHide = () => {
+      try { connRef.current?.close(); } catch { /* ignore */ }
+      connRef.current = null;
+    };
+    window.addEventListener('pagehide', onPageHide);
+    window.addEventListener('beforeunload', onPageHide);
     const onVisible = () => { if (!document.hidden) kick(); };
     document.addEventListener('visibilitychange', onVisible);
     window.addEventListener('focus', kick);
@@ -289,6 +318,8 @@ export function useHomeAssistant() {
       window.removeEventListener('focus', kick);
       window.removeEventListener('online', kick);
       window.removeEventListener('offline', onNetDown);
+      window.removeEventListener('pagehide', onPageHide);
+      window.removeEventListener('beforeunload', onPageHide);
       if (flushHandle.current != null) {
         // The handle is either a rAF id or a timeout id depending on mode;
         // cancel both kinds to be safe.

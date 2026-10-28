@@ -1,4 +1,10 @@
 # Changelog
+## 2.6.8
+
+**Connessione pronta all'avvio (warm-up automatico)**
+- All'apertura la dashboard esegue da sola un "warm-up" della connessione (apre e chiude subito un canale, come il "Test connection" manuale) e poi apre la connessione vera. Questo evita il blocco/ritardo su "Connecting…" al refresh: la connessione reale parte già sbloccata.
+- Chiusura pulita della connessione al refresh/uscita, così Home Assistant libera subito la sessione precedente.
+
 ## 2.6.7
 
 **Sblocco automatico della connessione appesa**
