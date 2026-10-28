@@ -153,12 +153,35 @@ export function useHomeAssistant() {
     }
 
     let cancelled = false;
+    let watchdog: number | null = null;
+
+    // Abort a stuck attempt and try again from scratch. Some first attempts
+    // (especially on mobile Safari) open a half-dead socket that neither
+    // succeeds nor errors — it just hangs on "connecting" forever. The user
+    // found that hitting "Test connection" (which opens+closes a fresh socket)
+    // always unblocks it; this watchdog does that automatically.
+    const armWatchdog = () => {
+      if (watchdog != null) clearTimeout(watchdog);
+      watchdog = window.setTimeout(() => {
+        if (cancelled) return;
+        console.warn('[Glance] Connect watchdog: attempt stuck, retrying fresh');
+        try { connRef.current?.close(); } catch { /* ignore */ }
+        connRef.current = null;
+        connectingRef.current = false;
+        setPhase('reconnecting');
+        connect();
+      }, 7000);
+    };
+    const clearWatchdog = () => {
+      if (watchdog != null) { clearTimeout(watchdog); watchdog = null; }
+    };
 
     async function connect() {
       // Only one attempt at a time — prevents the initial connect and the
       // focus/visibility kick from racing on page load.
       if (connectingRef.current || connRef.current) return;
       connectingRef.current = true;
+      armWatchdog();
       console.log('[Glance] Connecting to', HA_URL, '...');
       setPhase((p) => (p === 'idle' ? 'connecting' : p));
       setAttempts((n) => n + 1);
@@ -169,9 +192,11 @@ export function useHomeAssistant() {
         if (cancelled) {
           conn.close();
           connectingRef.current = false;
+          clearWatchdog();
           return;
         }
         connectingRef.current = false;
+        clearWatchdog();
 
         connRef.current = conn;
         setConnected(true);
@@ -214,6 +239,7 @@ export function useHomeAssistant() {
       } catch (err) {
         console.error('[Glance] Connection failed:', err);
         connectingRef.current = false;
+        clearWatchdog();
         if (!cancelled) {
           const detail = buildConnectionError(err, HA_URL);
           setError(detail);
@@ -258,6 +284,7 @@ export function useHomeAssistant() {
 
     return () => {
       cancelled = true;
+      clearWatchdog();
       document.removeEventListener('visibilitychange', onVisible);
       window.removeEventListener('focus', kick);
       window.removeEventListener('online', kick);

@@ -1,4 +1,9 @@
 # Changelog
+## 2.6.7
+
+**Sblocco automatico della connessione appesa**
+- Se un tentativo di connessione resta appeso su "Connecting…" senza riuscire né fallire (capita su Safari mobile), dopo 7 secondi la dashboard chiude la connessione monca e ne apre una nuova pulita, in automatico — lo stesso effetto che si otteneva premendo "Test connection" a mano. Niente più blocco permanente.
+
 ## 2.6.6
 
 **Numero di versione nelle Impostazioni**
