@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 import { entityIcon, entitySummary, isActiveState, resolveArtwork } from '../lib/entityInfo';
 import { useArtworkColor } from '../hooks/useArtworkColor';
-import { isLiteMode } from '../lib/perfMode';
+import { isLiteMode, isMobileLayout } from '../lib/perfMode';
 import { runViewTransition, viewTransitionsAvailable } from '../lib/viewTransition';
 import { useTilt } from '../hooks/useTilt';
 import { useCameraFeed } from '../hooks/useCameraFeed';
@@ -332,8 +332,13 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
   // ── Slide across the tile: lights dim, covers set position ──
   // Enabled by default for dimmable lights and (non-tall) covers; users can opt a
   // specific tile out by setting slideDim to false in tile settings.
-  const slideLight = slideDim !== false && domain === 'light' && active;
-  const slideCover = slideDim !== false && isCover && !tall;
+  // On the phone layout we DISABLE slide-to-dim-on-the-tile: on iOS Safari the
+  // horizontal drag fights page scrolling and the pointer events get stolen, so
+  // the fill doesn't track the finger. Instead, a tap toggles and brightness is
+  // set from the detail flyout's slider. (Desktop/tablet keep the slide.)
+  const mobileLayout = isMobileLayout();
+  const slideLight = !mobileLayout && slideDim !== false && domain === 'light' && active;
+  const slideCover = !mobileLayout && slideDim !== false && isCover && !tall;
   const slideEnabled = slideLight || slideCover;
   const dragRef = useRef<{ startX: number; startY: number; width: number; left: number; moved: boolean } | null>(null);
   const suppressClick = useRef(false);
@@ -711,7 +716,30 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
           <span /><span /><span /><span />
         </div>
       )}
-      {(dimmable || isCover) && !slideEnabled && (
+      {/* Mobile dimmable lights: 4 preset brightness buttons instead of a drag
+          slider (reliable on iOS touch — just taps, no gesture that fights
+          scrolling). The preset nearest the current brightness is highlighted. */}
+      {mobileLayout && dimmable && (
+        <div className="tile-presets" onClick={(e) => e.stopPropagation()}>
+          {[15, 40, 70, 100].map((p) => {
+            const near = Math.abs((brightnessPct ?? 0) - p) <= 12;
+            return (
+              <button
+                key={p}
+                className={`tile-preset ${near ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  callHA('light', 'turn_on', { brightness_pct: p }, { entity_id: id });
+                }}
+              >
+                {p}%
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {/* Slider for covers (and desktop/tablet dimmables when slide is off). */}
+      {(isCover || (dimmable && !mobileLayout)) && !slideEnabled && (
         <input
           type="range"
           className="tile-slider"
@@ -720,8 +748,19 @@ function DeviceTileImpl({ entity, name, callHA, onToggle, onOpenDetail, onOpenTa
           value={sliderDisplay}
           style={{ '--fill': `${sliderDisplay}%` } as React.CSSProperties}
           onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
           onChange={(e) => setLocal(fromSlider(parseInt(e.target.value)))}
           onPointerUp={(e) => {
+            const v = fromSlider(parseInt((e.target as HTMLInputElement).value));
+            if (dimmable) {
+              callHA('light', 'turn_on', { brightness_pct: v }, { entity_id: id });
+            } else {
+              callHA('cover', 'set_cover_position', { position: v }, { entity_id: id });
+            }
+          }}
+          onTouchEnd={(e) => {
+            // iOS Safari doesn't always fire pointerup on a range input — commit
+            // the value on touchend too so brightness/position actually applies.
             const v = fromSlider(parseInt((e.target as HTMLInputElement).value));
             if (dimmable) {
               callHA('light', 'turn_on', { brightness_pct: v }, { entity_id: id });

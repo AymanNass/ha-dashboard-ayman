@@ -1,4 +1,10 @@
 # Changelog
+## 2.6.4
+
+**Luci a preset su mobile e riconnessione più rapida**
+- **Luci regolabili su telefono**: niente più slider da trascinare (inaffidabile su iOS) — ora 4 pulsanti di luminosità preimpostata (15 / 40 / 70 / 100%), con quello attivo evidenziato. Tap preciso, nessun conflitto con lo scorrimento.
+- **Riconnessione rapida**: quando la pagina torna in primo piano (riapertura, sblocco telefono, rientro dalla sospensione) la connessione a Home Assistant viene ristabilita subito, invece di restare bloccata su "Connecting…". Risolve il blocco che capitava riaprendo la dashboard su alcuni telefoni. Vale per tutti i dispositivi.
+
 ## 2.6.3
 
 **Routine in un menu su mobile**

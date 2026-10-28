@@ -196,8 +196,34 @@ export function useHomeAssistant() {
 
     connect();
 
+    // ── Fast reconnect when the page comes back to the foreground ──
+    // On mobile (especially iOS), the OS suspends the WebSocket while the tab is
+    // backgrounded or the phone is locked. On return the page would otherwise
+    // sit on "connecting" until the library's slow backoff retried. Here we
+    // nudge an immediate reconnect the moment the page becomes visible / focused
+    // again if we're not currently connected — this is what was leaving one
+    // phone stuck on "connecting…" after reopening.
+    const kick = () => {
+      if (cancelled || document.hidden) return;
+      const conn = connRef.current;
+      if (conn) {
+        // Force the existing connection to retry now instead of waiting.
+        try { conn.reconnect(); } catch { /* ignore */ }
+      } else {
+        // No connection object yet (initial attempt failed) — start fresh.
+        connect();
+      }
+    };
+    const onVisible = () => { if (!document.hidden) kick(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', kick);
+    window.addEventListener('online', kick);
+
     return () => {
       cancelled = true;
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', kick);
+      window.removeEventListener('online', kick);
       if (flushHandle.current != null) {
         // The handle is either a rAF id or a timeout id depending on mode;
         // cancel both kinds to be safe.

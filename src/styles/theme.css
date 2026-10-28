@@ -11259,6 +11259,52 @@ html[data-mobile] .tile-info {
   margin-top: 4px !important;
   flex: none !important;
 }
+
+/* Covers on mobile use the native range slider (full width at the bottom). */
+html[data-mobile] .tile-slider {
+  display: block !important;
+  width: 100% !important;
+  margin-top: 8px !important;
+  flex: none !important;
+}
+/* Covers still span two rows (slider needs room). Dimmable lights stay a
+   single row like every other tile — the preset buttons fit compactly. */
+html[data-mobile] .tile[data-domain='cover'] {
+  grid-row: span 2 !important;
+}
+
+/* Dimmable lights on mobile: 4 brightness preset buttons (15/40/70/100). */
+html[data-mobile] .tile-presets {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 3px !important;
+  margin-top: 6px !important;
+  flex: none !important;
+}
+html[data-mobile] .tile-preset {
+  padding: 5px 0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 7px !important;
+  color: var(--text-secondary) !important;
+  font-family: inherit !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+/* On a dimmable tile, tighten the top area so icon + name + presets fit one
+   row like the other tiles. */
+html[data-mobile] .tile.is-dimmable { padding: 10px 12px !important; }
+html[data-mobile] .tile.is-dimmable .tile-top { gap: 4px !important; margin-bottom: 2px !important; }
+html[data-mobile] .tile.is-dimmable .tile-icon { font-size: 24px !important; }
+html[data-mobile] .tile.is-dimmable .tile-top .tile-name { font-size: 12px !important; -webkit-line-clamp: 1 !important; }
+html[data-mobile] .tile-preset.active {
+  background: rgba(250, 204, 21, 0.18) !important;
+  border-color: rgba(250, 204, 21, 0.5) !important;
+  color: #facc15 !important;
+}
+html[data-mobile] .tile-preset:active { transform: scale(0.94) !important; }
 html[data-mobile] .tile-sub {
   font-size: 12px !important;
   line-height: 1.2 !important;
