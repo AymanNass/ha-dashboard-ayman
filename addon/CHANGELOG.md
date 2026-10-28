@@ -1,4 +1,10 @@
 # Changelog
+## 2.6.3
+
+**Routine in un menu su mobile**
+- Su telefono le routine e le azioni rapide (Sono tornato, Vado via, Buonanotte, Tutto OFF…) non sono più nella pagina ma si aprono da un pulsante "Routine & azioni" in alto, in uno sheet dal basso con i tasti grandi e leggibili.
+- Su tablet e desktop il Control Center resta invariato in linea.
+
 ## 2.6.2
 
 **Layout mobile automatico sui telefoni**

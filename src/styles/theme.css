@@ -11204,10 +11204,8 @@ html[data-mobile] .main-content {
   display: flex !important;
   flex-direction: column !important;
 }
-/* Keep the natural top-to-bottom order for everything except the routines bar,
-   which is pushed to the end. (Direct children of main-content.) */
-html[data-mobile] .main-content > * { order: 0 !important; }
-html[data-mobile] .main-content > .cc { order: 10 !important; margin-top: 12px !important; }
+/* (Routines/quick actions are no longer in the page flow on mobile — they open
+   from a header-level button into a sheet; see .routines-trigger / .routines-sheet.) */
 
 /* ── Tiles: native-app style cards, NOT the tablet's compact rows. Big, airy,
    icon-forward. 2-up grid with fixed, generous row height so nothing overlaps.
@@ -11583,6 +11581,87 @@ html[data-mobile] .bottom-more-item:active { background: rgba(255, 255, 255, 0.0
 html[data-mobile] .detail-panel {
   padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
 }
+
+/* ── Routines & quick actions: a single trigger button + a bottom sheet
+   (mobile only). Replaces the broken inline Control Center bar. ── */
+html[data-mobile] .routines-trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 4px 0 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-mobile] .routines-trigger > .mdi:first-child { font-size: 20px; color: var(--accent-orange); }
+html[data-mobile] .routines-trigger-chev { margin-left: auto; color: var(--text-muted); }
+
+/* The sheet: slides up from the bottom, scrollable, above the nav. */
+html[data-mobile] .routines-sheet-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+}
+html[data-mobile] .routines-sheet {
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: rgba(20, 22, 34, 0.99);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 8px 14px calc(20px + env(safe-area-inset-bottom, 0px));
+}
+html[data-mobile][data-theme='light'] .routines-sheet {
+  background: rgba(255, 255, 255, 0.99);
+}
+html[data-mobile] .routines-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 2px 12px;
+  font-size: 15px;
+  font-weight: 700;
+}
+html[data-mobile] .routines-sheet-close {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: rgba(255,255,255,0.08); border-radius: 50%;
+  color: var(--text-secondary); cursor: pointer;
+}
+html[data-mobile] .routines-sheet-close .mdi { font-size: 18px; }
+
+/* Inside the sheet, lay the Control Center buttons in a vertical stack (not the
+   horizontal strip), so they're big and nothing clips. */
+html[data-mobile] .routines-sheet .cc {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+html[data-mobile] .routines-sheet .cc-hero,
+html[data-mobile] .routines-sheet .cc-hero-split,
+html[data-mobile] .routines-sheet .cc-btn,
+html[data-mobile] .routines-sheet .cc-cluster {
+  width: 100% !important;
+  justify-content: flex-start !important;
+  padding: 14px 16px !important;
+  font-size: 15px !important;
+}
+html[data-mobile] .routines-sheet .cc-divider { display: none !important; }
 
 /* ── Robot page (RobotPageV2): the 3-column desktop layout is unreadable on a
    phone. Stack everything into a single column, in a sensible order, and let

@@ -47,6 +47,9 @@ export default function App() {
   const [showPages, setShowPages] = useState(false);
   const [showSensors, setShowSensors] = useState(false);
   const [scenePicker, setScenePicker] = useState(false);
+  // Mobile: the routines/quick-actions bar lives in a sheet opened from a header
+  // button, instead of sitting (broken) in the page flow.
+  const [showRoutines, setShowRoutines] = useState(false);
   // First-run guided setup shows when no token is configured; can be dismissed
   // for this session to explore the shell without connecting.
   // Also re-shown on auth errors (code 2 = invalid token) so the user can fix credentials.
@@ -319,7 +322,31 @@ export default function App() {
         />
 
         {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
-          <ControlCenter callHA={callHA} />
+          isMobileLayout() ? (
+            <>
+              {/* Mobile: a single button opens the routines/quick-actions sheet. */}
+              <button className="routines-trigger" onClick={() => setShowRoutines(true)}>
+                <span className="mdi mdi-lightning-bolt" />
+                <span>Routine &amp; azioni</span>
+                <span className="mdi mdi-chevron-right routines-trigger-chev" />
+              </button>
+              {showRoutines && (
+                <div className="routines-sheet-wrap" onClick={() => setShowRoutines(false)}>
+                  <div className="routines-sheet" onClick={(e) => e.stopPropagation()}>
+                    <div className="routines-sheet-head">
+                      <span>Routine &amp; azioni</span>
+                      <button className="routines-sheet-close" onClick={() => setShowRoutines(false)}>
+                        <span className="mdi mdi-close" />
+                      </button>
+                    </div>
+                    <ControlCenter callHA={callHA} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <ControlCenter callHA={callHA} />
+          )
         )}
 
         {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
