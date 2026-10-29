@@ -25,13 +25,18 @@ function clone<T>(v: T): T {
  * of these "system" special pages — never ordinary tile pages, so we don't
  * resurrect a tile page the user deliberately removed.
  */
-const INJECTABLE_KINDS: DashView['kind'][] = ['shopping', 'recipes'];
+const INJECTABLE_KINDS: DashView['kind'][] = ['shopping'];
+// Kinds that have been retired/hidden: strip them from a saved layout so a
+// device that already persisted the page (e.g. Ricette from 2.7.0) stops
+// showing it once the page is hidden.
+const HIDDEN_KINDS: DashView['kind'][] = ['recipes'];
 function mergeNewDefaultPages(saved: DashView[]): DashView[] {
-  const haveIds = new Set(saved.map((v) => v.id));
+  const pruned = saved.filter((v) => !HIDDEN_KINDS.includes(v.kind));
+  const haveIds = new Set(pruned.map((v) => v.id));
   const missing = defaultViews.filter(
     (v) => INJECTABLE_KINDS.includes(v.kind) && !haveIds.has(v.id),
   );
-  return missing.length ? [...saved, ...clone(missing)] : saved;
+  return missing.length ? [...pruned, ...clone(missing)] : pruned;
 }
 
 export function useLayout() {

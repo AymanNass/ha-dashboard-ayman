@@ -364,13 +364,16 @@ export const views: DashView[] = [
     kind: 'shopping' as DashView['kind'],
     sections: [],
   },
-  {
-    id: 'recipes',
-    name: 'Ricette',
-    icon: 'mdi-chef-hat',
-    kind: 'recipes' as DashView['kind'],
-    sections: [],
-  },
+  // Pagina Ricette temporaneamente nascosta (codice e routing restano pronti).
+  // Per riattivarla: ripristinare questa vista e rimettere 'recipes' in
+  // INJECTABLE_KINDS (src/hooks/useLayout.ts).
+  // {
+  //   id: 'recipes',
+  //   name: 'Ricette',
+  //   icon: 'mdi-chef-hat',
+  //   kind: 'recipes' as DashView['kind'],
+  //   sections: [],
+  // },
 ];
 
 /**

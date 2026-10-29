@@ -1,4 +1,9 @@
 # Changelog
+## 2.7.1
+
+**Pagina Ricette nascosta (per ora)**
+- La pagina Ricette di prova è stata nascosta in attesa di aggiungere la ricerca vera. Sparisce automaticamente da tablet e telefoni. La pagina Spesa resta attiva.
+
 ## 2.7.0
 
 **Nuova pagina Lista della spesa / dispensa**
