@@ -1,4 +1,16 @@
 # Changelog
+## 2.7.0
+
+**Nuova pagina Lista della spesa / dispensa**
+- Aggiunta una pagina **Spesa** (nel menu "Altro" su telefono, e nella navigazione sul tablet) con un elenco di prodotti fissi della dispensa che si spuntano quando li hai e si deselezionano quando mancano, più la possibilità di aggiungere articoli extra per la spesa.
+- Design moderno a due colonne con intestazione che mostra quante cose mancano, filtro "solo da comprare" e pulsante "nuova spesa".
+- La lista è **condivisa fra tablet e telefoni** (salvata sul server dell'add-on) e si aggiorna da sola ogni pochi secondi, così le modifiche fatte su un dispositivo compaiono sull'altro. Nessun servizio esterno, nessun cloud: tutto in casa.
+
+**Nuova pagina Ricette (anteprima)**
+- Aggiunta una pagina **Ricette** con un video YouTube incorporato, per ora un singolo video di prova. Serve a verificare il player sul tablet prima di aggiungere la ricerca vera.
+
+- Le nuove pagine compaiono automaticamente anche sui dispositivi con un layout già salvato, senza bisogno di resettare nulla.
+
 ## 2.6.12
 
 **Collegamento a Home Assistant riscritto da zero**

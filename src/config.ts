@@ -357,4 +357,43 @@ export const views: DashView[] = [
     kind: 'automations' as DashView['kind'],
     sections: [],
   },
+  {
+    id: 'shopping',
+    name: 'Spesa',
+    icon: 'mdi-cart',
+    kind: 'shopping' as DashView['kind'],
+    sections: [],
+  },
+  {
+    id: 'recipes',
+    name: 'Ricette',
+    icon: 'mdi-chef-hat',
+    kind: 'recipes' as DashView['kind'],
+    sections: [],
+  },
+];
+
+/**
+ * Lista della spesa — prodotti "fissi" di default (dispensa di casa).
+ *
+ * Sono i prodotti sempre presenti che si spuntano (ce l'ho) o si deselezionano
+ * (manca). Questo è solo il seed iniziale: una volta che la lista è salvata sul
+ * server dell'add-on (/data/shopping.json), tu e Martina potete aggiungere,
+ * rinominare o togliere prodotti dall'app senza toccare questo file.
+ */
+export const defaultPantryItems: string[] = [
+  'Latte',
+  'Pane',
+  'Uova',
+  'Pasta',
+  'Riso',
+  'Caffè',
+  'Zucchero',
+  'Sale',
+  'Olio',
+  'Burro',
+  'Acqua',
+  'Carta igienica',
+  'Detersivo piatti',
+  'Spazzatura (sacchetti)',
 ];

@@ -11174,6 +11174,294 @@ html[data-perf='lite'] .tile.on .tile-top .tile-name {
 html[data-perf='lite'] .cv-quick-btn { transition: none !important; }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   SHOPPING / PANTRY PAGE  (kind: 'shopping')  — modern two-column layout
+   ══════════════════════════════════════════════════════════════════════════ */
+.shop-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 4px 0 28px;
+}
+
+/* Hero header */
+.shop-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent, #ff6b35) 26%, transparent), transparent 60%),
+    rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.shop-hero-icon {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+  color: #fff;
+  background: var(--accent, #ff6b35);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent, #ff6b35) 45%, transparent);
+}
+.shop-hero-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.shop-hero-count {
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.shop-hero-label {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+.shop-hero-ring {
+  margin-left: auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.95rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Add bar */
+.shop-add {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shop-add-ic {
+  position: absolute;
+  left: 14px;
+  font-size: 1.2rem;
+  opacity: 0.45;
+  pointer-events: none;
+}
+.shop-add-input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 14px 13px 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font-size: 1rem;
+}
+.shop-add-input:focus {
+  outline: none;
+  border-color: var(--accent, #ff6b35);
+  background: rgba(255, 255, 255, 0.09);
+}
+.shop-add-btn {
+  flex: 0 0 auto;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  border: none;
+  background: var(--accent, #ff6b35);
+  color: #fff;
+  font-size: 1.5rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.shop-add-btn:disabled { opacity: 0.4; cursor: default; }
+.shop-add-btn:not(:disabled):active { transform: scale(0.92); }
+
+/* Toolbar */
+.shop-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.shop-filter,
+.shop-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.shop-filter.active {
+  border-color: var(--accent, #ff6b35);
+  background: color-mix(in srgb, var(--accent, #ff6b35) 18%, transparent);
+  color: var(--accent, #ff6b35);
+}
+.shop-reset { margin-left: auto; }
+.shop-reset:hover,
+.shop-filter:hover { background: rgba(255, 255, 255, 0.09); }
+
+/* Sections */
+.shop-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  margin: 8px 2px 2px;
+}
+
+/* Two-column responsive grid of item cards */
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.shop-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 2px 4px 2px 2px;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.shop-card.have {
+  background: color-mix(in srgb, var(--accent, #ff6b35) 12%, rgba(255, 255, 255, 0.03));
+  border-color: color-mix(in srgb, var(--accent, #ff6b35) 35%, transparent);
+}
+.shop-card:active { transform: scale(0.98); }
+.shop-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 8px;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 1.02rem;
+  text-align: left;
+  cursor: pointer;
+}
+.shop-tick .mdi {
+  font-size: 1.5rem;
+  opacity: 0.5;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+.shop-card.have .shop-tick .mdi {
+  color: var(--accent, #ff6b35);
+  opacity: 1;
+}
+.shop-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shop-card.have .shop-text { opacity: 0.55; text-decoration: line-through; }
+.shop-remove {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  opacity: 0.4;
+  font-size: 1.15rem;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.shop-remove:hover { opacity: 1; color: #ef4444; }
+.shop-empty {
+  padding: 22px;
+  text-align: center;
+  opacity: 0.55;
+  font-size: 0.95rem;
+  grid-column: 1 / -1;
+}
+
+/* On a narrow phone, drop to a single column for comfortable tap targets. */
+@media (max-width: 460px) {
+  .shop-grid { grid-template-columns: 1fr; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RECIPES PAGE  (kind: 'recipes')  — demo single video for now
+   ══════════════════════════════════════════════════════════════════════════ */
+.recipes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 4px 0 28px;
+}
+.recipes-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.recipes-hero-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  color: #fff;
+  background: var(--accent, #ff6b35);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--accent, #ff6b35) 45%, transparent);
+}
+.recipes-hero-title { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.recipes-hero-sub { margin: 2px 0 0; font-size: 0.85rem; opacity: 0.6; }
+.recipes-card {
+  border-radius: 18px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.recipes-video {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+.recipes-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.recipes-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.recipes-meta .mdi { color: var(--accent, #ff6b35); font-size: 1.3rem; }
+
+/* ══════════════════════════════════════════════════════════════════════════
    MOBILE LAYOUT  (html[data-mobile="on"])  — opt-in via ?mobile only.
    Fully isolated: every rule is scoped to html[data-mobile], so nothing here
    affects the tablet/desktop experience. Phone-shaped layout with an iOS-style

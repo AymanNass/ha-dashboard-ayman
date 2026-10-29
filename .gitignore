@@ -34,3 +34,6 @@ my-dashboard-layout.backup.json
 
 # Local shared-settings state (synced app preferences; dev-server copy)
 settings.json
+
+# Local shared shopping/pantry list (dev-server copy)
+shopping.json

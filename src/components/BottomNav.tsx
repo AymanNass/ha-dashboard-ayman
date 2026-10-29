@@ -9,7 +9,7 @@ interface Props {
 }
 
 /** View ids that live under the "Altro" (More) menu instead of the main bar. */
-const SECONDARY_VIEW_IDS = new Set(['calendar', 'automations']);
+const SECONDARY_VIEW_IDS = new Set(['calendar', 'automations', 'shopping', 'recipes']);
 
 /**
  * Phone bottom navigation (mobile layout only). The primary pages sit inline;

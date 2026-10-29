@@ -321,7 +321,7 @@ export default function App() {
           onOpenCalendar={() => setCalendarOpen(true)}
         />
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && view.kind !== 'shopping' && view.kind !== 'recipes' && (
           isMobileLayout() ? (
             <>
               {/* Mobile: a single button opens the routines/quick-actions sheet. */}
@@ -349,7 +349,7 @@ export default function App() {
           )
         )}
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && (
+        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && view.kind !== 'shopping' && view.kind !== 'recipes' && (
           <NotificationZone entities={entities} callHA={callHA} onOpenDetail={setDetailEntity} onNavigate={goToView} />
         )}
 

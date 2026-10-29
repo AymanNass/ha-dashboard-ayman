@@ -16,6 +16,24 @@ function clone<T>(v: T): T {
     : JSON.parse(JSON.stringify(v));
 }
 
+/**
+ * A saved layout file reflects the default pages that existed *when it was
+ * saved*. When a new release ships a new built-in special page (e.g. the
+ * shopping/pantry list), that page would otherwise never appear on devices with
+ * an older saved layout unless the user reset everything. So we fold in any
+ * default page whose id is missing from the saved layout AND whose kind is one
+ * of these "system" special pages — never ordinary tile pages, so we don't
+ * resurrect a tile page the user deliberately removed.
+ */
+const INJECTABLE_KINDS: DashView['kind'][] = ['shopping', 'recipes'];
+function mergeNewDefaultPages(saved: DashView[]): DashView[] {
+  const haveIds = new Set(saved.map((v) => v.id));
+  const missing = defaultViews.filter(
+    (v) => INJECTABLE_KINDS.includes(v.kind) && !haveIds.has(v.id),
+  );
+  return missing.length ? [...saved, ...clone(missing)] : saved;
+}
+
 export function useLayout() {
   const [views, setViews] = useState<DashView[]>(() => withRows(clone(defaultViews)));
   const [loaded, setLoaded] = useState(false);
@@ -31,7 +49,7 @@ export function useLayout() {
         if (res.ok && res.status !== 204) {
           const data = (await res.json()) as DashView[];
           if (!cancelled && Array.isArray(data) && data.length) {
-            setViews(withRows(data));
+            setViews(withRows(mergeNewDefaultPages(data)));
           }
         }
       } catch {

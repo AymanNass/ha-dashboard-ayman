@@ -13,6 +13,7 @@ fi
 export LAYOUT_FILE
 export CONNECTION_FILE="/data/connection.json"
 export SETTINGS_FILE="/data/settings.json"
+export SHOPPING_FILE="/data/shopping.json"
 export PORT=3000
 
 bashio::log.info "Starting Dynamic HA Dashboard on port ${PORT}…"

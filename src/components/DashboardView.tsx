@@ -29,6 +29,8 @@ import { AutomationsPage } from './AutomationsPage';
 import { MediaPageV2 } from './MediaPageV2';
 import { MusicaPage } from './MusicaPage';
 import { CalendarPage } from './CalendarPage';
+import { ShoppingPage } from './ShoppingPage';
+import { RecipesPage } from './RecipesPage';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -364,6 +366,14 @@ export function DashboardView(props: Props) {
         getCalendarEvents={props.getCalendarEvents ?? (async () => ({}))}
       />
     );
+  }
+
+  if (view.kind === 'shopping') {
+    return <ShoppingPage />;
+  }
+
+  if (view.kind === 'recipes') {
+    return <RecipesPage />;
   }
 
   if (view.kind === 'vacuum') {

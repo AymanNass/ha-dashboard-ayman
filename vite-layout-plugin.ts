@@ -17,9 +17,16 @@ const CONNECTION_FILE = process.env.CONNECTION_FILE
 const SETTINGS_FILE = process.env.SETTINGS_FILE
   ? resolve(process.env.SETTINGS_FILE)
   : resolve(process.cwd(), 'settings.json');
+// Shared shopping / pantry list (fixed items checked/unchecked + ad-hoc items),
+// persisted so tablet and phones see the same list. Override with SHOPPING_FILE
+// (add-on → /data).
+const SHOPPING_FILE = process.env.SHOPPING_FILE
+  ? resolve(process.env.SHOPPING_FILE)
+  : resolve(process.cwd(), 'shopping.json');
 const ROUTE = '/layout';
 const CONNECTION_ROUTE = '/connection';
 const SETTINGS_ROUTE = '/settings';
+const SHOPPING_ROUTE = '/shopping';
 const PROXY_ROUTE = '/fetch-json';
 const MAX_BYTES = 512 * 1024;
 const PROXY_MAX_BYTES = 256 * 1024;
@@ -40,6 +47,11 @@ const PROXY_MAX_BYTES = 256 * 1024;
  *   GET  /settings  -> 200 { ...settings } | 204 (none stored)
  *   POST /settings  -> 200 { ok: true }
  *   DELETE /settings -> 200 { ok: true }
+ *
+ * And the shared shopping / pantry list (fixed + ad-hoc items):
+ *   GET  /shopping  -> 200 { items: [...] } | 204 (none stored yet)
+ *   POST /shopping  -> 200 { ok: true }
+ *   DELETE /shopping -> 200 { ok: true }
  */
 export function layoutApi(): Plugin {
   const handler = (server: ViteDevServer) => {
@@ -143,7 +155,9 @@ export function layoutApi(): Plugin {
             ? CONNECTION_FILE
             : url === SETTINGS_ROUTE
               ? SETTINGS_FILE
-              : null;
+              : url === SHOPPING_ROUTE
+                ? SHOPPING_FILE
+                : null;
       if (!file) return next();
 
       if (req.method === 'GET') {
