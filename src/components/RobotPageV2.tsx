@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { HassEntities } from 'home-assistant-js-websocket';
 import { HA_URL, HA_TOKEN } from '../config';
+import { ensurePowerThenStart } from '../lib/robot';
 
 type CallHA = (domain: string, service: string, data?: Record<string, unknown>, target?: { entity_id: string | string[] }) => Promise<void>;
 
@@ -125,18 +126,24 @@ export function RobotPageV2({ entities, callHA, onOpenDetail }: Props) {
   };
 
   const startClean = () => {
-    // Set mode
-    callHA('select', 'select_option', { option: mode }, { entity_id: 'select.cameretta_roborock_qv_35a_cleaning_mode' });
-    // Set fan speed
-    callHA('vacuum', 'set_fan_speed', { fan_speed: fan }, { entity_id: 'vacuum.roborock_qv_35a' });
+    // The robot is kept powered off at the wall (Shelly plug) for safety, so
+    // make sure the plug is on and the robot has booted BEFORE sending any
+    // command — otherwise mode/fan/start all hit an offline robot and do
+    // nothing. ensurePowerThenStart turns the plug on + waits only when needed.
+    void ensurePowerThenStart(callHA, entities, async () => {
+      // Set mode
+      await callHA('select', 'select_option', { option: mode }, { entity_id: 'select.cameretta_roborock_qv_35a_cleaning_mode' });
+      // Set fan speed
+      await callHA('vacuum', 'set_fan_speed', { fan_speed: fan }, { entity_id: 'vacuum.roborock_qv_35a' });
 
-    if (selectedRooms.length === 0) {
-      // Clean all
-      callHA('vacuum', 'start', undefined, { entity_id: 'vacuum.roborock_qv_35a' });
-    } else {
-      // Clean specific rooms
-      callHA('vacuum', 'send_command', { command: 'app_segment_clean', params: selectedRooms }, { entity_id: 'vacuum.roborock_qv_35a' });
-    }
+      if (selectedRooms.length === 0) {
+        // Clean all
+        await callHA('vacuum', 'start', undefined, { entity_id: 'vacuum.roborock_qv_35a' });
+      } else {
+        // Clean specific rooms
+        await callHA('vacuum', 'send_command', { command: 'app_segment_clean', params: selectedRooms }, { entity_id: 'vacuum.roborock_qv_35a' });
+      }
+    });
   };
 
   const applyPreset = (preset: 'standard' | 'fast' | 'deep') => {

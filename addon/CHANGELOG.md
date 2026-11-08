@@ -1,4 +1,10 @@
 # Changelog
+## 2.7.2
+
+**Avvio robot: accende da solo la presa**
+- La presa del Roborock viene tenuta spenta quando il robot non è in uso. Ora, quando avvii la pulizia dalla dashboard (pulizia completa, per stanze, o dal riquadro robot in home), la dashboard **accende prima la presa se è spenta**, aspetta che il robot si avvii, e poi manda il comando — così non resti mai col robot senza corrente. Se la presa è già accesa, la pulizia parte subito.
+- (Lato Home Assistant: "Vado via" spegne la presa, "Torno a casa" la riaccende, e una rete di sicurezza la accende se il robot inizia a pulire da pulsantiera/app/voce.)
+
 ## 2.7.1
 
 **Pagina Ricette nascosta (per ora)**
