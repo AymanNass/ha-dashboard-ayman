@@ -44,6 +44,19 @@ export function ControlCenter({ callHA }: Props) {
       });
   };
 
+  /**
+   * "Weekend / Vacanza": grande spegnimento per assenze lunghe. Chiama lo
+   * script HA `weekend_away` (unica fonte di verità, così funziona anche da
+   * voce/app): luci off, tapparelle chiuse, clima off, musica/TV off, presa
+   * del robot off e vacation mode ON. A differenza di "Vado via" quotidiano,
+   * QUESTO spegne la presa del robot — che nell'uso normale resta sempre
+   * alimentato.
+   */
+  const weekendAway = () => {
+    if (confirm('Parti per il weekend? Spengo luci, clima, musica e TV, chiudo le tapparelle, spengo la presa del robot e attivo la modalità vacanza. Confermi?'))
+      callHA('script', 'turn_on', undefined, { entity_id: 'script.weekend_away' });
+  };
+
   // ── Routines (scenes) ──
   const routines: Routine[] = [
     { id: 'buonanotte', icon: 'mdi-weather-night', label: 'Buonanotte', color: '#8b5cf6', action: () => callHA('scene', 'turn_on', undefined, { entity_id: 'scene.buonanotte' }) },
@@ -109,6 +122,12 @@ export function ControlCenter({ callHA }: Props) {
           <span className="mdi mdi-blinds" />
         </button>
       </div>
+
+      {/* Weekend / vacanza: spegnimento grande, include la presa del robot */}
+      <button className="cc-hero cc-hero-weekend" onClick={weekendAway}>
+        <span className="mdi mdi-bag-suitcase" />
+        <span>Weekend / Vacanza</span>
+      </button>
 
       <div className="cc-divider" />
 

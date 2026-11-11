@@ -1,4 +1,10 @@
 # Changelog
+## 2.7.3
+
+**Nuovo pulsante "Weekend / Vacanza" + gestione presa robot semplificata**
+- Aggiunto nel pannello azioni un pulsante **Weekend / Vacanza** (con conferma): per le assenze lunghe spegne luci, clima, musica e TV, chiude le tapparelle, **spegne la presa del robot** e attiva la modalità vacanza.
+- Semplificata la gestione della presa del robot: nell'uso quotidiano il robot resta **sempre alimentato** (niente più accensione/spegnimento automatico a ogni uscita, che poteva creare problemi). La presa si spegne **solo** con "Weekend / Vacanza". L'avvio pulizia dalla dashboard torna immediato, senza attese.
+
 ## 2.7.2
 
 **Avvio robot: accende da solo la presa**

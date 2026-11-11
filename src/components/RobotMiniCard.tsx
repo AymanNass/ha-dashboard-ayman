@@ -1,5 +1,4 @@
 import type { HassEntities } from 'home-assistant-js-websocket';
-import { ensurePowerThenStart } from '../lib/robot';
 
 interface Props {
   entities: HassEntities;
@@ -23,10 +22,7 @@ export function RobotMiniCard({ entities, callHA, onNavigate }: Props) {
   const quickClean = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Avviare pulizia tutta casa?')) {
-      // Power the plug on first if the robot is off (safety-off at the wall).
-      void ensurePowerThenStart(callHA, entities, () =>
-        callHA('vacuum', 'start', undefined, { entity_id: 'vacuum.roborock_qv_35a' }),
-      );
+      callHA('vacuum', 'start', undefined, { entity_id: 'vacuum.roborock_qv_35a' });
     }
   };
 

@@ -622,6 +622,7 @@ body::after {
 .cc-hero:active { transform: scale(0.96); }
 .cc-hero-back { background: linear-gradient(135deg, #10b981, #059669); }
 .cc-hero-leave { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.cc-hero-weekend { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
 /* Split hero: the wrapper carries the colour, the two buttons inside stay
    transparent so they read as a single pill with a divider. */
 .cc-hero-split {
