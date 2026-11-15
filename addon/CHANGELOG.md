@@ -1,4 +1,9 @@
 # Changelog
+## 2.8.1
+
+**Albero di Natale accanto alle lampade**
+- L'albero di Natale ora è una tile nello stesso blocco delle luci del Soggiorno, subito dopo la Lampada sala, invece che in un riquadro separato sotto le piante. Ha le stesse dimensioni delle altre tile: l'icona è un alberino che si illumina (palline colorate e stella dorata) quando è acceso, e mostra i watt; da spento mostra quanti giorni mancano a Natale. Su telefono si incastra nella griglia a due colonne come le altre.
+
 ## 2.8.0
 
 **Albero di Natale in salotto**

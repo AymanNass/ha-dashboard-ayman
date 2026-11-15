@@ -32,7 +32,7 @@ import { CalendarPage } from './CalendarPage';
 import { ShoppingPage } from './ShoppingPage';
 import { RecipesPage } from './RecipesPage';
 import { EnergyPage, type GetStatistics } from './EnergyPage';
-import { ChristmasTreeCard } from './ChristmasTreeCard';
+import { ChristmasTreeTile } from './ChristmasTreeTile';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -518,12 +518,15 @@ export function DashboardView(props: Props) {
                       .map((re) => (
                         <Tile key={re.entity_id} re={re} enterIndex={tileIndex++} sectionColor={col.color} {...props} />
                       ))}
+                    {/* Christmas tree: a tile in the same block as the lamps. */}
+                    {isSoggiorno && (
+                      <ChristmasTreeTile entities={entities} callHA={props.callHA} enterIndex={tileIndex++} />
+                    )}
                   </div>
                   )}
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
                       <PlantWidget entities={entities} plants={plantSensors} />
-                      <ChristmasTreeCard entities={entities} callHA={props.callHA} />
                     </div>
                   )}
                 </CollapsibleColumn>
