@@ -31,6 +31,8 @@ import { MusicaPage } from './MusicaPage';
 import { CalendarPage } from './CalendarPage';
 import { ShoppingPage } from './ShoppingPage';
 import { RecipesPage } from './RecipesPage';
+import { EnergyPage, type GetStatistics } from './EnergyPage';
+import { ChristmasTreeCard } from './ChristmasTreeCard';
 import { NocView } from './NocView';
 import { MusicAssistantSearch, type SearchMusic, type PlayMusic, type GetMaPlayers } from './MusicAssistantSearch';
 import { effectiveSize, sizeToSpan } from '../lib/tileSize';
@@ -270,6 +272,7 @@ interface Props {
   onOpenCalendar?: () => void;
   callHA: CallHA;
   getHistory?: (entityId: string, hours?: number) => Promise<number[]>;
+  getStatistics?: GetStatistics;
   getCalendarEvents?: (entityIds: string[], days?: number) => Promise<Record<string, { events?: unknown[] }>>;
   editing: boolean;
   layout: LayoutActions;
@@ -374,6 +377,15 @@ export function DashboardView(props: Props) {
 
   if (view.kind === 'recipes') {
     return <RecipesPage />;
+  }
+
+  if (view.kind === 'energy') {
+    return (
+      <EnergyPage
+        entities={entities}
+        getStatistics={props.getStatistics ?? (async () => ({}))}
+      />
+    );
   }
 
   if (view.kind === 'vacuum') {
@@ -511,6 +523,7 @@ export function DashboardView(props: Props) {
                   {isSoggiorno && (
                     <div className="soggiorno-widgets">
                       <PlantWidget entities={entities} plants={plantSensors} />
+                      <ChristmasTreeCard entities={entities} callHA={props.callHA} />
                     </div>
                   )}
                 </CollapsibleColumn>

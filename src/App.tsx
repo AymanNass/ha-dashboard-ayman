@@ -32,9 +32,16 @@ import { runNavTransition } from './lib/viewTransition';
 import { scenes, HA_TOKEN } from './config';
 import type { RoomEntity, DashView } from './types';
 
+/** Pages that have their own full-screen UI: they don't get the scenes /
+ *  routines bar or the notification zone above them. */
+const FULL_PAGE_KINDS = new Set<string>([
+  'cameras', 'sensors', 'climate', 'robot-v2', 'vacuum', 'automations',
+  'media-v2', 'calendar', 'musica', 'shopping', 'recipes', 'energy',
+]);
+
 export default function App() {
   const { t } = useTranslation();
-  const { entities, connected, error, phase, attempts, callHA, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
+  const { entities, connected, error, phase, attempts, callHA, getForecast, getHistory, getStatistics, getCalendarEvents, searchMusic, playMusic, getMaPlayers } = useHomeAssistant();
   const layout = useLayout();
   const { views } = layout;
   const [activeView, setActiveView] = useState<string>('main');
@@ -321,7 +328,7 @@ export default function App() {
           onOpenCalendar={() => setCalendarOpen(true)}
         />
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && view.kind !== 'shopping' && view.kind !== 'recipes' && (
+        {!editing && !FULL_PAGE_KINDS.has(view.kind ?? '') && (
           isMobileLayout() ? (
             <>
               {/* Mobile: a single button opens the routines/quick-actions sheet. */}
@@ -349,7 +356,7 @@ export default function App() {
           )
         )}
 
-        {!editing && view.kind !== 'cameras' && view.kind !== 'sensors' && view.kind !== 'climate' && view.kind !== 'robot-v2' && view.kind !== 'vacuum' && view.kind !== 'automations' && view.kind !== 'media-v2' && view.kind !== 'calendar' && view.kind !== 'musica' && view.kind !== 'shopping' && view.kind !== 'recipes' && (
+        {!editing && !FULL_PAGE_KINDS.has(view.kind ?? '') && (
           <NotificationZone entities={entities} callHA={callHA} onOpenDetail={setDetailEntity} onNavigate={goToView} />
         )}
 
@@ -430,6 +437,7 @@ export default function App() {
             onOpenCalendar={openCalendar}
             callHA={callHA}
             getHistory={getHistory}
+            getStatistics={getStatistics}
             getCalendarEvents={getCalendarEvents}
             editing={editing}
             layout={layout}

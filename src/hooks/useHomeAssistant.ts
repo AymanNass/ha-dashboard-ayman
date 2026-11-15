@@ -390,6 +390,36 @@ export function useHomeAssistant() {
     [],
   );
 
+  /** Long-term statistics (recorder) for energy-style sensors, e.g. kWh used per
+   *  hour/day. Asks HA for the `change` of each bucket (consumption in that
+   *  interval), which is what a consumption page wants instead of the ever-
+   *  growing total. Buckets come back with `start`/`end` as epoch milliseconds.
+   *  Returns {} when not connected or on any error so callers can show "no data". */
+  const getStatistics = useCallback(
+    async (
+      statisticIds: string[],
+      start: Date,
+      end: Date,
+      period: '5minute' | 'hour' | 'day' | 'week' | 'month',
+    ): Promise<Record<string, Array<{ start: number; end: number; change?: number | null }>>> => {
+      if (!connRef.current || !statisticIds.length) return {};
+      try {
+        const res = (await connRef.current.sendMessagePromise({
+          type: 'recorder/statistics_during_period',
+          start_time: start.toISOString(),
+          end_time: end.toISOString(),
+          statistic_ids: statisticIds,
+          period,
+          types: ['change'],
+        })) as Record<string, Array<{ start: number; end: number; change?: number | null }>>;
+        return res ?? {};
+      } catch {
+        return {};
+      }
+    },
+    [],
+  );
+
   const getForecast = useCallback(
     async (entityId: string, type: 'daily' | 'hourly' = 'daily') => {
       if (!connRef.current) return [];
@@ -514,5 +544,5 @@ export function useHomeAssistant() {
     return maPlayerIds.current;
   }, []);
 
-  return { entities, connected, error, phase, attempts, callHA, getState, getForecast, getHistory, getCalendarEvents, searchMusic, playMusic, getMaPlayers };
+  return { entities, connected, error, phase, attempts, callHA, getState, getForecast, getHistory, getStatistics, getCalendarEvents, searchMusic, playMusic, getMaPlayers };
 }

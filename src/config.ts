@@ -364,6 +364,13 @@ export const views: DashView[] = [
     kind: 'shopping' as DashView['kind'],
     sections: [],
   },
+  {
+    id: 'consumi',
+    name: 'Consumi',
+    icon: 'mdi-flash',
+    kind: 'energy' as DashView['kind'],
+    sections: [],
+  },
   // Pagina Ricette temporaneamente nascosta (codice e routing restano pronti).
   // Per riattivarla: ripristinare questa vista e rimettere 'recipes' in
   // INJECTABLE_KINDS (src/hooks/useLayout.ts).
@@ -375,6 +382,50 @@ export const views: DashView[] = [
   //   sections: [],
   // },
 ];
+
+/** Presa Shelly dell'albero di Natale (accendibile dal Soggiorno). */
+export const christmasTree = {
+  switchId: 'switch.shellyplugmg3_907069659024',
+  powerId: 'sensor.shellyplugmg3_907069659024_potenza',
+} as const;
+
+/**
+ * Pagina Consumi — elettrodomestici monitorati tramite presa Shelly.
+ * `energyId` è il contatore kWh totale (state_class total_increasing): da lì HA
+ * calcola le statistiche orarie/giornaliere. `powerId` è la potenza istantanea
+ * (W), usata per il badge "In funzione". Per aggiungere un dispositivo basta
+ * una riga qui.
+ */
+export interface EnergyDevice {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  energyId: string;
+  powerId: string;
+}
+export const energyDevices: EnergyDevice[] = [
+  {
+    id: 'lavatrice',
+    name: 'Lavatrice',
+    icon: 'mdi-washing-machine',
+    color: '#38bdf8',
+    energyId: 'sensor.shellyplugmg3_0892725e89fc_energia',
+    powerId: 'sensor.shellyplugmg3_0892725e89fc_potenza',
+  },
+  {
+    id: 'asciugatrice',
+    name: 'Asciugatrice',
+    icon: 'mdi-tumble-dryer',
+    color: '#fb923c',
+    energyId: 'sensor.shellyplugmg3_9070695ed8a0_energia',
+    powerId: 'sensor.shellyplugmg3_9070695ed8a0_potenza',
+  },
+];
+/** Prezzo di riferimento (€/kWh) per la stima del costo. Modificalo con la tua tariffa. */
+export const energyPricePerKwh = 0.3;
+/** Sopra questa potenza (W) il dispositivo è considerato "in funzione". */
+export const energyRunningWatts = 10;
 
 /**
  * Lista della spesa — prodotti "fissi" di default (dispensa di casa).

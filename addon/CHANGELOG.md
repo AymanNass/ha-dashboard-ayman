@@ -1,4 +1,14 @@
 # Changelog
+## 2.8.0
+
+**Albero di Natale in salotto**
+- Nuovo riquadro nel Soggiorno, sotto le piante, per accendere e spegnere l'albero di Natale (la presa Shelly dedicata). Un albero disegnato con palline colorate e stella dorata: spento è scuro, acceso si illumina con un alone caldo. Mostra i watt in tempo reale e i giorni che mancano a Natale. Fuori dalla modalità lite le palline lampeggiano.
+
+**Nuova pagina Consumi**
+- Nuova pagina **Consumi** (nel menu "Altro" su telefono) con il consumo di lavatrice e asciugatrice. Tre viste: **Oggi** (per ora), **Settimana** (ultimi 7 giorni) e **Mese** (giorno per giorno).
+- Grafico a barre impilate (una tinta per elettrodomestico) con dettaglio al tocco, totale in kWh e stima del costo, e indicazione "In funzione" con i watt quando un elettrodomestico è acceso. Include anche l'ora in corso, quindi se avvii la lavatrice vedi subito il consumo.
+- Il costo è una stima a 0,30 €/kWh (modificabile in `config.ts`, `energyPricePerKwh`). I dati partono da quando le prese sono state aggiunte a Home Assistant.
+
 ## 2.7.3
 
 **Nuovo pulsante "Weekend / Vacanza" + gestione presa robot semplificata**

@@ -25,7 +25,7 @@ function clone<T>(v: T): T {
  * of these "system" special pages — never ordinary tile pages, so we don't
  * resurrect a tile page the user deliberately removed.
  */
-const INJECTABLE_KINDS: DashView['kind'][] = ['shopping'];
+const INJECTABLE_KINDS: DashView['kind'][] = ['shopping', 'energy'];
 // Kinds that have been retired/hidden: strip them from a saved layout so a
 // device that already persisted the page (e.g. Ricette from 2.7.0) stops
 // showing it once the page is hidden.
